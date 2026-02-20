@@ -222,15 +222,31 @@ a.nav-link:hover{color:#fff;}
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
 
 // ─── PROGRAMAS ────────────────────────────────────────────────────────────────
-const PROGS = [
-  {id:'lhdll',  name:'LA HORA DE LOS LENTOS',       horas:[{h:0}]},
-  {id:'trasn',  name:'TRASNOCHE 100',                horas:[{h:2},{h:4}]},
-  {id:'moro',   name:'EL CLUB DEL MORO',             horas:[{h:7},{h:8},{h:9}]},
-  {id:'netd',   name:'NO ESTÁ TODO DICHO',           horas:[{h:10},{h:11},{h:12},{h:13}]},
-  {id:'sarasa', name:'SARASA',                       horas:[{h:14},{h:15},{h:16}]},
-  {id:'atar',   name:'ATARDECER DE UN DÍA AGITADO',  horas:[{h:17},{h:18},{h:19}]},
-  {id:'roman',  name:'ROMÁNTICOS',                   horas:[{h:20},{h:22}]},
+const PROG_LAV=[
+  {id:'lentos',name:'LA HORA DE LOS LENTOS',horas:[{h:0},{h:1}]},
+  {id:'tras',name:'TRASNOCHE 100',horas:[{h:2},{h:3},{h:4},{h:5}]},
+  {id:'moro',name:'EL CLUB DEL MORO',horas:[{h:6},{h:7},{h:8},{h:9}]},
+  {id:'todo',name:'NO ESTÁ TODO DICHO',horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'sarasa',name:'SARASA',horas:[{h:14},{h:15},{h:16}]},
+  {id:'atard',name:'ATARDECER DE UN DÍA AGITADO',horas:[{h:17},{h:18},{h:19}]},
+  {id:'romanticos',name:'ROMÁNTICOS',horas:[{h:20},{h:21},{h:22},{h:23}]}
 ];
+const PROG_SABADO=[
+  {id:'tras_s',name:'TRASNOCHE 100',horas:[{h:0},{h:1},{h:2},{h:3},{h:4},{h:5}]},
+  {id:'mus_s',name:'MUSICAL SÁBADO',horas:[{h:6},{h:7},{h:8}]},
+  {id:'casa_s',name:'TODO QUEDA EN CASA',horas:[{h:9},{h:10},{h:11},{h:12}]},
+  {id:'tarde_s',name:'LA TARDE DE LA 100',horas:[{h:13},{h:14},{h:15},{h:16},{h:17}]},
+  {id:'disco_s',name:'DISCO RETRO',horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
+];
+const PROG_DOMINGO=[
+  {id:'tras_d',name:'TRASNOCHE 100',horas:[{h:0},{h:1},{h:2},{h:3},{h:4},{h:5},{h:6}]},
+  {id:'hist_d',name:'TU MÚSICA TU HISTORIA',horas:[{h:7},{h:8},{h:9}]},
+  {id:'abrt_d',name:'ABIERTO LOS DOMINGOS',horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'mwe_d',name:'MUSIC WEEKEND',horas:[{h:14},{h:15},{h:16},{h:17}]},
+  {id:'disco_d',name:'DISCO RETRO',horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
+];
+const ESTRUCTURAS = { 1:PROG_LAV, 2:PROG_LAV, 3:PROG_LAV, 4:PROG_LAV, 5:PROG_LAV, 6:PROG_SABADO, 0:PROG_DOMINGO };
+let PROGS = PROG_LAV;
 
 let ARTISTS = [];
 let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
@@ -419,6 +435,26 @@ function exportar(){
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('fecha').valueAsDate=new Date();
 loadUrl();
+// --- INTELIGENCIA DEL CALENDARIO ---
+const inputFecha = document.getElementById('fecha');
+if (inputFecha) {
+  // 1. Al abrir la app, detecta qué día es hoy y carga la grilla correcta
+  if (!inputFecha.value) {
+    inputFecha.valueAsDate = new Date();
+  }
+  const diaHoy = new Date(inputFecha.value + "T12:00:00Z");
+  PROGS = ESTRUCTURAS[diaHoy.getUTCDay()] || PROG_LAV;
+
+  // 2. Al cambiar la fecha en el calendario, muta la grilla automáticamente
+  inputFecha.addEventListener('change', function(e) {
+    if(e.target.value) {
+      const d = new Date(e.target.value + "T12:00:00Z");
+      PROGS = ESTRUCTURAS[d.getUTCDay()] || PROG_LAV;
+      initAssignments();
+      renderGrid();
+    }
+  });
+}
 </script>
 </body>
 </html>
