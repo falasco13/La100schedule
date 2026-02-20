@@ -258,12 +258,11 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 <div id="stats-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:9999; padding:20px; overflow-y:auto; align-items:flex-start; justify-content:center;">
   <div style="background:#fff; width:100%; max-width:900px; margin:40px auto; padding:30px; border-radius:12px; position:relative; font-family:'Sora',sans-serif; box-shadow:0 10px 40px rgba(0,0,0,.3);">
     <button onclick="document.getElementById('stats-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; background:none; border:none; cursor:pointer; color:#7478A8;">&times;</button>
-    <h2 style="margin-bottom:20px; color:#1B1F6E;">📊 Reportes y Carga de Artística</h2>
+    <h2 style="margin-bottom:20px; color:#1B1F6E;">📊 Reportes de Artística</h2>
 
-    <div id="stats-loading" style="text-align:center; padding:40px; color:#7478A8;">Conectando con la base de datos... ⏳</div>
+    <div id="stats-loading" style="text-align:center; padding:40px; color:#7478A8; font-weight:600;">Conectando con la base de datos... ⏳</div>
 
     <div id="stats-content" style="display:none;">
-      
       <div style="display:flex; gap:15px; background:#F4F5FF; padding:15px; border-radius:8px; border:1px solid #E2E4F6; margin-bottom:20px; align-items:flex-end; flex-wrap:wrap;">
         <div>
           <label style="display:block; font-size:12px; color:#7478A8; margin-bottom:5px; font-weight:600;">Desde (Fecha de aire):</label>
@@ -273,28 +272,28 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
           <label style="display:block; font-size:12px; color:#7478A8; margin-bottom:5px; font-weight:600;">Hasta (Fecha de aire):</label>
           <input type="date" id="stat-hasta" style="padding:8px; border:1px solid #C4CBFF; border-radius:6px; font-family:'Sora',sans-serif; color:#1B1F6E;">
         </div>
-        <button id="btn-aplicar-filtros" style="padding:9px 20px; background:#1B1F6E; color:#fff; border:none; border-radius:6px; cursor:pointer; font-family:'Sora',sans-serif; font-weight:600; transition:0.2s;">Actualizar Reporte</button>
+        <button id="btn-aplicar-filtros" style="padding:9px 20px; background:#1B1F6E; color:#fff; border:none; border-radius:6px; cursor:pointer; font-family:'Sora',sans-serif; font-weight:600;">Filtrar Fechas</button>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:30px;">
-        
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
         <div style="border:1px solid #E2E4F6; padding:20px; border-radius:8px;">
-           <h3 style="font-size:14px; color:#7478A8; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">🔍 Buscador de Material</h3>
-           <label style="display:block; font-size:12px; color:#7478A8; margin-bottom:5px;">Elegí una Promo, Sep o Éxito:</label>
+           <h3 style="font-size:14px; color:#7478A8; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">🔍 Rendimiento de Material</h3>
+           <label style="display:block; font-size:12px; color:#1B1F6E; margin-bottom:5px; font-weight:600;">Elegí una Promo (agrupa todas sus versiones):</label>
            <select id="stat-material" style="width:100%; padding:10px; border:1px solid #C4CBFF; border-radius:6px; font-family:'Sora',sans-serif; margin-bottom:15px; outline:none; color:#1B1F6E; font-weight:600;">
              <option value="">-- Seleccionar material --</option>
            </select>
-           
            <div id="res-material" style="background:#EEF0FF; padding:20px; border-radius:8px; text-align:center; display:none;">
              <div style="font-size:42px; font-weight:800; color:#1B1F6E; line-height:1;" id="res-count">0</div>
-             <div style="font-size:14px; color:#7478A8; margin-bottom:10px;">veces al aire en este período</div>
+             <div style="font-size:14px; color:#7478A8; margin-bottom:10px;">veces al aire en total</div>
              <div style="font-size:13px; color:#4F5EFF; font-weight:700; background:#fff; display:inline-block; padding:5px 10px; border-radius:4px;" id="res-time">⏱️ Tiempo total: 0 min</div>
            </div>
         </div>
 
-        <div style="border:1px solid #E2E4F6; padding:20px; border-radius:8px;">
+        <div style="border:1px solid #E2E4F6; padding:20px; border-radius:8px; display:flex; flex-direction:column;">
            <h3 style="font-size:14px; color:#7478A8; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">⏱️ Minutos por Día</h3>
-           <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartTiempos"></canvas></div>
+           <div style="position: relative; height: 250px; width: 100%;">
+             <canvas id="chartTiempos"></canvas>
+           </div>
         </div>
       </div>
     </div>
@@ -830,7 +829,7 @@ let statsLoaded = false;
 let misGraficos = [];
 let datosCrudos = [];
 
-// Función para agrupar (le saca los números del final a los nombres)
+// Le saca los números al final al nombre de la promo para sumarlas todas juntas
 function agruparNombre(nombre) {
   if(!nombre) return '';
   return nombre.replace(/\s+\d+$/, '').trim();
@@ -858,7 +857,6 @@ document.getElementById('btn-stats').addEventListener('click', async () => {
         document.getElementById('stat-hasta').value = fechas[fechas.length-1];
     }
 
-    // Llenar el buscador con los nombres agrupados
     const nombresAgrupados = [...new Set(datosCrudos.map(r => agruparNombre(r.nombre)).filter(n => n && !n.includes("O'Clock")))].sort();
     const selObj = document.getElementById('stat-material');
     selObj.innerHTML = '<option value="">-- Seleccionar material --</option>'; 
@@ -892,15 +890,11 @@ function actualizarReporte() {
   if(fDesde) filtrados = filtrados.filter(r => r.fecha_schedule >= fDesde);
   if(fHasta) filtrados = filtrados.filter(r => r.fecha_schedule <= fHasta);
 
-  // Al buscar, comparamos sumando las versiones agrupadas
   if(material) {
     const pautados = filtrados.filter(r => agruparNombre(r.nombre) === material);
     document.getElementById('res-count').innerText = pautados.length;
-    
     let secTotales = pautados.reduce((acc, r) => acc + strToSecs(r.duracion), 0);
-    let minTotales = (secTotales / 60).toFixed(1);
-    
-    document.getElementById('res-time').innerText = `⏱️ Tiempo total: ${minTotales} min`;
+    document.getElementById('res-time').innerText = `⏱️ Tiempo total: ${(secTotales / 60).toFixed(1)} min`;
     document.getElementById('res-material').style.display = 'block';
   } else {
     document.getElementById('res-material').style.display = 'none';
@@ -910,22 +904,16 @@ function actualizarReporte() {
   misGraficos = [];
 
   const fechasUnicas = [...new Set(filtrados.map(r => r.fecha_schedule).filter(Boolean))].sort();
-  
-  const datosPromo = [];
-  const datosSep = [];
-  const datosExito = [];
+  const datosPromo = [], datosSep = [], datosExito = [];
 
   fechasUnicas.forEach(f => {
-    const diaRows = filtrados.filter(r => r.fecha_schedule === f);
     let sumPromo = 0, sumSep = 0, sumExito = 0;
-
-    diaRows.forEach(r => {
+    filtrados.filter(r => r.fecha_schedule === f).forEach(r => {
        let sec = strToSecs(r.duracion);
        if(r.tipo === 'Promo') sumPromo += sec;
        else if(r.tipo === 'Sep. Compañía') sumSep += sec;
        else if(r.tipo === 'Éxito a la Vista') sumExito += sec;
     });
-
     datosPromo.push((sumPromo / 60).toFixed(1));
     datosSep.push((sumSep / 60).toFixed(1));
     datosExito.push((sumExito / 60).toFixed(1));
@@ -935,10 +923,7 @@ function actualizarReporte() {
   misGraficos.push(new Chart(ctxTiempos, {
     type: 'bar',
     data: {
-      labels: fechasUnicas.map(f => {
-          if(f.includes('-')) { const p = f.split('-'); return `${p[2]}/${p[1]}`; }
-          return f;
-      }),
+      labels: fechasUnicas.map(f => f.includes('-') ? `${f.split('-')[2]}/${f.split('-')[1]}` : f),
       datasets: [
         { label: 'Promos (min)', data: datosPromo, backgroundColor: '#4F5EFF', stack: 'stack1' },
         { label: 'Sep. Compañía (min)', data: datosSep, backgroundColor: '#F5C842', stack: 'stack1' },
@@ -948,13 +933,13 @@ function actualizarReporte() {
     options: {
       maintainAspectRatio: false,
       plugins: { tooltip: { mode: 'index', intersect: false } },
-      scales: {
-        x: { stacked: true },
-        y: { stacked: true, title: { display: true, text: 'Minutos Totales al Aire' } }
-      }
+      scales: { x: { stacked: true }, y: { stacked: true, title: { display: true, text: 'Minutos Totales al Aire' } } }
     }
   }));
 }
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+loadUrl();
 </script>
 </body>
 </html>
