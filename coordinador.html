@@ -218,46 +218,33 @@ a.nav-link:hover{color:#fff;}
 </div>
 
 <script>
+// ─── SHEET URL DEFAULT ─────────────────────────────────────────────────────────
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
 
-const PROG_LAV=[
+// ─── PROGRAMAS ────────────────────────────────────────────────────────────────
+const PROGS = [
   {id:'lhdll',  name:'LA HORA DE LOS LENTOS',       horas:[{h:0}]},
-  {id:'trasn',  name:'TRASNOCHE 100',               horas:[{h:2},{h:4}]},
-  {id:'moro',   name:'EL CLUB DEL MORO',            horas:[{h:7},{h:8},{h:9}]},
-  {id:'netd',   name:'NO ESTÁ TODO DICHO',          horas:[{h:10},{h:11},{h:12},{h:13}]},
-  {id:'sarasa', name:'SARASA',                      horas:[{h:14},{h:15},{h:16}]},
-  {id:'atar',   name:'ATARDECER DE UN DÍA AGITADO', horas:[{h:17},{h:18},{h:19}]},
-  {id:'roman',  name:'ROMÁNTICOS',                  horas:[{h:20},{h:22}]}
+  {id:'trasn',  name:'TRASNOCHE 100',                horas:[{h:2},{h:4}]},
+  {id:'moro',   name:'EL CLUB DEL MORO',             horas:[{h:7},{h:8},{h:9}]},
+  {id:'netd',   name:'NO ESTÁ TODO DICHO',           horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'sarasa', name:'SARASA',                       horas:[{h:14},{h:15},{h:16}]},
+  {id:'atar',   name:'ATARDECER DE UN DÍA AGITADO',  horas:[{h:17},{h:18},{h:19}]},
+  {id:'roman',  name:'ROMÁNTICOS',                   horas:[{h:20},{h:22}]},
 ];
-const PROG_SABADO=[
-  {id:'tras_s', name:'TRASNOCHE 100',       horas:[{h:2},{h:3}]},
-  {id:'mus_s',  name:'MUSICAL SÁBADO',      horas:[{h:6},{h:7},{h:8}]},
-  {id:'casa_s', name:'TODO QUEDA EN CASA',  horas:[{h:9},{h:10},{h:11},{h:12}]},
-  {id:'tarde_s',name:'LA TARDE DE LA 100',  horas:[{h:13},{h:14},{h:15},{h:16},{h:17}]},
-  {id:'disco_s',name:'DISCO RETRO',         horas:[{h:18},{h:19},{h:20}]}
-];
-const PROG_DOMINGO=[
-  {id:'tras_d', name:'TRASNOCHE 100',       horas:[{h:3},{h:5}]},
-  {id:'hist_d', name:'TU MÚSICA TU HISTORIA',horas:[{h:7},{h:8},{h:9}]},
-  {id:'abrt_d', name:'ABIERTO LOS DOMINGOS',horas:[{h:10},{h:11},{h:12},{h:13}]},
-  {id:'mwe_d',  name:'MUSIC WEEKEND',       horas:[{h:14},{h:15},{h:16},{h:17}]},
-  {id:'disco_d',name:'DISCO RETRO',         horas:[{h:18},{h:19},{h:20}]}
-];
-const ESTRUCTURAS = { 1:PROG_LAV, 2:PROG_LAV, 3:PROG_LAV, 4:PROG_LAV, 5:PROG_LAV, 6:PROG_SABADO, 0:PROG_DOMINGO };
-let PROGS = PROG_LAV;
 
 let ARTISTS = [];
 let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
 let assignments = {};
 let pickerTarget = null;
 
-function initAssignments(){assignments={};PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
+function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
 initAssignments();
 
+// ─── CSV PARSER ────────────────────────────────────────────────────────────────
 function parseDur(s){
   if(!s) return 0;
   s=String(s).trim();
-  if(s.includes(':')){const p=s.split(':').map(Number);return p.length===2?p[0]*60+p[1]:p[0]*3600+p[1]*60+(p[2]||0);}
+  if(s.includes(':')){const p=s.split(':').map(Number);return p.length===2?p[0]*60+p[1]:p[0]*3600+p[1]*60+p[2];}
   return parseInt(s)||0;
 }
 function splitCSV(line){
@@ -270,6 +257,9 @@ function parseCSV(text){
   if(lines.length<2) throw new Error('El archivo está vacío');
   const H=splitCSV(lines[0]).map(h=>h.toUpperCase());
   const iCAT=H.indexOf('CATEGORIA'),iART=H.indexOf('ARTISTA'),iCOD=H.indexOf('CODIGO'),iDUR=H.indexOf('DURACION'),iNOM=H.indexOf('NOMBRE');
+  if(iCOD<0||iNOM<0) throw new Error('No se encontraron columnas CODIGO/NOMBRE');
+  if(iCAT<0) throw new Error('Falta la columna CATEGORIA — agregala al Sheet');
+
   const amap={};
   for(let i=1;i<lines.length;i++){
     const p=splitCSV(lines[i]);
@@ -298,38 +288,53 @@ function parseCSV(text){
   return result;
 }
 
+// ─── FETCH DATA ────────────────────────────────────────────────────────────────
 async function recargar(){
   const url=(document.getElementById('url-in').value||'').trim();
   if(!url){setStatus('Pegá la URL del Sheet','err');return;}
   saveUrl();
+  setStatus('Conectando…','load');
+  setContent('loading');
+
   let fetchUrl=url;
   if(url.includes('/edit')||(!url.includes('/pub')&&url.includes('/d/'))){
     const m=url.match(/\/d\/([^\/\?]+)/);
     if(m)fetchUrl=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
   }
+
   let text=null;
-  try{const r=await fetch(fetchUrl,{cache:'no-cache'});if(r.ok)text=await r.text();}catch(e){}
+  try{const r=await fetch(fetchUrl,{cache:'no-cache'});if(r.ok&&r.headers.get('content-type')?.includes('text'))text=await r.text();}catch(e){}
   if(!text||text.length<30){
     try{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`,{cache:'no-cache'});if(r.ok){const d=await r.json();text=d.contents;}}catch(e){}
   }
-  if(text){
+  if(!text||text.length<30){setStatus('❌ No se pudo conectar. Verificá que el Sheet esté publicado como CSV (Archivo → Compartir → Publicar en la web).','err');setContent('empty');return;}
+
+  try{
     MAT=parseCSV(text);
     ARTISTS=[...MAT.shows.map(a=>({...a,cat:'shows'})),...MAT.mini_lolla.map(a=>({...a,cat:'mini_lolla'})),...MAT.concursos.map(a=>({...a,cat:'concursos'}))];
+    const nv=ARTISTS.reduce((s,a)=>s+a.variants.length,0);
+    setStatus(`✅ ${ARTISTS.length} artistas · ${nv} materiales cargados · Sep: ${MAT.sep_verano.length} · Éxito: ${MAT.exito_vista.length}`,'ok');
     renderGrid();
-    setStatus('✅ Conectado','ok');
-  }
+  }catch(e){setStatus(`❌ ${e.message}`,'err');setContent('empty');}
 }
 
 function setStatus(msg,type){const el=document.getElementById('sheet-status');el.style.display='block';el.className=`status-pill sp-${type}`;el.textContent=msg;}
-function saveUrl(){localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}
-function loadUrl(){const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}
+function setContent(state){
+  const c=document.getElementById('main-content');
+  if(state==='loading')c.innerHTML=`<div class="state-center"><div class="sc-icon loading-dots">⏳</div><div class="sc-title">Cargando datos</div><div class="sc-text">Conectando con Google Sheets…</div></div>`;
+  else if(state==='empty')c.innerHTML=`<div class="state-center"><div class="sc-icon">📊</div><div class="sc-title">Conectá el Google Sheet</div><div class="sc-text">Pegá la URL del Sheet "PROMOS EN ROTACIÓN" en el panel izquierdo y hacé click en Conectar.</div></div>`;
+}
+function saveUrl(){try{localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}catch(e){}}
+function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}catch(e){}}
 
+// ─── RENDER ────────────────────────────────────────────────────────────────────
 function renderGrid(){
   document.getElementById('main-content').innerHTML=`<div class="prog-grid">${PROGS.map(prog=>{
     const done=Object.values(assignments[prog.id]).filter(Boolean).length;
     const slots=prog.horas.map(hr=>{
       const a=assignments[prog.id][hr.h];
-      const body=a?`<div class="slot-chip"><span class="sc-name">${a.label}</span><button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
+      const body=a
+        ?`<div class="slot-chip"><span class="sc-name">${a.label}</span>${a.variants.length>1?`<span class="sc-vars">${a.variants.length}v</span>`:''}<button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
         :`<button class="slot-add-btn" data-open="${prog.id}" data-h="${hr.h}"><span class="plus">+</span><span>Asignar promo</span></button>`;
       return `<div class="slot-row"><span class="slot-time">${String(hr.h).padStart(2,'0')}:00</span><div class="slot-body">${body}</div></div>`;
     }).join('');
@@ -343,35 +348,39 @@ document.getElementById('main-content').addEventListener('click',e=>{
   const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
 });
 
+// ─── PICKER ───────────────────────────────────────────────────────────────────
 function openPicker(pid,h){
   pickerTarget={pid,h};
+  const prog=PROGS.find(p=>p.id===pid);
+  document.getElementById('picker-title').textContent=prog.name;
+  document.getElementById('picker-sub').textContent=`${String(h).padStart(2,'0')}:00 · Elegí el artista`;
   document.getElementById('picker-search').value='';
   renderPickerList('');
   document.getElementById('picker-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('picker-search').focus(),320);
 }
-function closePicker(){document.getElementById('picker-overlay').classList.remove('open');}
+function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;}
 document.getElementById('picker-search').addEventListener('input',function(){renderPickerList(this.value);});
 document.getElementById('picker-list').addEventListener('click',e=>{
   const item=e.target.closest('[data-lbl]');
-  if(item){
-    const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
-    assignments[pickerTarget.pid][pickerTarget.h]=artist;
-    closePicker();renderGrid();
-  }
+  if(!item||!pickerTarget)return;
+  const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
+  if(artist){assignments[pickerTarget.pid][pickerTarget.h]=artist;closePicker();renderGrid();}
 });
 
 function renderPickerList(q){
   const qn=q.toLowerCase();
+  if(!pickerTarget) return;
+  const used=new Set(Object.values(assignments[pickerTarget.pid]).filter(Boolean).map(a=>a.label));
   const cats=[{cat:'shows',label:'🎸 Shows',dot:'dot-shows'},{cat:'mini_lolla',label:'🎪 Mini Lolla',dot:'dot-lolla'},{cat:'concursos',label:'🏆 Concursos',dot:'dot-conc'}];
   let html='';
   for(const {cat,label,dot} of cats){
     const items=ARTISTS.filter(a=>a.cat===cat&&(!q||a.label.toLowerCase().includes(qn)));
-    if(items.length){
-      html+=`<div class="pk-cat-label">${label}</div>`;
-      items.forEach(a=>html+=`<div class="pk-artist" data-lbl="${a.label}" data-cat="${a.cat}"><div class="pk-dot ${dot}"></div><div class="pk-a-name">${a.label}</div></div>`);
-    }
+    if(!items.length) continue;
+    html+=`<div class="pk-cat-label">${label}</div>`;
+    for(const a of items)html+=`<div class="pk-artist ${used.has(a.label)?'used':''}" data-lbl="${a.label}" data-cat="${a.cat}"><div class="pk-dot ${dot}"></div><div class="pk-a-name">${a.label}</div>${a.variants.length>1?`<span class="pk-a-vers">${a.variants.length} versiones</span>`:''}</div>`;
   }
-  document.getElementById('picker-list').innerHTML=html;
+  document.getElementById('picker-list').innerHTML=html||`<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.8rem;">Sin resultados</div>`;
 }
 
 function updateProgress(){
@@ -379,39 +388,36 @@ function updateProgress(){
   document.getElementById('prog-bar').style.width=total?`${(done/total)*100}%`:'0%';
   document.getElementById('prog-done').textContent=`${done} asignados`;
   document.getElementById('prog-total').textContent=`de ${total}`;
+  document.getElementById('ef-note').textContent=done?`${done}/${total} slots — exportá cuando estés listo.`:'Asigná promos y exportá.';
 }
 function renderSummary(){
   let html='',any=false;
-  for(const p of PROGS)for(const h of p.horas){const a=assignments[p.id][h.h];if(a){html+=`<div class="sum-entry"><span class="se-artist">${a.label}</span> - ${String(h.h).padStart(2,'0')}:00</div>`;any=true;}}
-  document.getElementById('summary').innerHTML=any?html:'Sin asignaciones.';
+  for(const p of PROGS)for(const h of p.horas){const a=assignments[p.id][h.h];if(!a)continue;html+=`<div class="sum-entry"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="se-artist">${a.label}</span><span class="se-hour">${String(h.h).padStart(2,'0')}:00</span></div><div class="se-prog">${p.name}</div></div>`;any=true;}
+  document.getElementById('summary').innerHTML=any?html:'<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
 }
-function limpiar(){if(confirm('¿Limpiar todo?')){initAssignments();renderGrid();}}
+function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){initAssignments();renderGrid();}}
 
+// ─── EXPORT JSON ───────────────────────────────────────────────────────────────
 function exportar(){
   const fecha=document.getElementById('fecha').value;
-  if(!fecha){alert('Elegí fecha');return;}
-  const used=new Set();const asignaciones=[];
+  if(!fecha){alert('Seleccioná la fecha primero');return;}
+  if(!ARTISTS.length){alert('Cargá los datos del Sheet primero');return;}
+  const used=new Set();
+  const asignaciones=[];
   for(const p of PROGS)for(const h of p.horas){
     const a=assignments[p.id][h.h];if(!a)continue;
     const chosen=a.variants.find(v=>!used.has(v.c))||a.variants[0];
     used.add(chosen.c);
     asignaciones.push({prog:p.name,hora:h.h,slot:'t1i',artista:a.label,code:chosen.c,name:chosen.n,dur:chosen.d,allVariants:a.variants.map(v=>v.c)});
   }
-  const payload={fecha,asignaciones};
+  const payload={fecha,sheetUrl:document.getElementById('url-in').value.trim(),generado:new Date().toISOString(),asignaciones};
   const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`asignaciones_${fecha}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`asignaciones_${fecha}.json`;a.click();URL.revokeObjectURL(a.href);
+  document.getElementById('ef-note').innerHTML='✅ Archivo exportado — compartilo con quien hace el schedule.';
 }
 
-// ARRANQUE Y CALENDARIO
-const inputFecha = document.getElementById('fecha');
-inputFecha.valueAsDate = new Date();
-function cambiarGrilla(){
-  const d = new Date(inputFecha.value + "T12:00:00Z");
-  PROGS = ESTRUCTURAS[d.getUTCDay()] || PROG_LAV;
-  initAssignments();renderGrid();
-}
-inputFecha.addEventListener('change', cambiarGrilla);
-cambiarGrilla();
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('fecha').valueAsDate=new Date();
 loadUrl();
 </script>
 </body>
