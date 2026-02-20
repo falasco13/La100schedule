@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coordinador · LA 100</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;--accent-lt:#EEF0FF;
+  --gold:#F5C842;--off:#F4F5FF;--text:#0D0E2E;--muted:#7478A8;
+  --border:#E2E4F6;--green:#0B6B48;--red:#C8102E;--card:#fff;
+}
+body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;}
+
+/* NAV */
+nav{background:var(--navy);height:54px;padding:0 18px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.logo{background:var(--gold);color:var(--navy);font-weight:800;font-size:0.85rem;padding:4px 10px;border-radius:6px;text-decoration:none;letter-spacing:-0.2px;}
+.nav-t{color:#fff;font-weight:600;font-size:0.85rem;}
+.nav-r{margin-left:auto;display:flex;gap:10px;align-items:center;}
+a.nav-link{color:rgba(255,255,255,.5);font-size:0.73rem;text-decoration:none;transition:color .15s;}
+a.nav-link:hover{color:#fff;}
+
+/* LAYOUT */
+.layout{display:flex;height:calc(100vh - 54px);}
+.sidebar{width:272px;min-width:272px;background:var(--card);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
+.main-area{flex:1;overflow-y:auto;padding:20px;}
+
+/* SIDEBAR SECTIONS */
+.sbs{padding:14px 16px;border-bottom:1px solid var(--border);}
+.sbs-label{font-size:0.6rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:9px;}
+.url-input{width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.73rem;font-family:'Sora',sans-serif;outline:none;color:var(--text);background:#FAFBFF;transition:border-color .15s;}
+.url-input:focus{border-color:var(--accent);}
+.status-pill{margin-top:7px;padding:6px 10px;border-radius:7px;font-size:0.7rem;line-height:1.4;display:none;}
+.sp-ok{background:#E6F7EE;color:#0B5E38;}
+.sp-err{background:#FDEAED;color:#8B0F24;}
+.sp-load{background:#FFF8E1;color:#7A5800;}
+.date-input{width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:0.84rem;font-family:'Sora',sans-serif;outline:none;color:var(--text);transition:border-color .15s;}
+.date-input:focus{border-color:var(--accent);}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;font-size:0.76rem;font-weight:700;font-family:'Sora',sans-serif;transition:all .15s;text-decoration:none;white-space:nowrap;}
+.btn-navy{background:var(--navy);color:#fff;}.btn-navy:hover{background:var(--accent);}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#085c3e;}
+.btn-ghost{background:var(--off);color:var(--navy);border:1.5px solid var(--border);}.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 10px;font-size:0.7rem;}
+.btn-full{width:100%;margin-top:6px;}
+.btn-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+
+/* PROGRESS BAR */
+.prog-bar-wrap{background:var(--border);border-radius:6px;height:5px;margin-top:8px;}
+.prog-bar{background:linear-gradient(90deg,var(--navy),var(--accent));height:5px;border-radius:6px;transition:width .3s;}
+.prog-labels{display:flex;justify-content:space-between;font-size:0.67rem;color:var(--muted);margin-top:4px;}
+
+/* SUMMARY IN SIDEBAR */
+.sum-entry{padding:6px 0;border-bottom:1px solid var(--border);font-size:0.72rem;}
+.sum-entry:last-child{border-bottom:none;}
+.se-artist{font-weight:700;color:var(--navy);}
+.se-prog{color:var(--muted);font-size:0.67rem;margin-top:1px;}
+.se-hour{font-family:'DM Mono',monospace;font-size:0.65rem;color:var(--accent);}
+
+.exp-footer{padding:14px 16px;border-top:2px solid var(--border);background:var(--card);position:sticky;bottom:0;}
+.ef-note{font-size:0.7rem;color:var(--muted);margin-bottom:8px;line-height:1.4;}
+
+/* MAIN AREA */
+.main-header{margin-bottom:18px;}
+.main-title{font-size:1.1rem;font-weight:800;color:var(--navy);letter-spacing:-0.3px;}
+.main-sub{font-size:0.77rem;color:var(--muted);margin-top:3px;font-weight:400;}
+.prog-summary-bar{margin-top:12px;}
+.btn-row-main{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;}
+
+/* PROGRAM GRID */
+.prog-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.prog-card{background:var(--card);border:1.5px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:0 2px 14px rgba(27,31,110,.07);transition:box-shadow .2s;}
+.prog-card:hover{box-shadow:0 4px 22px rgba(27,31,110,.12);}
+.pc-hdr{background:var(--navy);padding:11px 15px;display:flex;align-items:center;justify-content:space-between;}
+.pc-name{color:#fff;font-weight:700;font-size:0.78rem;}
+.pc-count{background:rgba(255,255,255,.18);color:rgba(255,255,255,.9);font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}
+.pc-body{padding:10px 14px;}
+.slot-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
+.slot-row:last-child{border-bottom:none;}
+.slot-time{font-family:'DM Mono',monospace;font-size:0.73rem;font-weight:500;color:var(--navy);min-width:38px;}
+.slot-body{flex:1;}
+.slot-chip{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--accent-lt);border:1.5px solid #C4CBFF;border-radius:8px;}
+.sc-name{font-weight:700;font-size:0.77rem;color:var(--navy);flex:1;}
+.sc-vars{font-size:0.62rem;color:var(--accent);font-weight:600;}
+.sc-rm{background:none;border:none;cursor:pointer;color:#C4CBFF;font-size:0.72rem;padding:2px 5px;border-radius:4px;transition:all .12s;font-family:inherit;}
+.sc-rm:hover{background:#FDEAED;color:var(--red);}
+.slot-add-btn{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1.5px dashed var(--border);border-radius:8px;background:none;cursor:pointer;color:var(--muted);font-size:0.75rem;font-weight:600;font-family:'Sora',sans-serif;width:100%;transition:all .15s;}
+.slot-add-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lt);}
+.slot-add-btn span.plus{width:18px;height:18px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:0.75rem;transition:background .15s;}
+.slot-add-btn:hover span.plus{background:var(--accent);color:#fff;}
+
+/* STATES */
+.state-center{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:350px;text-align:center;padding:40px 20px;}
+.sc-icon{font-size:3rem;margin-bottom:14px;opacity:.6;}
+.sc-title{font-size:0.95rem;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.sc-text{font-size:0.78rem;color:var(--muted);line-height:1.7;max-width:300px;}
+.loading-dots::after{content:'...';animation:dots 1.5s steps(4,end) infinite;}
+@keyframes dots{0%,100%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'';}}
+
+/* BOTTOM SHEET PICKER */
+.picker-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;pointer-events:none;opacity:0;transition:opacity .2s;}
+.picker-overlay.open{pointer-events:all;opacity:1;}
+.picker-bg{position:absolute;inset:0;background:rgba(13,14,46,.55);backdrop-filter:blur(4px);}
+.picker-panel{position:relative;background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:540px;margin:0 auto;max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 -8px 40px rgba(0,0,0,.15);}
+.picker-overlay.open .picker-panel{transform:translateY(0);}
+.picker-drag{width:38px;height:4px;background:var(--border);border-radius:4px;margin:12px auto 0;}
+.picker-hdr{padding:14px 20px 12px;border-bottom:1px solid var(--border);}
+.picker-title{font-weight:700;font-size:0.92rem;color:var(--navy);}
+.picker-sub{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.picker-search-wrap{padding:12px 20px;border-bottom:1px solid var(--border);}
+.picker-search{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-family:'Sora',sans-serif;outline:none;background:var(--off);}
+.picker-search:focus{border-color:var(--accent);}
+.picker-list{overflow-y:auto;flex:1;padding:8px 0 24px;}
+.pk-cat-label{padding:7px 20px 4px;font-size:0.62rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);}
+.pk-artist{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;transition:background .1s;}
+.pk-artist:hover{background:var(--off);}
+.pk-artist.used{opacity:.3;pointer-events:none;}
+.pk-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.dot-shows{background:#4F5EFF;}
+.dot-lolla{background:#F5A623;}
+.dot-conc{background:#0B6B48;}
+.pk-a-name{font-weight:700;font-size:0.84rem;color:var(--text);flex:1;}
+.pk-a-vers{font-size:0.67rem;color:var(--accent);font-weight:600;}
+
+@media(max-width:680px){
+  .layout{flex-direction:column;height:auto;}
+  .sidebar{width:100%;min-width:0;max-height:none;border-right:none;border-bottom:1.5px solid var(--border);}
+  .main-area{padding:16px;}
+  .prog-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="logo">LA 100</a>
+  <span class="nav-t">Coordinador</span>
+  <div class="nav-r">
+    <a href="schedule.html" class="nav-link">Schedule →</a>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="sbs">
+      <div class="sbs-label">📊 Google Sheet</div>
+      <input class="url-input" id="url-in" placeholder="URL del Sheet publicado como CSV…" oninput="saveUrl()">
+      <div class="btn-row">
+        <button class="btn btn-navy btn-sm" onclick="recargar()">✓ Conectar</button>
+        <button class="btn btn-ghost btn-sm" onclick="recargar()">🔄</button>
+      </div>
+      <div id="sheet-status" class="status-pill"></div>
+    </div>
+
+    <div class="sbs">
+      <div class="sbs-label">📅 Fecha del schedule</div>
+      <input class="date-input" type="date" id="fecha">
+    </div>
+
+    <div class="sbs">
+      <div class="sbs-label">📊 Progreso</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" id="prog-bar" style="width:0"></div></div>
+      <div class="prog-labels"><span id="prog-done">0 asignados</span><span id="prog-total">de 0</span></div>
+    </div>
+
+    <div class="sbs" style="flex:1;">
+      <div class="sbs-label">📋 Resumen</div>
+      <div id="summary"><div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div></div>
+    </div>
+
+    <div class="exp-footer">
+      <div class="ef-note" id="ef-note">Asigná promos y exportá el archivo para el schedule.</div>
+      <button class="btn btn-green btn-full" onclick="exportar()">⬇ Exportar para Schedule</button>
+    </div>
+
+  </div>
+
+  <!-- MAIN -->
+  <div class="main-area">
+    <div class="main-header">
+      <div class="main-title">Asignación de promos</div>
+      <div class="main-sub">Elegí el artista para cada horario. Se muestran artistas, no códigos individuales.</div>
+      <div class="btn-row-main">
+        <button class="btn btn-ghost btn-sm" onclick="limpiar()">🗑 Limpiar todo</button>
+      </div>
+    </div>
+    <div id="main-content">
+      <div class="state-center">
+        <div class="sc-icon">📊</div>
+        <div class="sc-title">Conectá el Google Sheet</div>
+        <div class="sc-text">Pegá la URL del Sheet "PROMOS EN ROTACIÓN" en el panel izquierdo y hacé click en Conectar.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- PICKER (bottom sheet) -->
+<div class="picker-overlay" id="picker-overlay">
+  <div class="picker-bg" onclick="closePicker()"></div>
+  <div class="picker-panel">
+    <div class="picker-drag"></div>
+    <div class="picker-hdr">
+      <div class="picker-title" id="picker-title">Elegir artista</div>
+      <div class="picker-sub" id="picker-sub"></div>
+    </div>
+    <div class="picker-search-wrap">
+      <input class="picker-search" id="picker-search" placeholder="Buscar artista o concurso…">
+    </div>
+    <div class="picker-list" id="picker-list"></div>
+  </div>
+</div>
+
+<script>
+// ─── SHEET URL DEFAULT ─────────────────────────────────────────────────────────
+const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
+
+// ─── PROGRAMAS ────────────────────────────────────────────────────────────────
+const PROGS = [
+  {id:'lhdll',  name:'LA HORA DE LOS LENTOS',       horas:[{h:0}]},
+  {id:'trasn',  name:'TRASNOCHE 100',                horas:[{h:2},{h:4}]},
+  {id:'moro',   name:'EL CLUB DEL MORO',             horas:[{h:7},{h:8},{h:9}]},
+  {id:'netd',   name:'NO ESTÁ TODO DICHO',           horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'sarasa', name:'SARASA',                       horas:[{h:14},{h:15},{h:16}]},
+  {id:'atar',   name:'ATARDECER DE UN DÍA AGITADO',  horas:[{h:17},{h:18},{h:19}]},
+  {id:'roman',  name:'ROMÁNTICOS',                   horas:[{h:20},{h:22}]},
+];
+
+let ARTISTS = [];
+let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
+let assignments = {};
+let pickerTarget = null;
+
+function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
+initAssignments();
+
+// ─── CSV PARSER ────────────────────────────────────────────────────────────────
+function parseDur(s){
+  if(!s) return 0;
+  s=String(s).trim();
+  if(s.includes(':')){const p=s.split(':').map(Number);return p.length===2?p[0]*60+p[1]:p[0]*3600+p[1]*60+p[2];}
+  return parseInt(s)||0;
+}
+function splitCSV(line){
+  const r=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){if(line[i]==='"'){q=!q;continue;}if(line[i]===','&&!q){r.push(cur.trim());cur='';continue;}cur+=line[i];}
+  r.push(cur.trim());return r;
+}
+function parseCSV(text){
+  const lines=text.trim().split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2) throw new Error('El archivo está vacío');
+  const H=splitCSV(lines[0]).map(h=>h.toUpperCase());
+  const iCAT=H.indexOf('CATEGORIA'),iART=H.indexOf('ARTISTA'),iCOD=H.indexOf('CODIGO'),iDUR=H.indexOf('DURACION'),iNOM=H.indexOf('NOMBRE');
+  if(iCOD<0||iNOM<0) throw new Error('No se encontraron columnas CODIGO/NOMBRE');
+  if(iCAT<0) throw new Error('Falta la columna CATEGORIA — agregala al Sheet');
+
+  const amap={};
+  for(let i=1;i<lines.length;i++){
+    const p=splitCSV(lines[i]);
+    if(p.length<3) continue;
+    const cat=(p[iCAT]||'').toUpperCase();
+    const art=iART>=0?(p[iART]||'').trim():'';
+    const cod=(p[iCOD]||'').trim();
+    const dur=parseDur(iDUR>=0?p[iDUR]:'');
+    const nom=(p[iNOM]||'').trim();
+    if(!cod||!nom) continue;
+    const item={c:cod,n:nom,d:dur};
+    if(cat==='SEP_VERANO'){if(!amap['__SEP'])amap['__SEP']={label:'SEP_VERANO',cat:'sep_verano',variants:[]};amap['__SEP'].variants.push(item);continue;}
+    if(cat==='EXITO_VISTA'){if(!amap['__EV'])amap['__EV']={label:'EXITO_VISTA',cat:'exito_vista',variants:[]};amap['__EV'].variants.push(item);continue;}
+    const key=`${cat}||${art||nom}`;
+    if(!amap[key])amap[key]={label:art||nom,cat,variants:[]};
+    amap[key].variants.push(item);
+  }
+  const result={shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
+  for(const[k,g] of Object.entries(amap)){
+    if(k==='__SEP'){result.sep_verano=g.variants;continue;}
+    if(k==='__EV'){result.exito_vista=g.variants;continue;}
+    if(g.cat==='SHOWS')result.shows.push(g);
+    else if(g.cat==='MINI_LOLLA')result.mini_lolla.push(g);
+    else result.concursos.push(g);
+  }
+  return result;
+}
+
+// ─── FETCH DATA ────────────────────────────────────────────────────────────────
+async function recargar(){
+  const url=(document.getElementById('url-in').value||'').trim();
+  if(!url){setStatus('Pegá la URL del Sheet','err');return;}
+  saveUrl();
+  setStatus('Conectando…','load');
+  setContent('loading');
+
+  let fetchUrl=url;
+  if(url.includes('/edit')||(!url.includes('/pub')&&url.includes('/d/'))){
+    const m=url.match(/\/d\/([^\/\?]+)/);
+    if(m)fetchUrl=`https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
+  }
+
+  let text=null;
+  try{const r=await fetch(fetchUrl,{cache:'no-cache'});if(r.ok&&r.headers.get('content-type')?.includes('text'))text=await r.text();}catch(e){}
+  if(!text||text.length<30){
+    try{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`,{cache:'no-cache'});if(r.ok){const d=await r.json();text=d.contents;}}catch(e){}
+  }
+  if(!text||text.length<30){setStatus('❌ No se pudo conectar. Verificá que el Sheet esté publicado como CSV (Archivo → Compartir → Publicar en la web).','err');setContent('empty');return;}
+
+  try{
+    MAT=parseCSV(text);
+    ARTISTS=[...MAT.shows.map(a=>({...a,cat:'shows'})),...MAT.mini_lolla.map(a=>({...a,cat:'mini_lolla'})),...MAT.concursos.map(a=>({...a,cat:'concursos'}))];
+    const nv=ARTISTS.reduce((s,a)=>s+a.variants.length,0);
+    setStatus(`✅ ${ARTISTS.length} artistas · ${nv} materiales cargados · Sep: ${MAT.sep_verano.length} · Éxito: ${MAT.exito_vista.length}`,'ok');
+    renderGrid();
+  }catch(e){setStatus(`❌ ${e.message}`,'err');setContent('empty');}
+}
+
+function setStatus(msg,type){const el=document.getElementById('sheet-status');el.style.display='block';el.className=`status-pill sp-${type}`;el.textContent=msg;}
+function setContent(state){
+  const c=document.getElementById('main-content');
+  if(state==='loading')c.innerHTML=`<div class="state-center"><div class="sc-icon loading-dots">⏳</div><div class="sc-title">Cargando datos</div><div class="sc-text">Conectando con Google Sheets…</div></div>`;
+  else if(state==='empty')c.innerHTML=`<div class="state-center"><div class="sc-icon">📊</div><div class="sc-title">Conectá el Google Sheet</div><div class="sc-text">Pegá la URL del Sheet "PROMOS EN ROTACIÓN" en el panel izquierdo y hacé click en Conectar.</div></div>`;
+}
+function saveUrl(){try{localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}catch(e){}}
+function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}catch(e){}}
+
+// ─── RENDER ────────────────────────────────────────────────────────────────────
+function renderGrid(){
+  document.getElementById('main-content').innerHTML=`<div class="prog-grid">${PROGS.map(prog=>{
+    const done=Object.values(assignments[prog.id]).filter(Boolean).length;
+    const slots=prog.horas.map(hr=>{
+      const a=assignments[prog.id][hr.h];
+      const body=a
+        ?`<div class="slot-chip"><span class="sc-name">${a.label}</span>${a.variants.length>1?`<span class="sc-vars">${a.variants.length}v</span>`:''}<button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
+        :`<button class="slot-add-btn" data-open="${prog.id}" data-h="${hr.h}"><span class="plus">+</span><span>Asignar promo</span></button>`;
+      return `<div class="slot-row"><span class="slot-time">${String(hr.h).padStart(2,'0')}:00</span><div class="slot-body">${body}</div></div>`;
+    }).join('');
+    return `<div class="prog-card"><div class="pc-hdr"><span class="pc-name">🎙 ${prog.name}</span><span class="pc-count">${done}/${prog.horas.length}</span></div><div class="pc-body">${slots}</div></div>`;
+  }).join('')}</div>`;
+  updateProgress();renderSummary();
+}
+
+document.getElementById('main-content').addEventListener('click',e=>{
+  const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
+  const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
+});
+
+// ─── PICKER ───────────────────────────────────────────────────────────────────
+function openPicker(pid,h){
+  pickerTarget={pid,h};
+  const prog=PROGS.find(p=>p.id===pid);
+  document.getElementById('picker-title').textContent=prog.name;
+  document.getElementById('picker-sub').textContent=`${String(h).padStart(2,'0')}:00 · Elegí el artista`;
+  document.getElementById('picker-search').value='';
+  renderPickerList('');
+  document.getElementById('picker-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('picker-search').focus(),320);
+}
+function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;}
+document.getElementById('picker-search').addEventListener('input',function(){renderPickerList(this.value);});
+document.getElementById('picker-list').addEventListener('click',e=>{
+  const item=e.target.closest('[data-lbl]');
+  if(!item||!pickerTarget)return;
+  const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
+  if(artist){assignments[pickerTarget.pid][pickerTarget.h]=artist;closePicker();renderGrid();}
+});
+
+function renderPickerList(q){
+  const qn=q.toLowerCase();
+  if(!pickerTarget) return;
+  const used=new Set(Object.values(assignments[pickerTarget.pid]).filter(Boolean).map(a=>a.label));
+  const cats=[{cat:'shows',label:'🎸 Shows',dot:'dot-shows'},{cat:'mini_lolla',label:'🎪 Mini Lolla',dot:'dot-lolla'},{cat:'concursos',label:'🏆 Concursos',dot:'dot-conc'}];
+  let html='';
+  for(const {cat,label,dot} of cats){
+    const items=ARTISTS.filter(a=>a.cat===cat&&(!q||a.label.toLowerCase().includes(qn)));
+    if(!items.length) continue;
+    html+=`<div class="pk-cat-label">${label}</div>`;
+    for(const a of items)html+=`<div class="pk-artist ${used.has(a.label)?'used':''}" data-lbl="${a.label}" data-cat="${a.cat}"><div class="pk-dot ${dot}"></div><div class="pk-a-name">${a.label}</div>${a.variants.length>1?`<span class="pk-a-vers">${a.variants.length} versiones</span>`:''}</div>`;
+  }
+  document.getElementById('picker-list').innerHTML=html||`<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.8rem;">Sin resultados</div>`;
+}
+
+function updateProgress(){
+  let total=0,done=0;PROGS.forEach(p=>p.horas.forEach(h=>{total++;if(assignments[p.id][h.h])done++;}));
+  document.getElementById('prog-bar').style.width=total?`${(done/total)*100}%`:'0%';
+  document.getElementById('prog-done').textContent=`${done} asignados`;
+  document.getElementById('prog-total').textContent=`de ${total}`;
+  document.getElementById('ef-note').textContent=done?`${done}/${total} slots — exportá cuando estés listo.`:'Asigná promos y exportá.';
+}
+function renderSummary(){
+  let html='',any=false;
+  for(const p of PROGS)for(const h of p.horas){const a=assignments[p.id][h.h];if(!a)continue;html+=`<div class="sum-entry"><div style="display:flex;align-items:center;justify-content:space-between;"><span class="se-artist">${a.label}</span><span class="se-hour">${String(h.h).padStart(2,'0')}:00</span></div><div class="se-prog">${p.name}</div></div>`;any=true;}
+  document.getElementById('summary').innerHTML=any?html:'<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
+}
+function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){initAssignments();renderGrid();}}
+
+// ─── EXPORT JSON ───────────────────────────────────────────────────────────────
+function exportar(){
+  const fecha=document.getElementById('fecha').value;
+  if(!fecha){alert('Seleccioná la fecha primero');return;}
+  if(!ARTISTS.length){alert('Cargá los datos del Sheet primero');return;}
+  const used=new Set();
+  const asignaciones=[];
+  for(const p of PROGS)for(const h of p.horas){
+    const a=assignments[p.id][h.h];if(!a)continue;
+    const chosen=a.variants.find(v=>!used.has(v.c))||a.variants[0];
+    used.add(chosen.c);
+    asignaciones.push({prog:p.name,hora:h.h,slot:'t1i',artista:a.label,code:chosen.c,name:chosen.n,dur:chosen.d,allVariants:a.variants.map(v=>v.c)});
+  }
+  const payload={fecha,sheetUrl:document.getElementById('url-in').value.trim(),generado:new Date().toISOString(),asignaciones};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`asignaciones_${fecha}.json`;a.click();URL.revokeObjectURL(a.href);
+  document.getElementById('ef-note').innerHTML='✅ Archivo exportado — compartilo con quien hace el schedule.';
+}
+
+// ─── INIT ──────────────────────────────────────────────────────────────────────
+document.getElementById('fecha').valueAsDate=new Date();
+loadUrl();
+</script>
+</body>
+</html>
