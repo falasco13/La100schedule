@@ -406,6 +406,8 @@ function importJSON(file){
       const data=JSON.parse(e.target.result);
       if(!data.asignaciones||!data.fecha)throw new Error('Formato inválido');
     importFecha = data.fecha;
+      const d = new Date(importFecha + "T12:00:00Z");
+    PROGS = ESTRUCTURAS[d.getUTCDay()] || PROG_LAV;
     const d = new Date(importFecha + "T12:00:00Z");
     PROGS = ESTRUCTURAS[d.getUTCDay()];
       initSCH();
