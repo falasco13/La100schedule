@@ -294,7 +294,7 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 
         <div style="border:1px solid #E2E4F6; padding:20px; border-radius:8px;">
            <h3 style="font-size:14px; color:#7478A8; margin-bottom:15px; text-transform:uppercase; letter-spacing:0.5px;">⏱️ Minutos por Día</h3>
-           <canvas id="chartTiempos" height="250"></canvas>
+           <div style="position: relative; height: 250px; width: 100%;"><canvas id="chartTiempos"></canvas></div>
         </div>
       </div>
     </div>
@@ -830,7 +830,12 @@ let statsLoaded = false;
 let misGraficos = [];
 let datosCrudos = [];
 
-// Función para transformar '0:00:15' en segundos
+// Función para agrupar (le saca los números del final a los nombres)
+function agruparNombre(nombre) {
+  if(!nombre) return '';
+  return nombre.replace(/\s+\d+$/, '').trim();
+}
+
 function strToSecs(str) {
   if(!str) return 0;
   const parts = str.toString().trim().split(':');
@@ -847,18 +852,17 @@ document.getElementById('btn-stats').addEventListener('click', async () => {
     const res = await fetch('https://script.google.com/macros/s/AKfycbwPTkPAJi3Q81vY1VRpn8e-8FzOQP_1Dki9JlGcL8OzlNOB9yx1LPWuYFmh7HGxJ-NC/exec');
     datosCrudos = await res.json();
     
-    // Configura fechas "Desde" y "Hasta" automáticas
     const fechas = [...new Set(datosCrudos.map(r => r.fecha_schedule).filter(Boolean))].sort();
     if(fechas.length > 0) {
         document.getElementById('stat-desde').value = fechas[0]; 
         document.getElementById('stat-hasta').value = fechas[fechas.length-1];
     }
 
-    // Llena el buscador de materiales
-    const nombres = [...new Set(datosCrudos.map(r => r.nombre).filter(n => n && !n.includes("O'Clock")))].sort();
+    // Llenar el buscador con los nombres agrupados
+    const nombresAgrupados = [...new Set(datosCrudos.map(r => agruparNombre(r.nombre)).filter(n => n && !n.includes("O'Clock")))].sort();
     const selObj = document.getElementById('stat-material');
-    selObj.innerHTML = '<option value="">-- Seleccionar material --</option>'; // Limpiar previos
-    nombres.forEach(n => {
+    selObj.innerHTML = '<option value="">-- Seleccionar material --</option>'; 
+    nombresAgrupados.forEach(n => {
         const opt = document.createElement('option');
         opt.value = n;
         opt.innerText = n;
@@ -888,9 +892,9 @@ function actualizarReporte() {
   if(fDesde) filtrados = filtrados.filter(r => r.fecha_schedule >= fDesde);
   if(fHasta) filtrados = filtrados.filter(r => r.fecha_schedule <= fHasta);
 
-  // Buscador específico
+  // Al buscar, comparamos sumando las versiones agrupadas
   if(material) {
-    const pautados = filtrados.filter(r => r.nombre === material);
+    const pautados = filtrados.filter(r => agruparNombre(r.nombre) === material);
     document.getElementById('res-count').innerText = pautados.length;
     
     let secTotales = pautados.reduce((acc, r) => acc + strToSecs(r.duracion), 0);
@@ -902,7 +906,6 @@ function actualizarReporte() {
     document.getElementById('res-material').style.display = 'none';
   }
 
-  // Gráfico de barras apiladas verticales
   misGraficos.forEach(c => c.destroy());
   misGraficos = [];
 
@@ -952,7 +955,6 @@ function actualizarReporte() {
     }
   }));
 }
-loadUrl();
 </script>
 </body>
 </html>
