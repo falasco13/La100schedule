@@ -544,15 +544,18 @@ function autoAsignar(tipo){
   if(!inited){alert('Importá las asignaciones del coordinador primero');return;}
   if((tipo==='exito'||tipo==='ambos')&&!MAT.exito_vista.length){showToast('⚠ No hay Éxito a la Vista en el Sheet','warn');if(tipo==='exito')return;}
   if((tipo==='sep'||tipo==='ambos')&&!MAT.sep_comp.length){showToast('⚠ No hay Sep. Compañía en el Sheet','warn');if(tipo==='sep')return;}
+  
+  const todasLasTandas = ['t1i', 't1c', 't2i', 't2c'];
+
   if(tipo==='exito'||tipo==='ambos'){
     const pool=shuffle([...MAT.exito_vista]);let i=0;
     for(const prog of PROGS)for(const hr of prog.horas)
-      for(const sl of['t1c','t2c'])if(hr[sl]==='exito'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
+      for(const sl of todasLasTandas)if(hr[sl]==='exito'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
   }
   if(tipo==='sep'||tipo==='ambos'){
     const pool=shuffle([...MAT.sep_comp]);let i=0;
     for(const prog of PROGS)for(const hr of prog.horas)
-      for(const sl of['t1i','t2i'])if(hr[sl]==='sep'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
+      for(const sl of todasLasTandas)if(hr[sl]==='sep'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
   }
   renderSchedule();showToast('✅ Auto-asignación completada.','ok');
 }
