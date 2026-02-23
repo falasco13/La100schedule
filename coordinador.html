@@ -436,7 +436,22 @@ function exportar(){
 }
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
-document.getElementById('fecha').valueAsDate=new Date();
+document.getElementById('fecha').addEventListener('change', function() {
+  const fechaVal = this.value;
+  if (!fechaVal) return;
+  const [y, m, d] = fechaVal.split('-');
+  const dia = new Date(y, m - 1, d).getDay();
+
+  if (dia === 0) PROGS = PROGS_DOM;
+  else if (dia === 6) PROGS = PROGS_SAB;
+  else PROGS = PROGS_LUN_VIE;
+
+  initAssignments();
+  if (ARTISTS && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
+});
+
+document.getElementById('fecha').valueAsDate = new Date();
+document.getElementById('fecha').dispatchEvent(new Event('change'));
 loadUrl();
 </script>
 </body>
