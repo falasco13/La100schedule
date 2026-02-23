@@ -353,6 +353,11 @@ function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;i
 
 // ─── RENDER ────────────────────────────────────────────────────────────────────
 function renderGrid(){
+  const fechaVal = document.getElementById('fecha').value;
+  if(!fechaVal){
+    document.getElementById('main-content').innerHTML=`<div class="state-center"><div class="sc-icon">📅</div><div class="sc-title">Seleccioná una fecha</div><div class="sc-text">Elegí una fecha en la barra superior para crear el schedule.</div></div>`;
+    return;
+  }
   document.getElementById('main-content').innerHTML=`<div class="prog-grid">${PROGS.map(prog=>{
     const done=Object.values(assignments[prog.id]).filter(Boolean).length;
     const slots=prog.horas.map(hr=>{
@@ -443,7 +448,7 @@ function exportar(){
 // ─── INIT ──────────────────────────────────────────────────────────────────────
 document.getElementById('fecha').addEventListener('change', function() {
   const fechaVal = this.value;
-  if (!fechaVal) return;
+  if (!fechaVal) { renderGrid(); return; }
   const [y, m, d] = fechaVal.split('-');
   const dia = new Date(y, m - 1, d).getDay();
 
@@ -455,8 +460,7 @@ document.getElementById('fecha').addEventListener('change', function() {
   if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
 });
 
-document.getElementById('fecha').valueAsDate = new Date();
-document.getElementById('fecha').dispatchEvent(new Event('change'));
+document.getElementById('fecha').value = '';
 loadUrl();
 </script>
 </body>
