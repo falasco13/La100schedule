@@ -442,7 +442,7 @@ function importJSON(file){
       const dia = new Date(y, m - 1, d).getDay();
       const fechaParaConfirmar = fmtFechaU(importFecha);
       if (!confirm(`Estás por cargar el pautado del:\n\n📅 ${fechaParaConfirmar}\n\n¿Es correcto?`)) {
-        document.getElementById('file-in').value = ''; 
+        document.getElementById('file-in').value = '';
         return;
       }
 
@@ -811,14 +811,12 @@ async function exportarExcel(){
 
   const buf=await wb.xlsx.writeBuffer();
   const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  let fname = 'SCHEDULE_LA100.xlsx';
-  if (importFecha) {
-    const [y, m, d] = importFecha.split('-');
-    const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-    const mesStr = MESES_U[parseInt(m)];
-    const diaStr = DIAS_U[dt.getDay()];
-    fname = `PROMOS ${y} ${mesStr} ${d} - ${diaStr}.xlsx`;
-  }
+let fname = 'SCHEDULE_LA100.xlsx';
+if (importFecha) {
+  const [y, m, d] = importFecha.split('-');
+  const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+  fname = `PROMOS ${y} ${MESES_U[parseInt(m)]} ${d} - ${DIAS_U[dt.getDay()]}.xlsx`;
+}
   saveAs(blob,fname);
   showToast(`✅ Excel exportado: ${fname}`,'ok');
   enviarEstadisticas(); 
