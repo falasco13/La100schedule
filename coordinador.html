@@ -355,7 +355,7 @@ function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;i
 function renderGrid(){
   const fechaVal = document.getElementById('fecha').value;
   if(!fechaVal){
-    document.getElementById('main-content').innerHTML=`<div class="state-center"><div class="sc-icon">📅</div><div class="sc-title">Seleccioná una fecha</div><div class="sc-text">Elegí una fecha en la barra superior para crear el schedule.</div></div>`;
+    document.getElementById('main-content').innerHTML=`<div class="state-center" style="text-align:center; padding: 40px; color:#666;"><div style="font-size:40px; margin-bottom:10px;">📅</div><div style="font-size:18px; font-weight:bold;">Seleccioná una fecha</div><div style="font-size:14px; margin-top:5px;">Elegí un día arriba para crear el pautado.</div></div>`;
     return;
   }
   document.getElementById('main-content').innerHTML=`<div class="prog-grid">${PROGS.map(prog=>{
@@ -371,7 +371,6 @@ function renderGrid(){
   }).join('')}</div>`;
   updateProgress();renderSummary();
 }
-
 document.getElementById('main-content').addEventListener('click',e=>{
   const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
   const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
