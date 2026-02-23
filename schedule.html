@@ -865,10 +865,17 @@ function enviarEstadisticas() {
 
   fetch('https://script.google.com/macros/s/AKfycbwPTkPAJi3Q81vY1VRpn8e-8FzOQP_1Dki9JlGcL8OzlNOB9yx1LPWuYFmh7HGxJ-NC/exec', {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'text/plain' },
     body: JSON.stringify(payload)
-  }).catch(e => console.log('Error de red al enviar estadísticas:', e));
+  })
+  .then(response => {
+    if (!response.ok) {
+      showToast('❌ Error del servidor al guardar estadísticas.', 'err');
+    }
+  })
+  .catch(e => {
+    showToast('❌ Falló la conexión al enviar estadísticas.', 'err');
+  });
 }
 
 let statsLoaded = false;
