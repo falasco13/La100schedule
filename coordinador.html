@@ -221,36 +221,35 @@ a.nav-link:hover{color:#fff;}
 // ─── SHEET URL DEFAULT ─────────────────────────────────────────────────────────
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
 
-const PROGS = [
-  {// ─── PROGRAMAS POR DÍA ────────────────────────────────────────────────────────
+// ─── PROGRAMAS POR DÍA ────────────────────────────────────────────────────────
 const PROGS_LUN_VIE = [
-  {id:'lhdll',  name:'LA HORA DE LOS LENTOS',       horas:[{h:0,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:1,t1i:null,t1c:'exito',t2i:null,t2c:null}]},
-  {id:'trasn',  name:'TRASNOCHE 100',                horas:[{h:2,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:3,t1i:null,t1c:null,t2i:null,t2c:'exito'},{h:4,t1i:'promo',t1c:null,t2i:null,t2c:'exito'},{h:5,t1i:null,t1c:null,t2i:null,t2c:'exito'}]},
-  {id:'moro',   name:'EL CLUB DEL MORO',             horas:[{h:6,t1i:'oclock',t1c:null,t2i:null,t2c:null},{h:7,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:8,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null},{h:9,t1i:'promo',t1c:null,t2i:null,t2c:null}]},
-  {id:'netd',   name:'NO ESTÁ TODO DICHO',           horas:[{h:10,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:11,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:12,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:13,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'}]},
-  {id:'sarasa', name:'SARASA',                       horas:[{h:14,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:15,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:16,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'}]},
-  {id:'atar',   name:'ATARDECER DE UN DÍA AGITADO',  horas:[{h:17,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:18,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:19,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'}]},
-  {id:'roman',  name:'ROMÁNTICOS',                   horas:[{h:20,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:21,t1i:'sep',t1c:'exito',t2i:'sep',t2c:null},{h:22,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:23,t1i:null,t1c:null,t2i:null,t2c:null}]}
+  {id:'lhdll', name:'LA HORA DE LOS LENTOS', horas:[{h:0}]},
+  {id:'trasn', name:'TRASNOCHE 100', horas:[{h:2},{h:4}]},
+  {id:'moro', name:'EL CLUB DEL MORO', horas:[{h:7},{h:8},{h:9}]},
+  {id:'netd', name:'NO ESTÁ TODO DICHO', horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'sarasa', name:'SARASA', horas:[{h:14},{h:15},{h:16}]},
+  {id:'atar', name:'ATARDECER DE UN DÍA AGITADO', horas:[{h:17},{h:18},{h:19}]},
+  {id:'roman', name:'ROMÁNTICOS', horas:[{h:20},{h:22}]}
 ];
 
 const PROGS_SAB = [
-  {id:'trasn_sab', name:'TRASNOCHE 100', horas:[{h:0,t1i:null,t1c:'exito',t2i:null,t2c:null},{h:1,t1i:null,t1c:null,t2i:'exito',t2c:null},{h:2,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:3,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:4,t1i:null,t1c:'exito',t2i:null,t2c:null},{h:5,t1i:null,t1c:null,t2i:null,t2c:null}]},
-  {id:'moro_sab', name:'LO MEJOR DEL CLUB DEL MORO', horas:[{h:6,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:7,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:8,t1i:'promo',t1c:null,t2i:null,t2c:null}]},
-  {id:'casa_sab', name:'TODO QUEDA EN CASA', horas:[{h:9,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:10,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:11,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:12,t1i:'promo',t1c:null,t2i:'sep',t2c:null}]},
-  {id:'mw_sab', name:'MUSIC WEEKEND', horas:[{h:13,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:14,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:15,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:16,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:17,t1i:'promo',t1c:null,t2i:'sep',t2c:null}]},
-  {id:'retro_sab', name:'DISCO RETRO', horas:[{h:18,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:19,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:20,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:21,t1i:null,t1c:null,t2i:'exito',t2c:null},{h:22,t1i:null,t1c:null,t2i:null,t2c:null},{h:23,t1i:null,t1c:null,t2i:null,t2c:null}]}
+  {id:'trasn_s', name:'TRASNOCHE 100', horas:[{h:0},{h:1},{h:2},{h:3},{h:4},{h:5}]},
+  {id:'moro_s', name:'LO MEJOR DEL CLUB DEL MORO', horas:[{h:6},{h:7},{h:8}]},
+  {id:'casa_s', name:'TODO QUEDA EN CASA', horas:[{h:9},{h:10},{h:11},{h:12}]},
+  {id:'mw_s', name:'MUSIC WEEKEND', horas:[{h:13},{h:14},{h:15},{h:16},{h:17}]},
+  {id:'retro_s', name:'DISCO RETRO', horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
 ];
 
 const PROGS_DOM = [
-  {id:'trasn_dom', name:'TRASNOCHE 100', horas:[{h:3,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:4,t1i:null,t1c:null,t2i:null,t2c:null},{h:5,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:6,t1i:null,t1c:'exito',t2i:null,t2c:null}]},
-  {id:'tmth_dom', name:'TU MUSICA TU HISTORIA', horas:[{h:7,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:8,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null},{h:9,t1i:'promo',t1c:null,t2i:'sep',t2c:null}]},
-  {id:'abrt_dom', name:'ABIERTO LOS DOMINGOS', horas:[{h:10,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:11,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null},{h:12,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:13,t1i:'promo',t1c:null,t2i:'sep',t2c:null}]},
-  {id:'mw_dom', name:'MUSIC WEEKEND', horas:[{h:14,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:15,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null},{h:16,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:17,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null}]},
-  {id:'retro_dom', name:'DISCO RETRO', horas:[{h:18,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:19,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:20,t1i:'promo',t1c:'exito',t2i:null,t2c:null},{h:21,t1i:null,t1c:null,t2i:null,t2c:null},{h:22,t1i:null,t1c:null,t2i:null,t2c:null},{h:23,t1i:null,t1c:null,t2i:null,t2c:null}]}
+  {id:'trasn_d', name:'TRASNOCHE 100', horas:[{h:3},{h:4},{h:5},{h:6}]},
+  {id:'tmth_d', name:'TU MUSICA TU HISTORIA', horas:[{h:7},{h:8},{h:9}]},
+  {id:'abrt_d', name:'ABIERTO LOS DOMINGOS', horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'mw_d', name:'MUSIC WEEKEND', horas:[{h:14},{h:15},{h:16},{h:17}]},
+  {id:'retro_d', name:'DISCO RETRO', horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
 ];
 
 let PROGS = PROGS_LUN_VIE;
-// ──────────────────────────────────────────────────────────────────────────────
+
 let ARTISTS = [];
 let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
 let assignments = {};
@@ -326,7 +325,7 @@ async function recargar(){
   if(!text||text.length<30){
     try{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`,{cache:'no-cache'});if(r.ok){const d=await r.json();text=d.contents;}}catch(e){}
   }
-  if(!text||text.length<30){setStatus('❌ No se pudo conectar. Verificá que el Sheet esté publicado como CSV (Archivo → Compartir → Publicar en la web).','err');setContent('empty');return;}
+  if(!text||text.length<30){setStatus('❌ No se pudo conectar. Verificá que el Sheet esté publicado como CSV.','err');setContent('empty');return;}
 
   try{
     MAT=parseCSV(text);
@@ -447,7 +446,7 @@ document.getElementById('fecha').addEventListener('change', function() {
   else PROGS = PROGS_LUN_VIE;
 
   initAssignments();
-  if (ARTISTS && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
+  if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
 });
 
 document.getElementById('fecha').valueAsDate = new Date();
