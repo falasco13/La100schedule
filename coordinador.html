@@ -131,6 +131,12 @@ a.nav-link:hover{color:#fff;}
   .main-area{padding:16px;}
   .prog-grid{grid-template-columns:1fr;}
 }
+/* ─── FIX TECLADO MOBILE ─── */
+#picker-list {
+  max-height: 40vh !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
 </style>
 </head>
 <body>
@@ -211,7 +217,7 @@ a.nav-link:hover{color:#fff;}
       <div class="picker-sub" id="picker-sub"></div>
     </div>
     <div class="picker-search-wrap">
-      <input class="picker-search" id="picker-search" placeholder="Buscar artista o concurso…">
+      <input type="text" id="picker-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Buscar...">
     </div>
     <div class="picker-list" id="picker-list"></div>
   </div>
