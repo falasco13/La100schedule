@@ -262,24 +262,27 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
     <div id="stats-loading" style="text-align:center; padding:40px; color:#7478A8;">Conectando con la base de datos en Google Drive... ⏳</div>
     
     <div id="stats-content" style="display:none;">
-      <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; background:#FAFBFF; padding:15px; border-radius:8px; border:1px solid #E2E4F6;">
+      <div style="display:flex; gap:15px; margin-bottom:20px; flex-wrap:wrap; background:#FAFBFF; padding:15px; border-radius:8px; border:1px solid #E2E4F6; align-items:flex-end;">
         <div style="flex:1; min-width:150px;">
-          <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">🔍 Buscar Promo (ej. Sanz)</label>
+          <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">🔍 Buscar Promo</label>
           <input type="text" id="filtro-nombre" placeholder="Nombre o código..." style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
         </div>
-        <div style="flex:1; min-width:150px;">
+        <div style="flex:1; min-width:140px;">
           <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">🎙 Programa</label>
           <select id="filtro-prog" style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
             <option value="">Todos los programas</option>
           </select>
         </div>
-        <div style="flex:1; min-width:130px;">
+        <div style="flex:1; min-width:120px;">
           <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">📅 Desde</label>
           <input type="date" id="filtro-desde" style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
         </div>
-        <div style="flex:1; min-width:130px;">
+        <div style="flex:1; min-width:120px;">
           <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">📅 Hasta</label>
           <input type="date" id="filtro-hasta" style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
+        </div>
+        <div style="flex:0; min-width:140px;">
+          <button id="btn-exportar-stats" style="width:100%; padding:9px; background:#0B6B48; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer; font-family:'Sora'; white-space:nowrap;">⬇ Exportar Excel</button>
         </div>
       </div>
 
@@ -917,6 +920,7 @@ function enviarEstadisticas() {
 
 let statsLoaded = false;
 let datosHistoricos = [];
+let resultadosExportar = [];
 
 document.getElementById('btn-stats').addEventListener('click', async () => {
   const modal = document.getElementById('stats-modal');
@@ -934,7 +938,6 @@ document.getElementById('btn-stats').addEventListener('click', async () => {
     statsLoaded = true;
   } catch (e) {
     document.getElementById('stats-loading').innerText = '❌ Error al cargar. Revisá tu conexión a internet.';
-    console.log(e);
   }
 });
 
@@ -957,13 +960,19 @@ function prepararFiltros(data) {
 
 function parseDuracionSegundos(str) {
   if(!str) return 0;
-  const pts = String(str).trim().split(':').map(Number);
-  if(pts.length === 3) return pts[0]*3600 + pts[1]*60 + pts[2];
-  if(pts.length === 2) return pts[0]*60 + pts[1];
-  return parseInt(str) || 0;
+  let s = String(str).trim();
+  if (s.includes('T')) s = s.split('T')[1].split('.')[0] || s; 
+  
+  const pts = s.split(':').map(Number);
+  if(pts.length === 3 && !isNaN(pts[0])) return pts[0]*3600 + pts[1]*60 + pts[2];
+  if(pts.length === 2 && !isNaN(pts[0])) return pts[0]*60 + pts[1];
+  
+  const val = parseInt(s);
+  return isNaN(val) ? 0 : val;
 }
 
 function formatDuracionTotal(segs) {
+  if(isNaN(segs)) return '00:00:00';
   const h = Math.floor(segs / 3600);
   const m = Math.floor((segs % 3600) / 60);
   const s = segs % 60;
@@ -983,12 +992,14 @@ function aplicarFiltros() {
     const matchP = !p || row.programa === p;
     
     const fechaRow = row.fecha_schedule || row.fecha || ''; 
-    const matchD = !d || fechaRow >= d;
-    const matchH = !h || fechaRow <= h;
+    const fCorta = fechaRow.split('T')[0];
+    const matchD = !d || fCorta >= d;
+    const matchH = !h || fCorta <= h;
 
     return matchQ && matchP && matchD && matchH;
   });
 
+  resultadosExportar = resultados;
   let totalSegundos = 0;
   let html = '';
 
@@ -1011,6 +1022,42 @@ function aplicarFiltros() {
   document.getElementById('res-tiempo').textContent = formatDuracionTotal(totalSegundos);
   document.getElementById('tabla-resultados').innerHTML = html;
 }
+
+document.getElementById('btn-exportar-stats').addEventListener('click', async () => {
+  if (resultadosExportar.length === 0) {
+    alert('No hay datos para exportar con estos filtros.');
+    return;
+  }
+  
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Auditoría LA 100');
+  
+  ws.columns = [
+    { header: 'FECHA', key: 'fecha', width: 15 },
+    { header: 'PROGRAMA', key: 'programa', width: 35 },
+    { header: 'CÓDIGO', key: 'codigo', width: 15 },
+    { header: 'MATERIAL', key: 'nombre', width: 50 },
+    { header: 'DURACIÓN', key: 'duracion', width: 15 }
+  ];
+
+  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+
+  resultadosExportar.forEach(r => {
+    const f = r.fecha_schedule || r.fecha || '—';
+    ws.addRow({
+      fecha: f.split('T')[0],
+      programa: r.programa || '—',
+      codigo: r.codigo || '',
+      nombre: r.nombre || '',
+      duracion: r.duracion || '0'
+    });
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(blob, 'Auditoria_LA100.xlsx');
+});
 loadUrl();
 </script>
 </body>
