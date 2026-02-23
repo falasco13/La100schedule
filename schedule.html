@@ -291,19 +291,19 @@ const PROGS_LUN_VIE = [
 ];
 
 const PROGS_SAB = [
-  {name:'TRASNOCHE 100',horas:[{h:0,t1i:null,t1c:'exito',t2i:null,t2c:null},{h:1,t1i:null,t1c:null,t2i:'exito',t2c:null},{h:2,t1i:'promo',t1c:null,t2i:null,t2c:'promo'},{h:3,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:4,t1i:null,t1c:'exito',t2i:null,t2c:null},{h:5,t1i:null,t1c:null,t2i:null,t2c:null}]},
-  {name:'LO MEJOR DEL CLUB DEL MORO',horas:[{h:6,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:7,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:8,t1i:'promo',t1c:null,t2i:null,t2c:null}]},
-  {name:'TODO QUEDA EN CASA',horas:[{h:9,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:10,t1i:'promo',t1c:null,t2i:null,t2c:'sep'},{h:11,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:12,t1i:'promo',t1c:null,t2i:null,t2c:'sep'}]},
-  {name:'MUSIC WEEKEND',horas:[{h:13,t1i:null,t1c:null,t2i:'promo',t2c:'exito'},{h:14,t1i:'promo',t1c:null,t2i:null,t2c:'sep'},{h:15,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:16,t1i:'promo',t1c:'sep',t2i:'exito',t2c:null},{h:17,t1i:'promo',t1c:'sep',t2i:null,t2c:null}]},
-  {name:'DISCO RETRO',horas:[{h:18,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:19,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:20,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:21,t1i:null,t1c:null,t2i:'exito',t2c:null},{h:22,t1i:null,t1c:null,t2i:null,t2c:null},{h:23,t1i:null,t1c:null,t2i:null,t2c:null}]}
+  {id:'trasn_s', name:'TRASNOCHE 100', horas:[{h:0},{h:1},{h:2},{h:3},{h:4},{h:5}]},
+  {id:'moro_s', name:'LO MEJOR DEL CLUB DEL MORO', horas:[{h:6},{h:7},{h:8}]},
+  {id:'casa_s', name:'TODO QUEDA EN CASA', horas:[{h:9},{h:10},{h:11},{h:12}]},
+  {id:'mw_s', name:'MUSIC WEEKEND', horas:[{h:13},{h:14},{h:15},{h:16},{h:17}]},
+  {id:'retro_s', name:'DISCO RETRO', horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
 ];
 
 const PROGS_DOM = [
-  {name:'TRASNOCHE 100',horas:[{h:3,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:4,t1i:null,t1c:null,t2i:null,t2c:null},{h:5,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:6,t1i:null,t1c:'exito',t2i:null,t2c:null}]},
-  {name:'TU MUSICA TU HISTORIA',horas:[{h:7,t1i:'promo',t1c:null,t2i:null,t2c:'sep'},{h:8,t1i:'promo',t1c:'exito',t2i:null,t2c:'sep'},{h:9,t1i:'promo',t1c:null,t2i:null,t2c:'sep'}]},
-  {name:'ABIERTO LOS DOMINGOS',horas:[{h:10,t1i:'promo',t1c:null,t2i:null,t2c:'sep'},{h:11,t1i:'promo',t1c:'exito',t2i:null,t2c:'sep'},{h:12,t1i:'promo',t1c:null,t2i:'sep',t2c:'exito'},{h:13,t1i:'promo',t1c:null,t2i:'sep',t2c:null}]},
-  {name:'MUSIC WEEKEND',horas:[{h:14,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:15,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null},{h:16,t1i:'promo',t1c:null,t2i:'sep',t2c:null},{h:17,t1i:'promo',t1c:'exito',t2i:'sep',t2c:null}]},
-  {name:'DISCO RETRO',horas:[{h:18,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:19,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:20,t1i:'promo',t1c:null,t2i:'exito',t2c:null},{h:21,t1i:null,t1c:null,t2i:null,t2c:null},{h:22,t1i:null,t1c:null,t2i:null,t2c:null},{h:23,t1i:null,t1c:null,t2i:null,t2c:null}]}
+  {id:'trasn_d', name:'TRASNOCHE 100', horas:[{h:3},{h:4},{h:5},{h:6}]},
+  {id:'tmth_d', name:'TU MUSICA TU HISTORIA', horas:[{h:7},{h:8},{h:9}]},
+  {id:'abrt_d', name:'ABIERTO LOS DOMINGOS', horas:[{h:10},{h:11},{h:12},{h:13}]},
+  {id:'mw_d', name:'MUSIC WEEKEND', horas:[{h:14},{h:15},{h:16},{h:17}]},
+  {id:'retro_d', name:'DISCO RETRO', horas:[{h:18},{h:19},{h:20},{h:21},{h:22},{h:23}]}
 ];
 
 let PROGS = PROGS_LUN_VIE;
