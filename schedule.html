@@ -440,6 +440,11 @@ function importJSON(file){
       importFecha=data.fecha;
       const [y, m, d] = importFecha.split('-');
       const dia = new Date(y, m - 1, d).getDay();
+      const fechaParaConfirmar = fmtFechaU(importFecha);
+      if (!confirm(`Estás por cargar el pautado del:\n\n📅 ${fechaParaConfirmar}\n\n¿Es correcto?`)) {
+        document.getElementById('file-in').value = ''; 
+        return;
+      }
 
       if (dia === 0) PROGS = PROGS_DOM;
       else if (dia === 6) PROGS = PROGS_SAB;
@@ -806,7 +811,14 @@ async function exportarExcel(){
 
   const buf=await wb.xlsx.writeBuffer();
   const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const fname=importFecha?`PROMOS_${importFecha.replace(/-/g,'')}_SCHEDULE.xlsx`:'SCHEDULE_LA100.xlsx';
+  let fname = 'SCHEDULE_LA100.xlsx';
+  if (importFecha) {
+    const [y, m, d] = importFecha.split('-');
+    const dt = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+    const mesStr = MESES_U[parseInt(m)];
+    const diaStr = DIAS_U[dt.getDay()];
+    fname = `PROMOS ${y} ${mesStr} ${d} - ${diaStr}.xlsx`;
+  }
   saveAs(blob,fname);
   showToast(`✅ Excel exportado: ${fname}`,'ok');
   enviarEstadisticas(); 
