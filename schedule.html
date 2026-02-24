@@ -1026,12 +1026,14 @@ function prepararFiltros(data) {
 }
 
 function parseDuracionSegundos(str) {
-  if(!str) return 0;
+  if (!str) return 0;
   let s = String(str).trim();
   if (s.includes('T')) s = s.split('T')[1].split('.')[0] || s; 
   s = s.replace(/^'/, '');
-  const pts = s.split(':').map(Number);
+  
   let segs = 0;
+  const pts = s.split(':').map(Number);
+  
   if (pts.length === 3 && !isNaN(pts[0])) {
     segs = pts[0]*3600 + pts[1]*60 + pts[2];
   } else if (pts.length === 2 && !isNaN(pts[0])) {
@@ -1040,14 +1042,13 @@ function parseDuracionSegundos(str) {
     segs = parseInt(s);
     if (isNaN(segs)) return 0;
   }
-  if (segs >= 3600) {
-    let remainder = segs % 3600;
-    if (remainder < 600) return remainder;
-  }
+  
+    segs = segs % 3600;
+  
   if (segs >= 1008 && segs < 2000) {
-    let adj = segs - 1008;
-    if (adj < 600) return adj;
+    segs = segs - 1008;
   }
+  
   return segs;
 }
 
