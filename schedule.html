@@ -1031,7 +1031,7 @@ function parseDuracionSegundos(str) {
   if (s.includes('T')) s = s.split('T')[1].split('.')[0] || s; 
   
   const pts = s.split(':').map(Number);
-  if(pts.length === 3 && !isNaN(pts[0])) return pts[0]*3600 + pts[1]*60 + pts[2];
+  if(pts.length === 3 && !isNaN(pts[0])) return pts[1]*60 + pts[2];
   if(pts.length === 2 && !isNaN(pts[0])) return pts[0]*60 + pts[1];
   
   const val = parseInt(s);
@@ -1087,7 +1087,7 @@ function aplicarFiltros() {
       <td style="padding:8px 10px; color:#1B1F6E; font-family:'DM Mono', monospace;">${f.split('T')[0]}</td>
       <td style="padding:8px 10px;">${prog}</td>
       <td style="padding:8px 10px;"><strong>${r.codigo || ''}</strong> <span style="color:#7478A8;">${r.nombre}</span></td>
-      <td style="padding:8px 10px; font-family:'DM Mono', monospace;">${r.duracion || '0'}</td>
+      <td style="padding:8px 10px; font-family:'DM Mono', monospace;">${formatDuracionTotal(segs)}</td>
     </tr>`;
   });
 
