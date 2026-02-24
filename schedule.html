@@ -1050,6 +1050,7 @@ function parseDuracionSegundos(str) {
   }
   return segs;
 }
+
 function formatDuracionTotal(segs) {
   if(isNaN(segs) || segs === 0) return '00:00:00';
   const h = Math.floor(segs / 3600);
@@ -1066,15 +1067,12 @@ function aplicarFiltros() {
 
   let resultados = datosHistoricos.filter(row => {
     if(!row.nombre) return false;
-    
     const matchQ = !q || row.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q) || (row.codigo && row.codigo.toLowerCase().includes(q));
     const matchP = !p || row.programa === p;
-    
     const fechaRow = row.fecha_schedule || row.fecha || ''; 
     const fCorta = fechaRow.split('T')[0];
     const matchD = !d || fCorta >= d;
     const matchH = !h || fCorta <= h;
-
     return matchQ && matchP && matchD && matchH;
   });
 
@@ -1128,42 +1126,6 @@ function aplicarFiltros() {
   document.getElementById('tabla-carga-programas').innerHTML = htmlCarga;
   document.getElementById('tabla-resultados').innerHTML = htmlDetalle;
 }
-
-document.getElementById('btn-exportar-stats').addEventListener('click', async () => {
-  if (resultadosExportar.length === 0) {
-    alert('No hay datos para exportar con estos filtros.');
-    return;
-  }
-  
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Auditoría LA 100');
-  
-  ws.columns = [
-    { header: 'FECHA', key: 'fecha', width: 15 },
-    { header: 'PROGRAMA', key: 'programa', width: 35 },
-    { header: 'CÓDIGO', key: 'codigo', width: 15 },
-    { header: 'MATERIAL', key: 'nombre', width: 50 },
-    { header: 'DURACIÓN', key: 'duracion', width: 15 }
-  ];
-
-  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
-  ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
-
-  resultadosExportar.forEach(r => {
-    const f = r.fecha_schedule || r.fecha || '—';
-    ws.addRow({
-      fecha: f.split('T')[0],
-      programa: r.programa || '—',
-      codigo: r.codigo || '',
-      nombre: r.nombre || '',
-      duracion: r.duracion || '0'
-    });
-  });
-
-  const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, 'Auditoria_LA100.xlsx');
-});
 loadUrl();
 </script>
 </body>
