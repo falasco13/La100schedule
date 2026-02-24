@@ -1127,7 +1127,46 @@ function aplicarFiltros() {
   document.getElementById('tabla-carga-programas').innerHTML = htmlCarga;
   document.getElementById('tabla-resultados').innerHTML = htmlDetalle;
 }
-loadUrl();
+document.getElementById('btn-exportar-stats').addEventListener('click', async () => {
+  if (typeof resultadosExportar === 'undefined' || resultadosExportar.length === 0) {
+    alert('No hay datos para exportar con estos filtros.');
+    return;
+  }
+  
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Auditoría LA 100');
+  
+  ws.columns = [
+    { header: 'FECHA', key: 'fecha', width: 15 },
+    { header: 'PROGRAMA', key: 'programa', width: 35 },
+    { header: 'CÓDIGO', key: 'codigo', width: 15 },
+    { header: 'MATERIAL', key: 'nombre', width: 50 },
+    { header: 'DURACIÓN', key: 'duracion', width: 15 }
+  ];
+
+  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+
+  resultadosExportar.forEach(r => {
+    const f = r.fecha_schedule || r.fecha || '—';
+    let durLimpia = r.duracion || '0';
+    if (durLimpia.includes('T')) durLimpia = durLimpia.split('T')[1].split('.')[0];
+    durLimpia = durLimpia.replace(/^'/, '');
+
+    ws.addRow({
+      fecha: f.split('T')[0],
+      programa: r.programa || '—',
+      codigo: r.codigo || '',
+      nombre: r.nombre || '',
+      duracion: durLimpia
+    });
+  });
+
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  saveAs(blob, 'Auditoria_LA100.xlsx');
+});
+  loadUrl();
 </script>
 </body>
 </html>
