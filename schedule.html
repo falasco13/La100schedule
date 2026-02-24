@@ -964,7 +964,7 @@ function enviarEstadisticas() {
           tipo: tipo_real,
           codigo: mat.c,
           nombre: mat.n,
-          duracion: fmtD(mat.d) + " "
+          duracion: "'" + fmtD(mat.d)
         });
       }
     }
@@ -1028,16 +1028,10 @@ function prepararFiltros(data) {
 function parseDuracionSegundos(str) {
   if(!str) return 0;
   let s = String(str).trim();
-  let esFechaHistorica = false;
-  
-  if (s.includes('T')) {
-    esFechaHistorica = s.startsWith('1899');
-    s = s.split('T')[1].split('.')[0] || s; 
-  }
-  
+  if (s.includes('T')) s = s.split('T')[1].split('.')[0] || s; 
+  s = s.replace(/^'/, '');
   const pts = s.split(':').map(Number);
   let segs = 0;
-  
   if (pts.length === 3 && !isNaN(pts[0])) {
     segs = pts[0]*3600 + pts[1]*60 + pts[2];
   } else if (pts.length === 2 && !isNaN(pts[0])) {
@@ -1046,12 +1040,15 @@ function parseDuracionSegundos(str) {
     segs = parseInt(s);
     if (isNaN(segs)) return 0;
   }
-  
-  if (esFechaHistorica && segs >= 1008) {
-    segs -= 1008;
+  if (segs >= 3600) {
+    let remainder = segs % 3600;
+    if (remainder < 600) return remainder;
   }
-  
-  return Math.max(0, segs);
+  if (segs >= 1008 && segs < 2000) {
+    let adj = segs - 1008;
+    if (adj < 600) return adj;
+  }
+  return segs;
 }
 function formatDuracionTotal(segs) {
   if(isNaN(segs) || segs === 0) return '00:00:00';
