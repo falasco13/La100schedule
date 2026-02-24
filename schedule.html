@@ -1085,34 +1085,77 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Auditoría LA 100');
   
-  ws.columns = [
-    { header: 'FECHA', key: 'fecha', width: 15 },
-    { header: 'PROGRAMA', key: 'programa', width: 35 },
-    { header: 'CÓDIGO', key: 'codigo', width: 15 },
-    { header: 'MATERIAL', key: 'nombre', width: 50 },
-    { header: 'DURACIÓN', key: 'duracion', width: 15 }
-  ];
+  let totalSegundos = 0;
+  let cargaPorPrograma = {};
 
-  ws.getRow(1).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  resultadosExportar.forEach(r => {
+    const segs = parseDuracionSegundos(r.duracion);
+    totalSegundos += segs;
+    const prog = r.programa || 'Sin Programa';
+
+    if(!cargaPorPrograma[prog]) {
+      cargaPorPrograma[prog] = { cant: 0, segs: 0 };
+    }
+    cargaPorPrograma[prog].cant += 1;
+    cargaPorPrograma[prog].segs += segs;
+  });
+
+  ws.addRow(['REPORTE DE AUDITORÍA - LA 100']);
+  ws.getRow(1).font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
   ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+  ws.mergeCells('A1:E1');
+
+  ws.addRow(['Total de Emisiones:', resultadosExportar.length, '', 'Tiempo Total en Aire:', formatDuracionTotal(totalSegundos)]);
+  ws.getRow(2).font = { bold: true };
+  ws.addRow([]); 
+
+  ws.addRow(['RESUMEN POR PROGRAMA']);
+  ws.getRow(4).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B6B48' } };
+  ws.mergeCells('A4:E4');
+
+  ws.addRow(['Programa', 'Cant. Promos', 'Tiempo de Aire', '', '']);
+  ws.getRow(5).font = { bold: true };
+
+  const programasOrdenados = Object.keys(cargaPorPrograma).sort((a,b) => cargaPorPrograma[b].segs - cargaPorPrograma[a].segs);
+  programasOrdenados.forEach(prog => {
+    const datos = cargaPorPrograma[prog];
+    ws.addRow([prog, datos.cant, formatDuracionTotal(datos.segs), '', '']);
+  });
+
+  ws.addRow([]); 
+  let startDetalle = ws.lastRow.number + 1;
+
+  ws.addRow(['DETALLE DE EMISIONES']);
+  ws.getRow(startDetalle).font = { bold: true, color: { argb: 'FFFFFFFF' } };
+  ws.getRow(startDetalle).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+  ws.mergeCells(`A${startDetalle}:E${startDetalle}`);
+
+  ws.addRow(['FECHA', 'PROGRAMA', 'CÓDIGO', 'MATERIAL', 'DURACIÓN']);
+  ws.getRow(startDetalle + 1).font = { bold: true };
 
   resultadosExportar.forEach(r => {
     const f = r.fecha_schedule || r.fecha || '—';
     const segs = parseDuracionSegundos(r.duracion);
-    const finalDur = formatDuracionTotal(segs);
-
-    ws.addRow({
-      fecha: f.split('T')[0],
-      programa: r.programa || '—',
-      codigo: r.codigo || '',
-      nombre: r.nombre || '',
-      duracion: finalDur
-    });
+    
+    ws.addRow([
+      f.split('T')[0],
+      r.programa || '—',
+      r.codigo || '',
+      r.nombre || '',
+      formatDuracionTotal(segs)
+    ]);
   });
+
+  ws.getColumn(1).width = 15;
+  ws.getColumn(2).width = 35;
+  ws.getColumn(3).width = 15;
+  ws.getColumn(4).width = 50;
+  ws.getColumn(5).width = 15;
 
   const buf = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  saveAs(blob, 'Auditoria_LA100.xlsx');
+  saveAs(blob, 'Reporte_Estadisticas_LA100.xlsx');
 });
   loadUrl();
 </script>
