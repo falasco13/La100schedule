@@ -418,7 +418,7 @@ const PROGS_DOM = [
 ];
 
 let PROGS = PROGS_LUN_VIE;
-const OCLOCK={c:'C2212328',n:'OCLOCK LA 100 GENERICO 2023 DIA VERANO',d:17};
+let OCLOCK={c:'—',n:'Buscando Oclock...',d:0};
 
 // ─── STATE ─────────────────────────────────────────────────────────────────────
 let MAT={shows:[],mini_lolla:[],concursos:[],sep_comp:[],exito_vista:[]};
@@ -472,7 +472,22 @@ async function recargarSheet(){
   try{const r=await fetch(fetchUrl,{cache:'no-cache'});if(r.ok)text=await r.text();}catch(e){}
   if(!text||text.length<30){try{const r=await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`,{cache:'no-cache'});if(r.ok){const d=await r.json();text=d.contents;}}catch(e){}}
   if(!text||text.length<30){setChip('❌ No se pudo conectar. Verificá que el Sheet esté publicado como CSV.','err');return;}
-  try{MAT=parseCSV(text);const n=Object.values(MAT).flat().length;setChip(`✅ ${n} materiales cargados`,'ok');renderMatPanel();}catch(e){setChip(`❌ ${e.message}`,'err');}
+  try {
+    MAT=parseCSV(text);
+    let keyOclock = Object.keys(MAT).find(k => k.toUpperCase().includes('OCLOCK'));
+    if (keyOclock && MAT[keyOclock].length > 0) {
+      OCLOCK = MAT[keyOclock][0];
+    } else {
+      let allMats = Object.values(MAT).flat();
+      let nuevoOclock = allMats.find(m => m.n && m.n.toUpperCase().includes('OCLOCK'));
+      if(nuevoOclock) OCLOCK = nuevoOclock;
+    }
+    const n=Object.values(MAT).flat().length;
+    setChip(`✅ ${n} materiales cargados`,'ok');
+    renderMatPanel();
+  } catch(e) {
+    setChip(`❌ ${e.message}`,'err');
+  }
 }
 function setChip(msg,type){const el=document.getElementById('sheet-chip');el.style.display='block';el.className=`status-chip sch-${type}`;el.textContent=msg;}
 function saveUrl(){try{localStorage.setItem('la100s_url',document.getElementById('url-in').value.trim());}catch(e){}}
