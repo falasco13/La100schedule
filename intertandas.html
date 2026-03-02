@@ -55,7 +55,7 @@
       <button onclick="cargarMateriales()" style="width:100%; margin-top:15px; background:#4CAF50; padding:10px;">🔄 Recargar Catálogo</button>
     </div>
     <div class="panel">
-      <label>2. Cargar Schedule del Día (Antichoques)</label>
+      <label>2. Cargar Schedule del Día</label>
       <input type="date" id="fecha-in">
       <button onclick="bajarScheduleNube()" style="width:100%; margin-top:5px;">Buscar en la Nube</button>
       <div id="status-nube" style="margin-top:10px;"></div>
@@ -129,9 +129,9 @@ const GRILLA_SABADO = [
   {h:0.0, p:"TRASNOCHE 100", noT2:true}, {h:0.041666666666666664, p:"TRASNOCHE 100", noT2:true},
   {h:0.08333333333333333, p:"TRASNOCHE 100", noT2:true}, {h:0.125, p:"TRASNOCHE 100", noT2:true},
   {h:0.16666666666666666, p:"TRASNOCHE 100", noT2:true}, {h:0.20833333333333334, p:"TRASNOCHE 100", noT2:true},
-  {h:0.25, p:"LO MEJOR DEL CLUB DEL MORO"}, {h:0.2916666666666667, p:"LO MEJOR DEL CLUB DEL MORO"}, {h:0.3333333333333333, p:"LO MEJOR DEL CLUB DEL MORO"},
-  {h:0.375, p:"TODO QUEDA EN CASA"}, {h:0.4166666666666667, p:"TODO QUEDA EN CASA"}, {h:0.4583333333333333, p:"TODO QUEDA EN CASA"}, {h:0.5, p:"TODO QUEDA EN CASA"},
-  {h:0.5416666666666666, p:"MUSIC WEEKEND"}, {h:0.5833333333333334, p:"MUSIC WEEKEND"}, {h:0.625, p:"MUSIC WEEKEND"}, {h:0.6666666666666666, p:"MUSIC WEEKEND"}, {h:0.7083333333333334, p:"MUSIC WEEKEND"},
+  {h:0.25, p:"LO MEJOR DEL CLUB DEL MORO"}, {h:0.2916666666666667, p:"LO MEJOR DEL CLUB DEL MORO", noT2:true}, {h:0.3333333333333333, p:"LO MEJOR DEL CLUB DEL MORO", noT2:true},
+  {h:0.375, p:"TODO QUEDA EN CASA"}, {h:0.4166666666666667, p:"TODO QUEDA EN CASA"}, {h:0.4583333333333333, p:"TODO QUEDA EN CASA", noT2:true}, {h:0.5, p:"TODO QUEDA EN CASA"},
+  {h:0.5416666666666666, p:"MUSIC WEEKEND", noT2:true}, {h:0.5833333333333334, p:"MUSIC WEEKEND"}, {h:0.625, p:"MUSIC WEEKEND"}, {h:0.6666666666666666, p:"MUSIC WEEKEND"}, {h:0.7083333333333334, p:"MUSIC WEEKEND"},
   {h:0.75, p:"DISCO RETRO", noT2:true}, {h:0.7916666666666666, p:"DISCO RETRO", noT2:true}, {h:0.8333333333333334, p:"DISCO RETRO", noT2:true},
   {h:0.875, p:"DISCO RETRO", noT2:true}, {h:0.9166666666666666, p:"DISCO RETRO", noT2:true}, {h:0.9583333333333334, p:"DISCO RETRO", noT2:true}
 ];
@@ -139,8 +139,8 @@ const GRILLA_DOMINGO = [
   {h:0.125, p:"TRASNOCHE 100", noT2:true}, {h:0.16666666666666666, p:"TRASNOCHE 100", noT2:true},
   {h:0.20833333333333334, p:"TRASNOCHE 100", noT2:true}, {h:0.25, p:"TRASNOCHE 100", noT2:true},
   {h:0.2916666666666667, p:"TU MUSICA TU HISTORIA", noT2:true}, {h:0.3333333333333333, p:"TU MUSICA TU HISTORIA", noT2:true}, {h:0.375, p:"TU MUSICA TU HISTORIA", noT2:true},
-  {h:0.4166666666666667, p:"ABIERTO LOS DOMINGOS"}, {h:0.4583333333333333, p:"ABIERTO LOS DOMINGOS"}, {h:0.5, p:"ABIERTO LOS DOMINGOS"}, {h:0.5416666666666666, p:"ABIERTO LOS DOMINGOS"},
-  {h:0.5833333333333334, p:"MUSIC WEEKEND"}, {h:0.625, p:"MUSIC WEEKEND"}, {h:0.6666666666666666, p:"MUSIC WEEKEND"}, {h:0.7083333333333334, p:"MUSIC WEEKEND"},
+  {h:0.4166666666666667, p:"ABIERTO LOS DOMINGOS", noT2:true}, {h:0.4583333333333333, p:"ABIERTO LOS DOMINGOS"}, {h:0.5, p:"ABIERTO LOS DOMINGOS"}, {h:0.5416666666666666, p:"ABIERTO LOS DOMINGOS", noT2:true},
+  {h:0.5833333333333334, p:"MUSIC WEEKEND", noT2:true}, {h:0.625, p:"MUSIC WEEKEND"}, {h:0.6666666666666666, p:"MUSIC WEEKEND"}, {h:0.7083333333333334, p:"MUSIC WEEKEND"},
   {h:0.75, p:"DISCO RETRO", noT2:true}, {h:0.7916666666666666, p:"DISCO RETRO", noT2:true}, {h:0.8333333333333334, p:"DISCO RETRO", noT2:true},
   {h:0.875, p:"DISCO RETRO", noT2:true}, {h:0.9166666666666666, p:"DISCO RETRO", noT2:true}, {h:0.9583333333333334, p:"DISCO RETRO", noT2:true}
 ];
@@ -370,7 +370,7 @@ function aplicarReemplazo(){
   const val = document.getElementById('select-material').value; if(val === "|") return;
   const ps = val.split('|'); const td = tandaEditando === 1 ? filaEditando.querySelector('.td-t1') : filaEditando.querySelector('.td-t2');
   td.dataset.n = ps[0]; td.dataset.c = ps[1]; td.dataset.cat = ps[2];
-  td.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[ ps[2] || 'OTRAS'])}">${ps[0]}<small>${ps[1]}</small>
+  td.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[2] || 'OTRAS')}">${ps[0]}<small>${ps[1]}</small>
     <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span></div>`;
   cerrarModal();
 }
