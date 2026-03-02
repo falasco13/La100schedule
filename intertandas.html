@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La 100 - Intertandas</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <style>
   body{font-family:'Sora',sans-serif;background:#F4F6F9;margin:0;padding:20px;color:#333;}
   .container{max-width:1100px;margin:0 auto;background:#fff;padding:30px;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.05);}
@@ -79,7 +80,7 @@
       <table id="tabla-preview">
         <thead>
           <tr>
-            <th style="width:60px;">HORA</th>
+            <th style="width:80px;">HORA</th>
             <th>TANDA 1</th>
             <th style="width:100px;"></th>
             <th style="width:30px;"></th>
@@ -133,9 +134,9 @@ const GRILLA_LUN_VIE = [
   {h:0.5833333333333334, p:"SARASA"},
   {h:0.625, p:"SARASA"},
   {h:0.6666666666666666, p:"SARASA"},
-  {h:0.7083333333333334, p:"SARASA"},
-  {h:0.75, p:"ATARDECER"},
-  {h:0.7916666666666666, p:"ATARDECER"},
+  {h:0.7083333333333334, p:"ATARDECER DE UN DIA AGITADO"},
+  {h:0.75, p:"ATARDECER DE UN DIA AGITADO"},
+  {h:0.7916666666666666, p:"ATARDECER DE UN DIA AGITADO"},
   {h:0.8333333333333334, p:"ROMANTICOS", noT2:true},
   {h:0.875, p:"ROMANTICOS", noT2:true},
   {h:0.9166666666666666, p:"ROMANTICOS", noT2:true},
@@ -196,7 +197,6 @@ function procesarCSV(text){
     setStatus('status-mat', '❌ Datos vacíos o error de lectura.', 'err');
     return;
   }
-  
   if(text.toLowerCase().includes('<!doctype html>') || text.toLowerCase().includes('<html')){
      setStatus('status-mat', '❌ Tu Sheet es PRIVADO.', 'err');
      return;
@@ -538,47 +538,83 @@ function vaciarCelda(){
   cerrarModal();
 }
 
-function exportarDesdeTabla(){
-  const fIn = document.getElementById('fecha-in').value;
-  const objFecha = new Date(fIn + 'T12:00:00');
-  const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
-  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const diaNombre = dias[objFecha.getDay()];
-  
-  let csv = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()},,,,\r\n,,,,\r\n`;
-  
-  const trs = document.querySelectorAll('#tbody-preview tr');
-  let currentProg = "";
-  
-  trs.forEach(tr => {
-    if(tr.classList.contains('prog-row')) return;
-    
-    let p = tr.dataset.prog;
-    if(p !== currentProg){
-      csv += `${p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
-      currentProg = p;
-    }
-    
-    let h = tr.dataset.h; 
-    let t1_n = tr.querySelector('.t1-n').innerText.trim();
-    let t1_c = tr.querySelector('.t1-c').innerText.trim();
-    let t2_n = tr.querySelector('.t2-n').innerText.trim();
-    let t2_c = tr.querySelector('.t2-c').innerText.trim();
-    
-    csv += `${h},${t1_n},${t1_c} ,${t2_n},${t2_c}\r\n`;
-  });
-  
-  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
+async function exportarDesdeTabla(){
+  try {
+      const fIn = document.getElementById('fecha-in').value;
+      const objFecha = new Date(fIn + 'T12:00:00');
+      const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+      const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+      const diaNombre = dias[objFecha.getDay()];
+      const tituloFecha = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()}`;
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet('INTERTANDAS');
+
+      ws.columns = [
+        { width: 15 },
+        { width: 45 },
+        { width: 15 },
+        { width: 5 },
+        { width: 45 },
+        { width: 15 }
+      ];
+
+      const rowTitulo = ws.addRow([tituloFecha]);
+      ws.mergeCells('A1:F1');
+      rowTitulo.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF000000' } };
+      rowTitulo.alignment = { vertical: 'middle', horizontal: 'center' };
+      ws.addRow([]);
+
+      const trs = document.querySelectorAll('#tbody-preview tr');
+      
+      trs.forEach(tr => {
+        if(tr.classList.contains('prog-row')) {
+            let currentProg = tr.innerText.trim();
+            const progRow = ws.addRow([currentProg]);
+            ws.mergeCells(`A${progRow.number}:F${progRow.number}`);
+            progRow.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            progRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+            progRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+            const subHead = ws.addRow(['HORA', 'TANDA 1', '', '', 'TANDA 2', '']);
+            subHead.font = { bold: true };
+            subHead.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E4F6' } };
+            subHead.eachCell(c => c.border = {
+              top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+            });
+            return;
+        }
+
+        let h = parseFloat(tr.dataset.h);
+        let t1_n = tr.querySelector('.t1-n').innerText.trim();
+        let t1_c = tr.querySelector('.t1-c').innerText.trim();
+        let t2_n = tr.querySelector('.t2-n').innerText.trim();
+        let t2_c = tr.querySelector('.t2-c').innerText.trim();
+
+        const dataRow = ws.addRow([h, t1_n, t1_c, '', t2_n, t2_c]);
+        
+        dataRow.getCell(1).numFmt = '0.00000000000000';
+        dataRow.getCell(1).alignment = { horizontal: 'left' };
+        
+        [1, 2, 3, 5, 6].forEach(i => {
+            dataRow.getCell(i).border = {
+              top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+            };
+        });
+      });
+
+      const buffer = await wb.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.xlsx`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+
+      document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
+  } catch (error) {
+      document.getElementById('status-gen').innerHTML = '❌ Error al exportar: ' + error.message;
+  }
 }
 </script>
 </body>
