@@ -439,9 +439,26 @@ function exportar(){
     asignaciones.push({prog:p.name,hora:h.h,slot:'t1i',artista:a.label,code:chosen.c,name:chosen.n,dur:chosen.d,allVariants:a.variants.map(v=>v.c)});
   }
   const payload={fecha,sheetUrl:document.getElementById('url-in').value.trim(),generado:new Date().toISOString(),asignaciones};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`asignaciones_${fecha}.json`;a.click();URL.revokeObjectURL(a.href);
-  document.getElementById('ef-note').innerHTML='✅ Archivo exportado — compartilo con quien hace el schedule.';
+  const fileName=`asignaciones_${fecha}.json`;
+  const contentStr=JSON.stringify(payload,null,2);
+  document.getElementById('ef-note').innerHTML='⏳ Guardando en la nube...';
+  
+  fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec',{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify({fileName:fileName,content:contentStr})
+  })
+  .then(r=>r.json())
+  .then(d=>{
+    if(d.status==='success'){
+      document.getElementById('ef-note').innerHTML='✅ Archivo guardado en la nube. Ya está disponible para el Schedule Builder.';
+    }else{
+      document.getElementById('ef-note').innerHTML='❌ Error al guardar en la nube.';
+    }
+  })
+  .catch(e=>{
+    document.getElementById('ef-note').innerHTML='❌ Falló la conexión al guardar.';
+  });
 }
 
 // ─── INIT ──────────────────────────────────────────────────────────────────────
