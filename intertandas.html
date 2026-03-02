@@ -23,10 +23,11 @@
   .chip.load{background:#FFF3E0;color:#E65100;}
   .chip.ok{background:#E8F5E9;color:#2E7D32;}
   .chip.err{background:#FFEBEE;color:#C62828;}
-  .list-container{max-height:200px;overflow-y:auto;border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;}
+  .list-container{max-height:300px;overflow-y:auto;border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;}
   .check-item{display:flex;align-items:center;padding:8px;border-bottom:1px solid #eee;}
   .check-item:last-child{border-bottom:none;}
   .check-item input{margin-right:10px;width:18px;height:18px;}
+  .cat-header{background:#E2E4F6;padding:8px;font-weight:700;color:#1B1F6E;margin-top:10px;border-radius:4px;font-size:0.9rem;}
   
   table{width:100%;border-collapse:collapse;margin-top:20px;font-size:0.85rem;}
   th, td{border:1px solid #E2E4F6;padding:8px;text-align:left;}
@@ -34,6 +35,11 @@
   td[contenteditable="true"]{background:#FFFDE7;cursor:text;transition:0.2s;}
   td[contenteditable="true"]:focus{background:#FFF59D;outline:2px solid #FF5722;}
   .prog-row{background:#E8EAF6;font-weight:bold;color:#1B1F6E;}
+  .btn-edit{background:#E2E4F6;color:#1B1F6E;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;}
+  .btn-edit:hover{background:#C5CAE9;}
+  
+  #modal-reemplazo{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;}
+  .modal-content{background:#fff;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);}
 </style>
 </head>
 <body>
@@ -68,16 +74,18 @@
 
   <div id="panel-preview" class="panel" style="display:none; margin-top:30px; border-color:#FF5722;">
     <h2 style="color:#FF5722; margin-top:0;">Revisión Manual</h2>
-    <p style="font-size:0.9rem; color:#666;">Hacé click en las celdas amarillas para modificar nombres o códigos manualmente antes de exportar.</p>
-    <div style="max-height:400px; overflow-y:auto; border:1px solid #ccc;">
+    <p style="font-size:0.9rem; color:#666;">Hacé click en las celdas amarillas para modificar manualmente, o usá el botón 🔄 para buscar en el catálogo.</p>
+    <div style="max-height:500px; overflow-y:auto; border:1px solid #ccc;">
       <table id="tabla-preview">
         <thead>
           <tr>
-            <th style="width:80px;">HORA</th>
+            <th style="width:60px;">HORA</th>
             <th>TANDA 1</th>
-            <th style="width:120px;"></th>
+            <th style="width:100px;"></th>
+            <th style="width:30px;"></th>
             <th>TANDA 2</th>
-            <th style="width:120px;"></th>
+            <th style="width:100px;"></th>
+            <th style="width:30px;"></th>
           </tr>
         </thead>
         <tbody id="tbody-preview"></tbody>
@@ -85,13 +93,27 @@
     </div>
     <button class="btn-green" style="width:100%;font-size:1.1rem;padding:15px; margin-top:20px;" onclick="exportarDesdeTabla()">2️⃣ DESCARGAR EXCEL DEFINITIVO</button>
   </div>
+</div>
 
+<div id="modal-reemplazo">
+  <div class="modal-content">
+    <h3 style="margin-top:0;color:#1B1F6E;">Reemplazar Material</h3>
+    <select id="select-material" style="width:100%; padding:12px; font-family:'Sora',sans-serif; margin-bottom:20px; border-radius:6px; border:1px solid #ccc;"></select>
+    <div style="display:flex; gap:10px;">
+      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar</button>
+      <button onclick="cerrarModal()" style="flex:1; background:#C62828;">Cancelar</button>
+      <button onclick="vaciarCelda()" style="flex:1; background:#757575;">Vaciar Tanda</button>
+    </div>
+  </div>
 </div>
 
 <script>
 let MAT_WEB = [];
 let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
+
+let filaEditando = null;
+let tandaEditando = null;
 
 const GRILLA_LUN_VIE = [
   {h:0.0, p:"LA HORA DE LOS LENTOS", noT2:true},
@@ -138,341 +160,3 @@ function setStatus(id, msg, type){
 
 function decToTime(d){
   let m = Math.round(d * 24 * 60);
-  let hh = Math.floor(m / 60);
-  let mm = m % 60;
-  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
-}
-
-async function cargarMateriales(){
-  const url = 'https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612';
-  setStatus('status-mat', 'Conectando con Drive...', 'load');
-  
-  let fetchUrl = url;
-  const m = url.match(/\/d\/([^\/\?]+)/);
-  const gidMatch = url.match(/[?&#]gid=([^&#\s]+)/);
-  let gidStr = gidMatch ? `&gid=${gidMatch[1]}` : '';
-  
-  if(m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gidStr}`;
-  
-  try {
-    const r = await fetch(fetchUrl, {cache:'no-cache'});
-    let text = await r.text();
-    procesarCSV(text);
-  } catch(e) {
-    try {
-      const r2 = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`);
-      const d = await r2.json();
-      procesarCSV(d.contents);
-    } catch(e2) {
-      setStatus('status-mat', '❌ Error de red.', 'err');
-    }
-  }
-}
-
-function procesarCSV(text){
-  if(!text){
-    setStatus('status-mat', '❌ Datos vacíos o error de lectura.', 'err');
-    return;
-  }
-  
-  if(text.toLowerCase().includes('<!doctype html>') || text.toLowerCase().includes('<html')){
-     setStatus('status-mat', '❌ Tu Sheet es PRIVADO.', 'err');
-     return;
-  }
-
-  const lines = text.split('\n');
-  MAT_WEB = [];
-  MAT_TEMATICAS = {};
-  
-  for(let i=1; i<lines.length; i++){
-    let rawLine = lines[i].replace(/[\r\n]+/g, '').trim();
-    if(!rawLine) continue;
-    
-    const cols = [];
-    let inQuotes = false;
-    let colVal = '';
-    for(let j=0; j<rawLine.length; j++){
-       let char = rawLine[j];
-       if(char === '"' && rawLine[j+1] === '"'){
-           colVal += '"';
-           j++;
-       } else if(char === '"'){
-           inQuotes = !inQuotes;
-       } else if(char === ',' && !inQuotes){
-           cols.push(colVal.trim());
-           colVal = '';
-       } else {
-           colVal += char;
-       }
-    }
-    cols.push(colVal.trim());
-    
-    if(cols.length < 2 || !cols[0]) continue;
-    
-    const n = cols[0].toUpperCase();
-    const c = cols[1] || '';
-    const cat = (cols[2] || '').toUpperCase();
-    let tag = (cols[3] || '').toUpperCase().trim();
-    
-    if(!tag) tag = n.replace('INTERT LA 100 ', '').replace('SEP LA 100 ', '').trim();
-    
-    const item = {n:cols[0], c:c, tag:tag};
-    
-    if(n.includes('WEB CORTO') || cat.includes('WEB')){
-      MAT_WEB.push(item);
-    } else if(n.includes('INTERT LA 100') || n.includes('SEP LA 100')){
-      if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
-      MAT_TEMATICAS[tag].push(item);
-    }
-  }
-  
-  const tagsCount = Object.keys(MAT_TEMATICAS).length;
-  if(MAT_WEB.length === 0 && tagsCount === 0){
-     setStatus('status-mat', '⚠️ Archivo vacío o estructura incorrecta.', 'err');
-  } else {
-     setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Categorías`, 'ok');
-  }
-  renderTematicas();
-}
-
-function renderTematicas(){
-  const list = document.getElementById('lista-tematicas');
-  if(!list) return;
-  list.innerHTML = '';
-  const tags = Object.keys(MAT_TEMATICAS).sort();
-  
-  if(tags.length === 0){
-    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">Sin datos.</p>';
-    return;
-  }
-  
-  tags.forEach((tag, idx) => {
-    const div = document.createElement('div');
-    div.className = 'check-item';
-    div.innerHTML = `<input type="checkbox" id="chk-${idx}" value="${tag}"> <label for="chk-${idx}" style="margin:0;font-weight:400;"><strong>${tag}</strong> (${MAT_TEMATICAS[tag].length} audios)</label>`;
-    list.appendChild(div);
-  });
-}
-
-async function bajarScheduleNube(){
-  const f = document.getElementById('fecha-in').value;
-  if(!f){ setStatus('status-nube', 'Elegí la fecha primero', 'err'); return; }
-  setStatus('status-nube', 'Buscando...', 'load');
-  
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
-    const data = await res.json();
-    const target = `asignaciones_${f}.json`;
-    const found = (data && data.files) ? data.files.find(x => x.name === target) : null;
-    
-    if(found){
-      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
-      SCHEDULE_PROMOS = await reqFile.json();
-      setStatus('status-nube', `✅ Antichoques activo.`, 'ok');
-    } else {
-      SCHEDULE_PROMOS = null;
-      setStatus('status-nube', `⚠️ Sin schedule previo.`, 'err');
-    }
-  } catch(e) {
-    SCHEDULE_PROMOS = null;
-    setStatus('status-nube', '❌ Error de red.', 'err');
-  }
-}
-
-function shuffle(arr){
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-function generarPrevisualizacion(){
-  const statusGen = document.getElementById('status-gen');
-  statusGen.innerHTML = '⏳ Generando grilla...';
-  
-  try {
-    if(MAT_WEB.length === 0){
-      statusGen.innerHTML = '❌ Faltan cargar los materiales de relleno (INTERT LA 100 WEB CORTO). Son fundamentales.';
-      return;
-    }
-    
-    const fIn = document.getElementById('fecha-in').value;
-    if(!fIn){
-      statusGen.innerHTML = '❌ Elegí una fecha primero.';
-      return;
-    }
-
-    const seleccionadas = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
-    
-    const objFecha = new Date(fIn + 'T12:00:00');
-    const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
-    const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
-    
-    const tbody = document.getElementById('tbody-preview');
-    tbody.innerHTML = '';
-    
-    let currentProg = "";
-    let usadasEnProg = {};
-    let usadasWebEnProg = {};
-    
-    function getWebAleatorio(progName){
-      if(MAT_WEB.length === 0) return {n:'', c:''};
-      let arr = MAT_WEB.filter(w => !usadasWebEnProg[progName].includes(w.c));
-      if(arr.length === 0){
-        usadasWebEnProg[progName] = [];
-        arr = [...MAT_WEB];
-      }
-      arr = shuffle(arr);
-      let escogido = arr[0];
-      usadasWebEnProg[progName].push(escogido.c);
-      return escogido;
-    }
-    
-    GRILLA_LUN_VIE.forEach(bloque => {
-      if(bloque.p !== currentProg){
-        currentProg = bloque.p;
-        usadasEnProg[currentProg] = [];
-        usadasWebEnProg[currentProg] = [];
-        const trH = document.createElement('tr');
-        trH.className = 'prog-row';
-        trH.innerHTML = `<td colspan="5">${currentProg}</td>`;
-        tbody.appendChild(trH);
-      }
-      
-      let t1 = {n:'', c:''};
-      let t2 = {n:'', c:''};
-      
-      if(bloque.vacio){
-        if(!isFinde && bloque.fixT2){
-          t2 = bloque.fixT2;
-        }
-      } else {
-        let hasFixedT2 = !isFinde && bloque.fixT2;
-        let tematicaAsignada = false;
-        
-        let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
-        tagsDisponibles = shuffle(tagsDisponibles);
-        
-        for(let tag of tagsDisponibles){
-          let choca = false;
-          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-            const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
-            if(horaAprox){
-              const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
-              if(proms && Array.isArray(proms)){
-                choca = proms.some(p => {
-                   let tagPromo = typeof p === 'string' ? p : (p.tag || p.n || p.nombre || '');
-                   tagPromo = tagPromo.toUpperCase().trim();
-                   let tagInter = tag.toUpperCase().trim();
-                   if(!tagPromo || !tagInter) return false;
-                   return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
-                });
-              }
-            }
-          }
-          
-          if(!choca && MAT_TEMATICAS[tag]){
-            let audios = MAT_TEMATICAS[tag];
-            let escogido = audios[Math.floor(Math.random() * audios.length)];
-            
-            if(bloque.noT2){
-              t1 = escogido;
-            } else if (hasFixedT2) {
-              t1 = escogido;
-              t2 = bloque.fixT2;
-            } else {
-              if(Math.random() > 0.5){
-                t1 = escogido;
-                t2 = getWebAleatorio(currentProg);
-              } else {
-                t1 = getWebAleatorio(currentProg);
-                t2 = escogido;
-              }
-            }
-            usadasEnProg[currentProg].push(tag);
-            tematicaAsignada = true;
-            break;
-          }
-        }
-        
-        if(!tematicaAsignada){
-          if(bloque.noT2){
-            t1 = getWebAleatorio(currentProg);
-          } else if(hasFixedT2){
-            t1 = getWebAleatorio(currentProg);
-            t2 = bloque.fixT2;
-          } else {
-            t1 = getWebAleatorio(currentProg);
-            t2 = getWebAleatorio(currentProg);
-          }
-        }
-      }
-      
-      const tr = document.createElement('tr');
-      tr.dataset.prog = currentProg;
-      tr.dataset.h = bloque.h;
-      tr.innerHTML = `
-        <td style="font-weight:bold; color:#555;">${decToTime(bloque.h)}</td>
-        <td contenteditable="true">${t1.n || ''}</td>
-        <td contenteditable="true">${t1.c || ''}</td>
-        <td contenteditable="true">${t2.n || ''}</td>
-        <td contenteditable="true">${t2.c || ''}</td>
-      `;
-      tbody.appendChild(tr);
-    });
-    
-    document.getElementById('panel-preview').style.display = 'block';
-    statusGen.innerHTML = '✅ ¡Grilla generada! Revisala abajo.';
-    setTimeout(() => {
-      document.getElementById('panel-preview').scrollIntoView({behavior: 'smooth'});
-    }, 100);
-
-  } catch (err) {
-    statusGen.innerHTML = '❌ Fallo interno: ' + err.message;
-  }
-}
-
-function exportarDesdeTabla(){
-  const fIn = document.getElementById('fecha-in').value;
-  const objFecha = new Date(fIn + 'T12:00:00');
-  const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
-  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const diaNombre = dias[objFecha.getDay()];
-  
-  let csv = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()},,,,\r\n,,,,\r\n`;
-  
-  const trs = document.querySelectorAll('#tbody-preview tr');
-  let currentProg = "";
-  
-  trs.forEach(tr => {
-    if(tr.classList.contains('prog-row')) return;
-    
-    let p = tr.dataset.prog;
-    if(p !== currentProg){
-      csv += `${p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
-      currentProg = p;
-    }
-    
-    let tds = tr.querySelectorAll('td');
-    let h = tr.dataset.h; 
-    let t1_n = tds[1].innerText.trim();
-    let t1_c = tds[2].innerText.trim();
-    let t2_n = tds[3].innerText.trim();
-    let t2_c = tds[4].innerText.trim();
-    
-    csv += `${h},${t1_n},${t1_c} ,${t2_n},${t2_c}\r\n`;
-  });
-  
-  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
-}
-</script>
-</body>
-</html>
