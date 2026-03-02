@@ -73,12 +73,11 @@
       <table id="tabla-preview">
         <thead>
           <tr>
-            <th style="width:60px;">HORA</th>
-            <th style="width:150px;">PROGRAMA</th>
+            <th style="width:80px;">HORA</th>
             <th>TANDA 1</th>
-            <th style="width:100px;">CÓD. 1</th>
+            <th style="width:120px;">CÓD. 1</th>
             <th>TANDA 2</th>
-            <th style="width:100px;">CÓD. 2</th>
+            <th style="width:120px;">CÓD. 2</th>
           </tr>
         </thead>
         <tbody id="tbody-preview"></tbody>
@@ -95,15 +94,30 @@ let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
 
 const GRILLA_LUN_VIE = [
-  {h:0.0, p:"LA HORA DE LOS LENTOS"}, {h:0.041666666666666664, p:"LA HORA DE LOS LENTOS"},
-  {h:0.08333333333333333, p:"TRASNOCHE 100"}, {h:0.125, p:"TRASNOCHE 100"},
-  {h:0.16666666666666666, p:"TRASNOCHE 100"}, {h:0.20833333333333334, p:"TRASNOCHE 100"},
-  {h:0.25, p:"EL CLUB DEL MORO", vacio:true}, {h:0.2916666666666667, p:"EL CLUB DEL MORO", vacio:true},
-  {h:0.3333333333333333, p:"EL CLUB DEL MORO", vacio:true}, {h:0.375, p:"EL CLUB DEL MORO", vacio:true, fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053"}},
-  {h:0.4166666666666667, p:"NO ESTÁ TODO DICHO"}, {h:0.4583333333333333, p:"NO ESTÁ TODO DICHO"},
-  {h:0.5, p:"NO ESTÁ TODO DICHO"}, {h:0.5416666666666666, p:"NO ESTÁ TODO DICHO", fixT2:{n:"COMING LA 100 SARASA NEW", c:"C2102054"}},
-  {h:0.5833333333333334, p:"SARASA"}, {h:0.625, p:"SARASA"},
-  {h:0.6666666666666666, p:"SARASA"}, {h:0.7083333333333334, p:"SARASA"}
+  {h:0.0, p:"LA HORA DE LOS LENTOS", noT2:true},
+  {h:0.041666666666666664, p:"LA HORA DE LOS LENTOS", noT2:true},
+  {h:0.08333333333333333, p:"TRASNOCHE 100", noT2:true},
+  {h:0.125, p:"TRASNOCHE 100", noT2:true},
+  {h:0.16666666666666666, p:"TRASNOCHE 100", noT2:true},
+  {h:0.20833333333333334, p:"TRASNOCHE 100", noT2:true},
+  {h:0.25, p:"EL CLUB DEL MORO", vacio:true},
+  {h:0.2916666666666667, p:"EL CLUB DEL MORO", vacio:true},
+  {h:0.3333333333333333, p:"EL CLUB DEL MORO", vacio:true},
+  {h:0.375, p:"EL CLUB DEL MORO", vacio:true, fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053"}},
+  {h:0.4166666666666667, p:"NO ESTÁ TODO DICHO"},
+  {h:0.4583333333333333, p:"NO ESTÁ TODO DICHO"},
+  {h:0.5, p:"NO ESTÁ TODO DICHO"},
+  {h:0.5416666666666666, p:"NO ESTÁ TODO DICHO", fixT2:{n:"COMING LA 100 SARASA NEW", c:"C2102054"}},
+  {h:0.5833333333333334, p:"SARASA"},
+  {h:0.625, p:"SARASA"},
+  {h:0.6666666666666666, p:"SARASA"},
+  {h:0.7083333333333334, p:"SARASA"},
+  {h:0.75, p:"ATARDECER"},
+  {h:0.7916666666666666, p:"ATARDECER"},
+  {h:0.8333333333333334, p:"ROMANTICOS", noT2:true},
+  {h:0.875, p:"ROMANTICOS", noT2:true},
+  {h:0.9166666666666666, p:"ROMANTICOS", noT2:true},
+  {h:0.9583333333333334, p:"ROMANTICOS", noT2:true}
 ];
 
 window.onload = function() {
@@ -120,6 +134,13 @@ window.onload = function() {
 function setStatus(id, msg, type){
   const el = document.getElementById(id);
   if(el) el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
+}
+
+function decToTime(d){
+  let m = Math.round(d * 24 * 60);
+  let hh = Math.floor(m / 60);
+  let mm = m % 60;
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
 }
 
 async function cargarMateriales(){
@@ -306,7 +327,7 @@ function generarPrevisualizacion(){
         usadasEnProg[currentProg] = [];
         const trH = document.createElement('tr');
         trH.className = 'prog-row';
-        trH.innerHTML = `<td colspan="6">${currentProg}</td>`;
+        trH.innerHTML = `<td colspan="5">${currentProg}</td>`;
         tbody.appendChild(trH);
       }
       
@@ -320,7 +341,13 @@ function generarPrevisualizacion(){
           t2 = bloque.fixT2;
         }
       } else {
-        if(!isFinde && bloque.fixT2){
+        if(bloque.noT2){
+          t2 = {n:'', c:''};
+        }
+        
+        let targetTanda = bloque.noT2 ? 1 : 2;
+        
+        if(!isFinde && bloque.fixT2 && targetTanda === 2){
           t2 = bloque.fixT2;
         } else {
           let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
@@ -346,7 +373,9 @@ function generarPrevisualizacion(){
             
             if(!choca && MAT_TEMATICAS[tag]){
               let audios = MAT_TEMATICAS[tag];
-              t2 = audios[Math.floor(Math.random() * audios.length)];
+              let escogido = audios[Math.floor(Math.random() * audios.length)];
+              if(targetTanda === 1) t1 = escogido;
+              else t2 = escogido;
               usadasEnProg[currentProg].push(tag);
               break;
             }
@@ -356,9 +385,9 @@ function generarPrevisualizacion(){
       
       const tr = document.createElement('tr');
       tr.dataset.prog = currentProg;
+      tr.dataset.h = bloque.h;
       tr.innerHTML = `
-        <td>${bloque.h}</td>
-        <td style="color:#888;">${currentProg}</td>
+        <td style="font-weight:bold; color:#555;">${decToTime(bloque.h)}</td>
         <td contenteditable="true">${t1.n || ''}</td>
         <td contenteditable="true">${t1.c || ''}</td>
         <td contenteditable="true">${t2.n || ''}</td>
@@ -400,11 +429,11 @@ function exportarDesdeTabla(){
     }
     
     let tds = tr.querySelectorAll('td');
-    let h = tds[0].innerText.trim();
-    let t1_n = tds[2].innerText.trim();
-    let t1_c = tds[3].innerText.trim();
-    let t2_n = tds[4].innerText.trim();
-    let t2_c = tds[5].innerText.trim();
+    let h = tr.dataset.h; 
+    let t1_n = tds[1].innerText.trim();
+    let t1_c = tds[2].innerText.trim();
+    let t2_n = tds[3].innerText.trim();
+    let t2_c = tds[4].innerText.trim();
     
     csv += `${h},${t1_n},${t1_c} ,${t2_n},${t2_c}\r\n`;
   });
