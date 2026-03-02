@@ -88,7 +88,10 @@ async function cargarMateriales(){
   
   let fetchUrl = url;
   const m = url.match(/\/d\/([^\/\?]+)/);
-  if(m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv`;
+  const gidMatch = url.match(/[?&]gid=([^&#]+)/);
+  let gidStr = gidMatch ? `&gid=${gidMatch[1]}` : '';
+  
+  if(m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gidStr}`;
   
   try {
     const r = await fetch(fetchUrl, {cache:'no-cache'});
@@ -111,19 +114,44 @@ function procesarCSV(text){
   MAT_TEMATICAS = {};
   
   for(let i=1; i<lines.length; i++){
-    const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
+    let rawLine = lines[i].replace(/[\r\n]+/g, '').trim();
+    if(!rawLine) continue;
+    
+    const cols = [];
+    let inQuotes = false;
+    let colVal = '';
+    for(let j=0; j<rawLine.length; j++){
+       let char = rawLine[j];
+       if(char === '"' && rawLine[j+1] === '"'){
+           colVal += '"';
+           j++;
+       } else if(char === '"'){
+           inQuotes = !inQuotes;
+       } else if(char === ',' && !inQuotes){
+           cols.push(colVal.trim());
+           colVal = '';
+       } else {
+           colVal += char;
+       }
+    }
+    cols.push(colVal.trim());
+    
     if(cols.length < 2 || !cols[0]) continue;
     
     const n = cols[0].toUpperCase();
-    const c = cols[1];
-    const cat = (cols.length > 2 && cols[2]) ? cols[2].toUpperCase() : '';
-    const tag = (cols.length > 3 && cols[3]) ? cols[3].toUpperCase() : n.replace('INTERT LA 100 ', '').trim();
+    const c = cols[1] || '';
+    const cat = (cols[2] || '').toUpperCase();
+    let tag = (cols[3] || '').toUpperCase().trim();
+    
+    if(!tag) {
+      tag = n.replace('INTERT LA 100 ', '').trim();
+    }
     
     const item = {n:cols[0], c:c, tag:tag};
     
     if(n.includes('SEP LA 100 WEB') || n.includes('INTERT LA 100 WEB') || cat.includes('WEB')){
       MAT_WEB.push(item);
-    } else if(n.includes('INTERT LA 100') || cat.includes('INTERTANDA')) {
+    } else if(n.includes('INTERT LA 100') || cat.includes('INTERTANDA') || cat.includes('TEMATICA')) {
       if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
       MAT_TEMATICAS[tag].push(item);
     }
@@ -239,10 +267,18 @@ function generarExcel(){
       let asignada = false;
       for(let tag of tagsDisponibles){
         let choca = false;
+        
         if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-          const proms = SCHEDULE_PROMOS.asignaciones[bloque.h];
-          if(proms && proms.some(p => p.tag.toUpperCase() === tag.toUpperCase())){
-            choca = true;
+          const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
+          if(horaAprox){
+            const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
+            if(proms.some(p => {
+               let tagPromo = (p.tag || '').toUpperCase().trim();
+               let tagInter = tag.toUpperCase().trim();
+               return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
+            })){
+              choca = true;
+            }
           }
         }
         
