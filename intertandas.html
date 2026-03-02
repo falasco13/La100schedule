@@ -56,7 +56,7 @@
     </div>
     <div class="panel">
       <label>2. Cargar Schedule del Día</label>
-      <input type="date" id="fecha-in">
+      <input type="date" id="fecha-in" onchange="resetearEstadoPorFecha()">
       <button onclick="bajarScheduleNube()" style="width:100%; margin-top:5px;">Buscar en la Nube</button>
       <div id="status-nube" style="margin-top:10px;"></div>
     </div>
@@ -71,7 +71,6 @@
   <div id="status-gen" style="margin-top:10px;text-align:center;font-weight:bold;"></div>
   <div id="panel-preview" class="panel" style="display:none; margin-top:30px; border-color:#FF5722;">
     <h2 style="color:#FF5722; margin-top:0;">Revisión Manual</h2>
-    <p style="font-size:0.9rem; color:#666;">Controlá tu aire. Usá la cruz (×) para borrar un material o el botón (🔄) para abrir el catálogo y reemplazar.</p>
     <div style="max-height:550px; overflow-y:auto; border:1px solid #E2E4F6; border-radius:8px;">
       <table id="tabla-preview">
         <thead>
@@ -94,7 +93,7 @@
     <h3 style="margin-top:0;color:#1B1F6E;">Seleccionar Material</h3>
     <select id="select-material" style="width:100%; padding:12px; font-family:'Sora',sans-serif; margin-bottom:20px; border-radius:6px; border:1px solid #ccc;"></select>
     <div style="display:flex; gap:10px;">
-      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar a la Tanda</button>
+      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar</button>
       <button onclick="cerrarModal()" style="flex:1; background:#757575;">Cancelar</button>
     </div>
   </div>
@@ -154,6 +153,14 @@ window.onload = function() {
   document.getElementById('fecha-in').value = yyyy + '-' + mm + '-' + dd;
   cargarMateriales();
 };
+function resetearEstadoPorFecha() {
+  document.getElementById('panel-preview').style.display = 'none';
+  document.getElementById('status-gen').innerHTML = '';
+  document.getElementById('status-nube').innerHTML = '';
+  SCHEDULE_PROMOS = null;
+  const checks = document.querySelectorAll('#lista-tematicas input[type="checkbox"]');
+  checks.forEach(c => c.checked = false);
+}
 function setStatus(id, msg, type){
   const el = document.getElementById(id);
   if(el) el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
@@ -266,155 +273,3 @@ function borrarMaterial(e, td) {
   let tanda = td.className.includes('td-t1') ? 1 : 2;
   td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
 }
-function renderCelda(m, tdClass) {
-  if (!m || !m.n) {
-    let tanda = tdClass.includes('td-t1') ? 1 : 2;
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
-  }
-  return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
-            <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
-              ${m.n}<small>${m.c}</small>
-              <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span>
-            </div>
-          </td>`;
-}
-function generarPrevisualizacion(){
-  const status = document.getElementById('status-gen');
-  status.innerHTML = '⏳ Generando...';
-  try {
-    const fIn = document.getElementById('fecha-in').value;
-    if(!fIn || MAT_WEB.length === 0){ status.innerHTML = '❌ Falta fecha o catálogo.'; return; }
-    const seleccionadas = [];
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
-    const objFecha = new Date(fIn + 'T12:00:00');
-    const diaNum = objFecha.getDay();
-    let grilla = GRILLA_LUN_VIE;
-    if(diaNum === 6) grilla = GRILLA_SABADO;
-    if(diaNum === 0) grilla = GRILLA_DOMINGO;
-    const isFinde = (diaNum === 0 || diaNum === 6);
-    const tbody = document.getElementById('tbody-preview');
-    tbody.innerHTML = '';
-    let currentProg = ""; let usadasEnProg = {}; let usadasWebEnProg = {};
-    function getWebAleatorio(prog){
-      let arr = MAT_WEB.filter(w => !usadasWebEnProg[prog].includes(w.n));
-      if(arr.length === 0){ usadasWebEnProg[prog] = []; arr = [...MAT_WEB]; }
-      arr = shuffle(arr); let esc = arr[0]; usadasWebEnProg[prog].push(esc.n); return esc;
-    }
-    grilla.forEach(bloque => {
-      if(bloque.p !== currentProg){
-        currentProg = bloque.p; usadasEnProg[currentProg] = []; usadasWebEnProg[currentProg] = [];
-        const trH = document.createElement('tr'); trH.className = 'prog-row';
-        trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${currentProg}</td>`;
-        tbody.appendChild(trH);
-      }
-      let t1 = {n:'', c:''}; let t2 = {n:'', c:''};
-      if(bloque.vacio){ if(!isFinde && bloque.fixT2) t2 = bloque.fixT2; }
-      else {
-        let hasFix = !isFinde && bloque.fixT2; let tematicaOK = false;
-        let tagsDispo = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
-        tagsDispo = shuffle(tagsDispo);
-        for(let tag of tagsDispo){
-          let choca = false;
-          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-            const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
-            if(hAprox){
-              const ps = SCHEDULE_PROMOS.asignaciones[hAprox];
-              if(ps && Array.isArray(ps)){
-                choca = ps.some(p => {
-                   let tp = typeof p === 'string' ? p : (p.tag || p.n || '');
-                   return tag.toUpperCase().includes(tp.toUpperCase().trim());
-                });
-              }
-            }
-          }
-          if(!choca && MAT_TEMATICAS[tag]){
-            let escogido = MAT_TEMATICAS[tag][Math.floor(Math.random() * MAT_TEMATICAS[tag].length)];
-            if(bloque.noT2) t1 = escogido; else if (hasFix) { t1 = escogido; t2 = bloque.fixT2; }
-            else { if(Math.random() > 0.5){ t1 = escogido; t2 = getWebAleatorio(currentProg); } else { t1 = getWebAleatorio(currentProg); t2 = escogido; } }
-            usadasEnProg[currentProg].push(tag); tematicaOK = true; break;
-          }
-        }
-        if(!tematicaOK){
-          if(bloque.noT2) t1 = getWebAleatorio(currentProg); else if(hasFix){ t1 = getWebAleatorio(currentProg); t2 = bloque.fixT2; }
-          else { t1 = getWebAleatorio(currentProg); t2 = getWebAleatorio(currentProg); }
-        }
-      }
-      const tr = document.createElement('tr'); tr.dataset.prog = currentProg; tr.dataset.h = bloque.h;
-      tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
-        ${renderCelda(t1, 'td-t1')}
-        <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
-        ${renderCelda(t2, 'td-t2')}
-        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>`;
-      tbody.appendChild(tr);
-    });
-    document.getElementById('panel-preview').style.display = 'block'; status.innerHTML = '✅ OK.';
-  } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
-}
-function abrirModal(tr, tandaNum){
-  filaEditando = tr; tandaEditando = tandaNum;
-  const select = document.getElementById('select-material');
-  select.innerHTML = '<option value="|">-- Seleccionar --</option>';
-  let gW = document.createElement('optgroup'); gW.label = "RELLENOS WEB";
-  MAT_WEB.sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => { gW.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`; });
-  select.appendChild(gW);
-  let ag = {}; for(let tag in MAT_TEMATICAS){ MAT_TEMATICAS[tag].forEach(m => { let cat = m.cat || 'OTRAS'; if(!ag[cat]) ag[cat] = []; ag[cat].push(m); }); }
-  Object.keys(ag).sort((a,b)=>a.localeCompare(b)).forEach(cat => {
-     let g = document.createElement('optgroup'); g.label = cat;
-     ag[cat].sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => { g.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`; });
-     select.appendChild(g);
-  });
-  document.getElementById('modal-reemplazo').style.display = 'flex';
-}
-function cerrarModal(){ document.getElementById('modal-reemplazo').style.display = 'none'; }
-function aplicarReemplazo(){
-  const val = document.getElementById('select-material').value; if(val === "|") return;
-  const ps = val.split('|'); const td = tandaEditando === 1 ? filaEditando.querySelector('.td-t1') : filaEditando.querySelector('.td-t2');
-  td.dataset.n = ps[0]; td.dataset.c = ps[1]; td.dataset.cat = ps[2];
-  td.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[2] || 'OTRAS')}">${ps[0]}<small>${ps[1]}</small>
-    <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span></div>`;
-  cerrarModal();
-}
-async function exportarDesdeTabla(){
-  try {
-      const fIn = document.getElementById('fecha-in').value; const objFecha = new Date(fIn + 'T12:00:00');
-      const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
-      const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-      const diaNombre = dias[objFecha.getDay()];
-      const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('INTERTANDAS', {views: [{showGridLines: false}]});
-      ws.columns = [{ width: 10 }, { width: 45 }, { width: 12 }, { width: 3 }, { width: 45 }, { width: 12 }];
-      const rowT = ws.addRow([`INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()}`]);
-      ws.mergeCells('A1:F1'); rowT.height = 30;
-      for(let i=1; i<=6; i++){ let c = rowT.getCell(i); c.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
-          c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3949AB' } }; c.alignment = { vertical: 'middle', horizontal: 'center' }; }
-      ws.addRow([]);
-      const trs = document.querySelectorAll('#tbody-preview tr');
-      trs.forEach(tr => {
-        if(tr.classList.contains('prog-row')) {
-            const progRow = ws.addRow([tr.innerText.trim()]); ws.mergeCells(`A${progRow.number}:F${progRow.number}`);
-            for(let i=1; i<=6; i++){ let c = progRow.getCell(i); c.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FF1A237E' } };
-                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8EAF6' } }; c.alignment = { vertical: 'middle', horizontal: 'center' };
-                c.border = { top: {style:'medium', color:{argb:'FF9FA8DA'}}, bottom: {style:'medium', color:{argb:'FF9FA8DA'}}, left: {style:'medium', color:{argb:'FF9FA8DA'}}, right: {style:'medium', color:{argb:'FF9FA8DA'}} }; }
-            const sub = ws.addRow(['HORA', 'TANDA 1', '', '', 'TANDA 2', '']);
-            for(let i=1; i<=6; i++){ let c = sub.getCell(i); c.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF555555' } };
-                c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF5F6F8' } }; 
-                if(i !== 4) { c.border = { top: {style:'thin', color:{argb:'FFDDDDDD'}}, bottom: {style:'thin', color:{argb:'FFDDDDDD'}}, left: {style:'thin', color:{argb:'FFDDDDDD'}}, right: {style:'thin', color:{argb:'FFDDDDDD'}} }; } }
-            return;
-        }
-        let d1 = tr.querySelector('.td-t1'); let d2 = tr.querySelector('.td-t2');
-        const dr = ws.addRow([parseFloat(tr.dataset.h), d1.dataset.n || '', d1.dataset.c || '', '', d2.dataset.n || '', d2.dataset.c || '']);
-        dr.font = { name: 'Calibri', size: 11, color: { argb: 'FF333333' } };
-        let ch = dr.getCell(1); ch.numFmt = 'hh:mm'; ch.alignment = { horizontal: 'center', vertical: 'middle' };
-        ch.border = { top: {style:'thin', color:{argb:'FFEEEEEE'}}, bottom: {style:'thin', color:{argb:'FFEEEEEE'}}, left: {style:'medium', color:{argb:'FF9FA8DA'}}, right: {style:'medium', color:{argb:'FF9FA8DA'}} };
-        [2, 3, 5, 6].forEach(i => { let c = dr.getCell(i); c.alignment = { vertical: 'middle', wrapText: true };
-          let side = (i==2||i==5) ? 'left' : 'right';
-          c.border = { top: {style:'thin', color:{argb:'FFEEEEEE'}}, bottom: {style:'thin', color:{argb:'FFEEEEEE'}}, [side]: {style:'medium', color:{argb:'FF9FA8DA'}} }; });
-      });
-      const buffer = await wb.xlsx.writeBuffer();
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-      link.download = `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.xlsx`; link.click();
-  } catch (error) { status.innerHTML = '❌ Error: ' + error.message; }
-}
-</script>
-</body>
-</html>
