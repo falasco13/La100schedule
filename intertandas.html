@@ -43,16 +43,15 @@
   
   <div class="grid-2">
     <div class="panel">
-      <label>1. Base de Datos (Google Sheet)</label>
-      <input type="text" id="url-in" value="https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612">
-      <button onclick="cargarMateriales()" style="display:none;">Cargar</button>
+      <label>1. Catálogo de Drive</label>
       <div id="status-mat" style="margin-top:10px;"></div>
+      <button onclick="cargarMateriales()" style="width:100%; margin-top:15px; background:#4CAF50; padding:10px;">🔄 Recargar Catálogo</button>
     </div>
     
     <div class="panel">
       <label>2. Cargar Schedule del Día (Antichoques)</label>
       <input type="date" id="fecha-in">
-      <button onclick="bajarScheduleNube()">Buscar en la Nube</button>
+      <button onclick="bajarScheduleNube()" style="width:100%; margin-top:5px;">Buscar en la Nube</button>
       <div id="status-nube" style="margin-top:10px;"></div>
     </div>
   </div>
@@ -60,7 +59,7 @@
   <div class="panel">
     <label>3. Seleccionar Artistas a Pautar (1 vez x Programa)</label>
     <div class="list-container" id="lista-tematicas">
-      <p style="color:#888;font-size:0.9rem;">Cargando catálogo...</p>
+      <p style="color:#888;font-size:0.9rem;">Conectando con Google Drive...</p>
     </div>
   </div>
 
@@ -109,13 +108,12 @@ const GRILLA_LUN_VIE = [
 
 function setStatus(id, msg, type){
   const el = document.getElementById(id);
-  el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
+  if(el) el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
 }
 
 async function cargarMateriales(){
-  const url = document.getElementById('url-in').value.trim();
-  if(!url){ setStatus('status-mat', 'Pegá la URL', 'err'); return; }
-  setStatus('status-mat', 'Conectando...', 'load');
+  const url = 'https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612';
+  setStatus('status-mat', 'Conectando con Drive...', 'load');
   
   let fetchUrl = url;
   const m = url.match(/\/d\/([^\/\?]+)/);
@@ -140,6 +138,11 @@ async function cargarMateriales(){
 }
 
 function procesarCSV(text){
+  if(!text){
+    setStatus('status-mat', '❌ Datos vacíos o error de lectura.', 'err');
+    return;
+  }
+  
   if(text.toLowerCase().includes('<!doctype html>') || text.toLowerCase().includes('<html')){
      setStatus('status-mat', '❌ Tu Sheet es PRIVADO.', 'err');
      return;
@@ -161,4 +164,246 @@ function procesarCSV(text){
        if(char === '"' && rawLine[j+1] === '"'){
            colVal += '"';
            j++;
-       } else
+       } else if(char === '"'){
+           inQuotes = !inQuotes;
+       } else if(char === ',' && !inQuotes){
+           cols.push(colVal.trim());
+           colVal = '';
+       } else {
+           colVal += char;
+       }
+    }
+    cols.push(colVal.trim());
+    
+    if(cols.length < 2 || !cols[0]) continue;
+    
+    const n = cols[0].toUpperCase();
+    const c = cols[1] || '';
+    const cat = (cols[2] || '').toUpperCase();
+    let tag = (cols[3] || '').toUpperCase().trim();
+    
+    if(!tag) tag = n.replace('INTERT LA 100 ', '').replace('SEP LA 100 ', '').trim();
+    
+    const item = {n:cols[0], c:c, tag:tag};
+    
+    if(cat.includes('WEB') || n.includes('WEB')){
+      MAT_WEB.push(item);
+    } else {
+      if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
+      MAT_TEMATICAS[tag].push(item);
+    }
+  }
+  
+  const tagsCount = Object.keys(MAT_TEMATICAS).length;
+  if(MAT_WEB.length === 0 && tagsCount === 0){
+     setStatus('status-mat', '⚠️ Archivo vacío o estructura incorrecta.', 'err');
+  } else {
+     setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Artistas`, 'ok');
+  }
+  renderTematicas();
+}
+
+function renderTematicas(){
+  const list = document.getElementById('lista-tematicas');
+  if(!list) return;
+  list.innerHTML = '';
+  const tags = Object.keys(MAT_TEMATICAS).sort();
+  
+  if(tags.length === 0){
+    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">Sin datos.</p>';
+    return;
+  }
+  
+  tags.forEach((tag, idx) => {
+    const div = document.createElement('div');
+    div.className = 'check-item';
+    div.innerHTML = `<input type="checkbox" id="chk-${idx}" value="${tag}"> <label for="chk-${idx}" style="margin:0;font-weight:400;"><strong>${tag}</strong> (${MAT_TEMATICAS[tag].length} audios)</label>`;
+    list.appendChild(div);
+  });
+}
+
+async function bajarScheduleNube(){
+  const f = document.getElementById('fecha-in').value;
+  if(!f){ setStatus('status-nube', 'Elegí la fecha primero', 'err'); return; }
+  setStatus('status-nube', 'Buscando...', 'load');
+  
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
+    const data = await res.json();
+    const target = `asignaciones_${f}.json`;
+    const found = (data && data.files) ? data.files.find(x => x.name === target) : null;
+    
+    if(found){
+      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
+      SCHEDULE_PROMOS = await reqFile.json();
+      setStatus('status-nube', `✅ Antichoques activo.`, 'ok');
+    } else {
+      SCHEDULE_PROMOS = null;
+      setStatus('status-nube', `⚠️ Sin schedule previo.`, 'err');
+    }
+  } catch(e) {
+    SCHEDULE_PROMOS = null;
+    setStatus('status-nube', '❌ Error de red.', 'err');
+  }
+}
+
+function shuffle(arr){
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function generarPrevisualizacion(){
+  const statusGen = document.getElementById('status-gen');
+  statusGen.innerHTML = '';
+  
+  if(MAT_WEB.length === 0){
+    statusGen.innerHTML = '❌ Faltan cargar los materiales de la Hoja 3.';
+    return;
+  }
+  
+  const fIn = document.getElementById('fecha-in').value;
+  if(!fIn){
+    statusGen.innerHTML = '❌ Elegí una fecha primero.';
+    return;
+  }
+
+  const seleccionadas = [];
+  document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
+  
+  const objFecha = new Date(fIn + 'T12:00:00');
+  const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
+  const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
+  
+  let lastWeb = null;
+  function getWebAleatorio(){
+    if(MAT_WEB.length === 0) return {n:'', c:''};
+    let arr = shuffle([...MAT_WEB]);
+    if(lastWeb && arr[0].c === lastWeb.c && arr.length > 1) arr.reverse();
+    lastWeb = arr[0];
+    return arr[0] || {n:'', c:''};
+  }
+  
+  const tbody = document.getElementById('tbody-preview');
+  tbody.innerHTML = '';
+  
+  let currentProg = "";
+  let usadasEnProg = {};
+  
+  GRILLA_LUN_VIE.forEach(bloque => {
+    if(bloque.p !== currentProg){
+      currentProg = bloque.p;
+      usadasEnProg[currentProg] = [];
+      const trH = document.createElement('tr');
+      trH.className = 'prog-row';
+      trH.innerHTML = `<td colspan="6">${currentProg}</td>`;
+      tbody.appendChild(trH);
+    }
+    
+    let t1 = getWebAleatorio();
+    let t2 = getWebAleatorio();
+    
+    if(bloque.vacio){
+      t1 = {n:'', c:''};
+      t2 = {n:'', c:''};
+      if(!isFinde && bloque.fixT2){
+        t2 = bloque.fixT2;
+      }
+    } else {
+      if(!isFinde && bloque.fixT2){
+        t2 = bloque.fixT2;
+      } else {
+        let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
+        tagsDisponibles = shuffle(tagsDisponibles);
+        
+        for(let tag of tagsDisponibles){
+          let choca = false;
+          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
+            const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
+            if(horaAprox){
+              const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
+              if(proms && proms.some(p => {
+                 let tagPromo = (p.tag || '').toUpperCase().trim();
+                 let tagInter = tag.toUpperCase().trim();
+                 return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
+              })){
+                choca = true;
+              }
+            }
+          }
+          
+          if(!choca && MAT_TEMATICAS[tag]){
+            let audios = MAT_TEMATICAS[tag];
+            t2 = audios[Math.floor(Math.random() * audios.length)];
+            usadasEnProg[currentProg].push(tag);
+            break;
+          }
+        }
+      }
+    }
+    
+    const tr = document.createElement('tr');
+    tr.dataset.prog = currentProg;
+    tr.innerHTML = `
+      <td>${bloque.h}</td>
+      <td style="color:#888;">${currentProg}</td>
+      <td contenteditable="true">${t1.n}</td>
+      <td contenteditable="true">${t1.c}</td>
+      <td contenteditable="true">${t2.n}</td>
+      <td contenteditable="true">${t2.c}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+  
+  document.getElementById('panel-preview').style.display = 'block';
+  setTimeout(() => {
+    document.getElementById('panel-preview').scrollIntoView({behavior: 'smooth'});
+  }, 100);
+}
+
+function exportarDesdeTabla(){
+  const fIn = document.getElementById('fecha-in').value;
+  const objFecha = new Date(fIn + 'T12:00:00');
+  const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const diaNombre = dias[objFecha.getDay()];
+  
+  let csv = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()},,,,\r\n,,,,\r\n`;
+  
+  const trs = document.querySelectorAll('#tbody-preview tr');
+  let currentProg = "";
+  
+  trs.forEach(tr => {
+    if(tr.classList.contains('prog-row')) return;
+    
+    let p = tr.dataset.prog;
+    if(p !== currentProg){
+      csv += `${p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
+      currentProg = p;
+    }
+    
+    let tds = tr.querySelectorAll('td');
+    let h = tds[0].innerText.trim();
+    let t1_n = tds[2].innerText.trim();
+    let t1_c = tds[3].innerText.trim();
+    let t2_n = tds[4].innerText.trim();
+    let t2_c = tds[5].innerText.trim();
+    
+    csv += `${h},${t1_n},${t1_c} ,${t2_n},${t2_c}\r\n`;
+  });
+  
+  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
+}
+
+window.onload = cargarMateriales;
+</script>
+</body>
+</html>
