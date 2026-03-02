@@ -31,13 +31,57 @@
   .cat-header{background:#E2E4F6;padding:8px;font-weight:700;color:#1B1F6E;margin-top:10px;border-radius:4px;font-size:0.9rem;}
   
   table{width:100%;border-collapse:collapse;margin-top:20px;font-size:0.85rem;}
-  th, td{border:1px solid #E2E4F6;padding:8px;text-align:left;}
-  th{background:#1B1F6E;color:#fff;position:sticky;top:0;}
-  td[contenteditable="true"]{background:#FFFDE7;cursor:text;transition:0.2s;}
-  td[contenteditable="true"]:focus{background:#FFF59D;outline:2px solid #FF5722;}
+  th, td{border:1px solid #E2E4F6;padding:10px;text-align:left;}
+  th{background:#F8F9FA;color:#333;position:sticky;top:0;font-weight:700;}
   .prog-row{background:#E8EAF6;font-weight:bold;color:#1B1F6E;}
-  .btn-edit{background:#E2E4F6;color:#1B1F6E;border:none;padding:5px 8px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;}
-  .btn-edit:hover{background:#C5CAE9;}
+  .btn-edit{background:#F0F2F5;color:#555;border:1px solid #ccc;padding:8px 10px;border-radius:6px;cursor:pointer;font-size:14px;transition:0.2s;}
+  .btn-edit:hover{background:#E2E4F6; color:#1B1F6E; border-color:#1B1F6E;}
+  
+  /* Estilos del Bloque de Material (Chip) */
+  .material-chip {
+    position: relative;
+    padding: 10px 25px 10px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    border: 1px solid rgba(0,0,0,0.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: 0.2s;
+  }
+  .material-chip:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.08); }
+  .material-chip small {
+    display: block;
+    font-weight: 400;
+    color: #555;
+    margin-top: 4px;
+    font-size: 0.75rem;
+  }
+  .delete-btn {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    cursor: pointer;
+    color: #999;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+    transition: 0.2s;
+  }
+  .delete-btn:hover { color: #D32F2F; transform: scale(1.2); }
+  
+  .empty-slot {
+    color: #888;
+    font-style: italic;
+    text-align: center;
+    padding: 15px;
+    border: 1px dashed #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    background: #FAFBFF;
+    transition: 0.2s;
+  }
+  .empty-slot:hover { background: #F0F2F5; border-color: #999; color: #333; }
   
   #modal-reemplazo{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;}
   .modal-content{background:#fff;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);}
@@ -75,18 +119,16 @@
 
   <div id="panel-preview" class="panel" style="display:none; margin-top:30px; border-color:#FF5722;">
     <h2 style="color:#FF5722; margin-top:0;">Revisión Manual</h2>
-    <p style="font-size:0.9rem; color:#666;">Hacé click en las celdas amarillas para modificar manualmente, o usá el botón 🔄 para buscar en el catálogo.</p>
-    <div style="max-height:500px; overflow-y:auto; border:1px solid #ccc;">
+    <p style="font-size:0.9rem; color:#666;">Controlá tu aire. Usá la cruz (×) para borrar un material o el botón (🔄) para abrir el catálogo y reemplazar.</p>
+    <div style="max-height:550px; overflow-y:auto; border:1px solid #E2E4F6; border-radius:8px;">
       <table id="tabla-preview">
         <thead>
           <tr>
-            <th style="width:80px;">HORA</th>
+            <th style="width:60px; text-align:center;">HORA</th>
             <th>TANDA 1</th>
-            <th style="width:100px;"></th>
-            <th style="width:30px;"></th>
+            <th style="width:40px;"></th>
             <th>TANDA 2</th>
-            <th style="width:100px;"></th>
-            <th style="width:30px;"></th>
+            <th style="width:40px;"></th>
           </tr>
         </thead>
         <tbody id="tbody-preview"></tbody>
@@ -98,12 +140,11 @@
 
 <div id="modal-reemplazo">
   <div class="modal-content">
-    <h3 style="margin-top:0;color:#1B1F6E;">Reemplazar Material</h3>
+    <h3 style="margin-top:0;color:#1B1F6E;">Seleccionar Material</h3>
     <select id="select-material" style="width:100%; padding:12px; font-family:'Sora',sans-serif; margin-bottom:20px; border-radius:6px; border:1px solid #ccc;"></select>
     <div style="display:flex; gap:10px;">
-      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar</button>
-      <button onclick="cerrarModal()" style="flex:1; background:#C62828;">Cancelar</button>
-      <button onclick="vaciarCelda()" style="flex:1; background:#757575;">Vaciar Tanda</button>
+      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar a la Tanda</button>
+      <button onclick="cerrarModal()" style="flex:1; background:#757575;">Cancelar</button>
     </div>
   </div>
 </div>
@@ -116,6 +157,18 @@ let SCHEDULE_PROMOS = null;
 let filaEditando = null;
 let tandaEditando = null;
 
+// Paleta de colores pastel moderna
+const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6', '#F0FFF0', '#F5F5DC', '#FFFACD', '#E0FFFF'];
+let colorMap = {};
+
+function getColorForCat(cat) {
+  if(cat.includes('WEB')) return '#FFF9C4'; // Amarillo re suave para webs
+  if (!colorMap[cat]) {
+    colorMap[cat] = PALETA[Object.keys(colorMap).length % PALETA.length];
+  }
+  return colorMap[cat];
+}
+
 const GRILLA_LUN_VIE = [
   {h:0.0, p:"LA HORA DE LOS LENTOS", noT2:true},
   {h:0.041666666666666664, p:"LA HORA DE LOS LENTOS", noT2:true},
@@ -126,11 +179,11 @@ const GRILLA_LUN_VIE = [
   {h:0.25, p:"EL CLUB DEL MORO", vacio:true},
   {h:0.2916666666666667, p:"EL CLUB DEL MORO", vacio:true},
   {h:0.3333333333333333, p:"EL CLUB DEL MORO", vacio:true},
-  {h:0.375, p:"EL CLUB DEL MORO", vacio:true, fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053"}},
+  {h:0.375, p:"EL CLUB DEL MORO", vacio:true, fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053", cat:"COMING"}},
   {h:0.4166666666666667, p:"NO ESTÁ TODO DICHO"},
   {h:0.4583333333333333, p:"NO ESTÁ TODO DICHO"},
   {h:0.5, p:"NO ESTÁ TODO DICHO"},
-  {h:0.5416666666666666, p:"NO ESTÁ TODO DICHO", fixT2:{n:"COMING LA 100 SARASA NEW", c:"C2102054"}},
+  {h:0.5416666666666666, p:"NO ESTÁ TODO DICHO", fixT2:{n:"COMING LA 100 SARASA NEW", c:"C2102054", cat:"COMING"}},
   {h:0.5833333333333334, p:"SARASA"},
   {h:0.625, p:"SARASA"},
   {h:0.6666666666666666, p:"SARASA"},
@@ -205,6 +258,7 @@ function procesarCSV(text){
   const lines = text.split('\n');
   MAT_WEB = [];
   MAT_TEMATICAS = {};
+  colorMap = {}; 
   
   for(let i=1; i<lines.length; i++){
     let rawLine = lines[i].replace(/[\r\n]+/g, '').trim();
@@ -233,7 +287,7 @@ function procesarCSV(text){
     
     const n = cols[0].toUpperCase();
     const c = cols[1] || '';
-    const cat = (cols[2] || 'SIN CATEGORÍA').toUpperCase().trim();
+    const cat = (cols[2] || 'OTRAS').toUpperCase().trim();
     let tag = (cols[3] || '').toUpperCase().trim();
     
     if(!tag) tag = n.replace('INTERT LA 100 ', '').replace('SEP LA 100 ', '').trim();
@@ -279,6 +333,7 @@ function renderTematicas(){
   categoriasOrdenadas.forEach(cat => {
     const header = document.createElement('div');
     header.className = 'cat-header';
+    header.style.backgroundColor = getColorForCat(cat);
     header.innerText = cat;
     list.appendChild(header);
     
@@ -322,6 +377,33 @@ function shuffle(arr){
   return arr.sort(() => Math.random() - 0.5);
 }
 
+function borrarMaterial(e, tdElement) {
+  e.stopPropagation();
+  tdElement.dataset.n = '';
+  tdElement.dataset.c = '';
+  tdElement.dataset.cat = '';
+  let tdClass = tdElement.className;
+  let tandaNum = tdClass.includes('td-t1') ? 1 : 2;
+  tdElement.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tandaNum})">+ Agregar Intertanda</div>`;
+}
+
+function renderCelda(m, tdClass) {
+  if (!m || !m.n) {
+    let tandaNum = tdClass.includes('td-t1') ? 1 : 2;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat="" style="vertical-align:middle;">
+              <div class="empty-slot" onclick="abrirModal(this.parentElement, ${tandaNum})">+ Agregar Intertanda</div>
+            </td>`;
+  }
+  let bgColor = getColorForCat(m.cat || 'SIN CATEGORÍA');
+  return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}" style="vertical-align:middle;">
+            <div class="material-chip" style="background-color:${bgColor}">
+              ${m.n}
+              <small>${m.c}</small>
+              <span class="delete-btn" title="Borrar" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span>
+            </div>
+          </td>`;
+}
+
 function generarPrevisualizacion(){
   const statusGen = document.getElementById('status-gen');
   statusGen.innerHTML = '⏳ Generando grilla...';
@@ -341,10 +423,6 @@ function generarPrevisualizacion(){
     const seleccionadas = [];
     document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
     
-    const objFecha = new Date(fIn + 'T12:00:00');
-    const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
-    const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
-    
     const tbody = document.getElementById('tbody-preview');
     tbody.innerHTML = '';
     
@@ -353,7 +431,7 @@ function generarPrevisualizacion(){
     let usadasWebEnProg = {};
     
     function getWebAleatorio(progName){
-      if(MAT_WEB.length === 0) return {n:'', c:''};
+      if(MAT_WEB.length === 0) return {n:'', c:'', cat:'WEB'};
       let arr = MAT_WEB.filter(w => !usadasWebEnProg[progName].includes(w.n));
       if(arr.length === 0){
         usadasWebEnProg[progName] = [];
@@ -365,6 +443,10 @@ function generarPrevisualizacion(){
       return escogido;
     }
     
+    const objFecha = new Date(fIn + 'T12:00:00');
+    const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
+    const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
+
     GRILLA_LUN_VIE.forEach(bloque => {
       if(bloque.p !== currentProg){
         currentProg = bloque.p;
@@ -372,7 +454,7 @@ function generarPrevisualizacion(){
         usadasWebEnProg[currentProg] = [];
         const trH = document.createElement('tr');
         trH.className = 'prog-row';
-        trH.innerHTML = `<td colspan="7">${currentProg}</td>`;
+        trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${currentProg}</td>`;
         tbody.appendChild(trH);
       }
       
@@ -449,13 +531,11 @@ function generarPrevisualizacion(){
       tr.dataset.prog = currentProg;
       tr.dataset.h = bloque.h;
       tr.innerHTML = `
-        <td style="font-weight:bold; color:#555;">${decToTime(bloque.h)}</td>
-        <td class="t1-n" contenteditable="true">${t1.n || ''}</td>
-        <td class="t1-c" contenteditable="true">${t1.c || ''}</td>
-        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
-        <td class="t2-n" contenteditable="true">${t2.n || ''}</td>
-        <td class="t2-c" contenteditable="true">${t2.c || ''}</td>
-        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>
+        <td style="font-weight:bold; color:#555; vertical-align:middle; text-align:center; font-size:1.1rem;">${decToTime(bloque.h)}</td>
+        ${renderCelda(t1, 'td-t1')}
+        <td style="vertical-align:middle; text-align:center;"><button class="btn-edit" title="Reemplazar T1" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
+        ${renderCelda(t2, 'td-t2')}
+        <td style="vertical-align:middle; text-align:center;"><button class="btn-edit" title="Reemplazar T2" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>
       `;
       tbody.appendChild(tr);
     });
@@ -481,7 +561,7 @@ function abrirModal(tr, tandaNum){
   let gWeb = document.createElement('optgroup');
   gWeb.label = "RELLENOS WEB";
   MAT_WEB.sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => {
-     gWeb.innerHTML += `<option value="${m.n}|${m.c}">${m.n}</option>`;
+     gWeb.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`;
   });
   select.appendChild(gWeb);
   
@@ -498,7 +578,7 @@ function abrirModal(tr, tandaNum){
      let g = document.createElement('optgroup');
      g.label = cat;
      agrupar[cat].sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => {
-        g.innerHTML += `<option value="${m.n}|${m.c}">${m.n}</option>`;
+        g.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`;
      });
      select.appendChild(g);
   });
@@ -516,25 +596,21 @@ function aplicarReemplazo(){
   const partes = val.split('|');
   const n = partes[0];
   const c = partes[1] || '';
+  const cat = partes[2] || '';
   
-  if(tandaEditando === 1){
-    filaEditando.querySelector('.t1-n').innerText = n;
-    filaEditando.querySelector('.t1-c').innerText = c;
-  } else {
-    filaEditando.querySelector('.t2-n').innerText = n;
-    filaEditando.querySelector('.t2-c').innerText = c;
-  }
-  cerrarModal();
-}
-
-function vaciarCelda(){
-  if(tandaEditando === 1){
-    filaEditando.querySelector('.t1-n').innerText = '';
-    filaEditando.querySelector('.t1-c').innerText = '';
-  } else {
-    filaEditando.querySelector('.t2-n').innerText = '';
-    filaEditando.querySelector('.t2-c').innerText = '';
-  }
+  const td = tandaEditando === 1 ? filaEditando.querySelector('.td-t1') : filaEditando.querySelector('.td-t2');
+  td.dataset.n = n;
+  td.dataset.c = c;
+  td.dataset.cat = cat;
+  
+  let bgColor = getColorForCat(cat || 'SIN CATEGORÍA');
+  td.innerHTML = `
+    <div class="material-chip" style="background-color:${bgColor}">
+      ${n}
+      <small>${c}</small>
+      <span class="delete-btn" title="Borrar" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span>
+    </div>
+  `;
   cerrarModal();
 }
 
@@ -550,8 +626,9 @@ async function exportarDesdeTabla(){
       const wb = new ExcelJS.Workbook();
       const ws = wb.addWorksheet('INTERTANDAS');
 
+      // Columnas ajustadas: HORA | T1_N | T1_C | VACIO | T2_N | T2_C
       ws.columns = [
-        { width: 15 },
+        { width: 12 },
         { width: 45 },
         { width: 15 },
         { width: 5 },
@@ -559,9 +636,10 @@ async function exportarDesdeTabla(){
         { width: 15 }
       ];
 
+      // Titulo
       const rowTitulo = ws.addRow([tituloFecha]);
       ws.mergeCells('A1:F1');
-      rowTitulo.font = { name: 'Arial', size: 14, bold: true, color: { argb: 'FF000000' } };
+      rowTitulo.font = { name: 'Calibri', size: 14, bold: true, color: { argb: 'FF333333' } };
       rowTitulo.alignment = { vertical: 'middle', horizontal: 'center' };
       ws.addRow([]);
 
@@ -572,34 +650,43 @@ async function exportarDesdeTabla(){
             let currentProg = tr.innerText.trim();
             const progRow = ws.addRow([currentProg]);
             ws.mergeCells(`A${progRow.number}:F${progRow.number}`);
-            progRow.font = { name: 'Arial', size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
-            progRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
+            // Azul suave corporativo para el programa
+            progRow.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+            progRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF5C6BC0' } }; 
             progRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
             const subHead = ws.addRow(['HORA', 'TANDA 1', '', '', 'TANDA 2', '']);
-            subHead.font = { bold: true };
-            subHead.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2E4F6' } };
+            subHead.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF444444' } };
+            subHead.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0F2F5' } }; 
             subHead.eachCell(c => c.border = {
-              top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+              top: {style:'thin', color:{argb:'FFCCCCCC'}}, left: {style:'thin', color:{argb:'FFCCCCCC'}}, 
+              bottom: {style:'thin', color:{argb:'FFCCCCCC'}}, right: {style:'thin', color:{argb:'FFCCCCCC'}}
             });
             return;
         }
 
         let h = parseFloat(tr.dataset.h);
-        let t1_n = tr.querySelector('.t1-n').innerText.trim();
-        let t1_c = tr.querySelector('.t1-c').innerText.trim();
-        let t2_n = tr.querySelector('.t2-n').innerText.trim();
-        let t2_c = tr.querySelector('.t2-c').innerText.trim();
+        let td1 = tr.querySelector('.td-t1');
+        let td2 = tr.querySelector('.td-t2');
+        
+        let t1_n = td1.dataset.n || '';
+        let t1_c = td1.dataset.c || '';
+        let t2_n = td2.dataset.n || '';
+        let t2_c = td2.dataset.c || '';
 
         const dataRow = ws.addRow([h, t1_n, t1_c, '', t2_n, t2_c]);
         
+        dataRow.font = { name: 'Calibri', size: 11, color: { argb: 'FF000000' } };
         dataRow.getCell(1).numFmt = '0.00000000000000';
         dataRow.getCell(1).alignment = { horizontal: 'left' };
         
         [1, 2, 3, 5, 6].forEach(i => {
-            dataRow.getCell(i).border = {
-              top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+            let cell = dataRow.getCell(i);
+            cell.border = {
+              top: {style:'thin', color:{argb:'FFEEEEEE'}}, left: {style:'thin', color:{argb:'FFEEEEEE'}}, 
+              bottom: {style:'thin', color:{argb:'FFEEEEEE'}}, right: {style:'thin', color:{argb:'FFEEEEEE'}}
             };
+            cell.alignment = { vertical: 'middle', wrapText: true };
         });
       });
 
