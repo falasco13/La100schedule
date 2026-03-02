@@ -184,6 +184,8 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
         <div class="dz-text">Arrastrá el archivo <strong>.json</strong><br>o hacé click para abrirlo</div>
         <input type="file" id="file-in" accept=".json">
       </div>
+      <button id="btn-nube" style="width:100%; margin-top:10px; padding:10px; background:#1B1F6E; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-family:'Sora',sans-serif;">☁️ Cargar pauta desde la Nube</button>
+      <div id="nube-list" style="display:none; margin-top:10px; background:#FAFBFF; border:1px solid #E2E4F6; border-radius:6px; padding:10px; max-height:150px; overflow-y:auto; font-size:0.8rem;"></div>
       <div id="import-ok" style="display:none;" class="dz-ok"></div>
     </div>
 
@@ -499,6 +501,51 @@ const dz=document.getElementById('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
 dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
 dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');if(e.dataTransfer.files[0])importJSON(e.dataTransfer.files[0]);});
+
+document.getElementById('btn-nube').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-nube');
+  const list = document.getElementById('nube-list');
+  btn.innerText = '⏳ Conectando con Google Drive...';
+  
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
+    const data = await res.json();
+    
+    if (data.status === 'success' && data.files.length > 0) {
+      list.style.display = 'block';
+      list.innerHTML = '';
+      
+      data.files.forEach(f => {
+        const item = document.createElement('div');
+        item.style.padding = '8px';
+        item.style.borderBottom = '1px solid #E2E4F6';
+        item.style.cursor = 'pointer';
+        item.style.color = '#1B1F6E';
+        item.innerHTML = `📄 <strong>${f.name}</strong>`;
+        
+        item.onclick = async () => {
+          btn.innerText = '⏳ Descargando pauta...';
+          list.style.display = 'none';
+          try {
+            const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${f.name}`);
+            const fileData = await reqFile.text();
+            const downloadedFile = new File([fileData], f.name, {type: 'application/json'});
+            importJSON(downloadedFile);
+            btn.innerText = '☁️ Cargar pauta desde la Nube';
+          } catch (e) {
+            btn.innerText = '❌ Error al descargar';
+          }
+        };
+        list.appendChild(item);
+      });
+      btn.innerText = '☁️ Cargar pauta desde la Nube';
+    } else {
+      btn.innerText = '☁️ La nube está vacía';
+    }
+  } catch (e) {
+    btn.innerText = '❌ Error de conexión';
+  }
+});
 
 function importJSON(file){
   if(!file.name.endsWith('.json')){alert('Seleccioná un archivo .json del coordinador');return;}
