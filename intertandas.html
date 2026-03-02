@@ -160,3 +160,426 @@ function setStatus(id, msg, type){
 
 function decToTime(d){
   let m = Math.round(d * 24 * 60);
+  let hh = Math.floor(m / 60);
+  let mm = m % 60;
+  return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
+}
+
+async function cargarMateriales(){
+  const url = 'https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612';
+  setStatus('status-mat', 'Conectando con Drive...', 'load');
+  
+  let fetchUrl = url;
+  const m = url.match(/\/d\/([^\/\?]+)/);
+  const gidMatch = url.match(/[?&#]gid=([^&#\s]+)/);
+  let gidStr = gidMatch ? `&gid=${gidMatch[1]}` : '';
+  
+  if(m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gidStr}`;
+  
+  try {
+    const r = await fetch(fetchUrl, {cache:'no-cache'});
+    let text = await r.text();
+    procesarCSV(text);
+  } catch(e) {
+    try {
+      const r2 = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(fetchUrl)}`);
+      const d = await r2.json();
+      procesarCSV(d.contents);
+    } catch(e2) {
+      setStatus('status-mat', '❌ Error de red.', 'err');
+    }
+  }
+}
+
+function procesarCSV(text){
+  if(!text){
+    setStatus('status-mat', '❌ Datos vacíos o error de lectura.', 'err');
+    return;
+  }
+  
+  if(text.toLowerCase().includes('<!doctype html>') || text.toLowerCase().includes('<html')){
+     setStatus('status-mat', '❌ Tu Sheet es PRIVADO.', 'err');
+     return;
+  }
+
+  const lines = text.split('\n');
+  MAT_WEB = [];
+  MAT_TEMATICAS = {};
+  
+  for(let i=1; i<lines.length; i++){
+    let rawLine = lines[i].replace(/[\r\n]+/g, '').trim();
+    if(!rawLine) continue;
+    
+    const cols = [];
+    let inQuotes = false;
+    let colVal = '';
+    for(let j=0; j<rawLine.length; j++){
+       let char = rawLine[j];
+       if(char === '"' && rawLine[j+1] === '"'){
+           colVal += '"';
+           j++;
+       } else if(char === '"'){
+           inQuotes = !inQuotes;
+       } else if(char === ',' && !inQuotes){
+           cols.push(colVal.trim());
+           colVal = '';
+       } else {
+           colVal += char;
+       }
+    }
+    cols.push(colVal.trim());
+    
+    if(cols.length < 2 || !cols[0]) continue;
+    
+    const n = cols[0].toUpperCase();
+    const c = cols[1] || '';
+    const cat = (cols[2] || 'SIN CATEGORÍA').toUpperCase().trim();
+    let tag = (cols[3] || '').toUpperCase().trim();
+    
+    if(!tag) tag = n.replace('INTERT LA 100 ', '').replace('SEP LA 100 ', '').trim();
+    
+    const item = {n:cols[0], c:c, tag:tag, cat:cat};
+    
+    if(n.includes('WEB CORTO') || cat.includes('WEB')){
+      MAT_WEB.push(item);
+    } else if(n.includes('INTERT LA 100') || n.includes('SEP LA 100')){
+      if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
+      MAT_TEMATICAS[tag].push(item);
+    }
+  }
+  
+  const tagsCount = Object.keys(MAT_TEMATICAS).length;
+  if(MAT_WEB.length === 0 && tagsCount === 0){
+     setStatus('status-mat', '⚠️ Archivo vacío o estructura incorrecta.', 'err');
+  } else {
+     setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Categorías`, 'ok');
+  }
+  renderTematicas();
+}
+
+function renderTematicas(){
+  const list = document.getElementById('lista-tematicas');
+  if(!list) return;
+  list.innerHTML = '';
+  
+  if(Object.keys(MAT_TEMATICAS).length === 0){
+    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">Sin datos.</p>';
+    return;
+  }
+  
+  let agrupado = {};
+  for(let tag in MAT_TEMATICAS){
+    let cat = MAT_TEMATICAS[tag][0].cat || 'OTRAS';
+    if(!agrupado[cat]) agrupado[cat] = [];
+    agrupado[cat].push(tag);
+  }
+  
+  const categoriasOrdenadas = Object.keys(agrupado).sort((a,b) => a.localeCompare(b));
+  
+  categoriasOrdenadas.forEach(cat => {
+    const header = document.createElement('div');
+    header.className = 'cat-header';
+    header.innerText = cat;
+    list.appendChild(header);
+    
+    const tagsOrdenados = agrupado[cat].sort((a,b) => a.localeCompare(b));
+    tagsOrdenados.forEach((tag, idx) => {
+      const div = document.createElement('div');
+      div.className = 'check-item';
+      let safeId = 'chk-' + cat.replace(/\s+/g, '-') + '-' + idx;
+      div.innerHTML = `<input type="checkbox" id="${safeId}" value="${tag}"> <label for="${safeId}" style="margin:0;font-weight:400;"><strong>${tag}</strong> (${MAT_TEMATICAS[tag].length})</label>`;
+      list.appendChild(div);
+    });
+  });
+}
+
+async function bajarScheduleNube(){
+  const f = document.getElementById('fecha-in').value;
+  if(!f){ setStatus('status-nube', 'Elegí la fecha primero', 'err'); return; }
+  setStatus('status-nube', 'Buscando...', 'load');
+  
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
+    const data = await res.json();
+    const target = `asignaciones_${f}.json`;
+    const found = (data && data.files) ? data.files.find(x => x.name === target) : null;
+    
+    if(found){
+      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
+      SCHEDULE_PROMOS = await reqFile.json();
+      setStatus('status-nube', `✅ Antichoques activo.`, 'ok');
+    } else {
+      SCHEDULE_PROMOS = null;
+      setStatus('status-nube', `⚠️ Sin schedule previo.`, 'err');
+    }
+  } catch(e) {
+    SCHEDULE_PROMOS = null;
+    setStatus('status-nube', '❌ Error de red.', 'err');
+  }
+}
+
+function shuffle(arr){
+  return arr.sort(() => Math.random() - 0.5);
+}
+
+function generarPrevisualizacion(){
+  const statusGen = document.getElementById('status-gen');
+  statusGen.innerHTML = '⏳ Generando grilla...';
+  
+  try {
+    if(MAT_WEB.length === 0){
+      statusGen.innerHTML = '❌ Faltan cargar los materiales de relleno (INTERT LA 100 WEB CORTO). Son fundamentales.';
+      return;
+    }
+    
+    const fIn = document.getElementById('fecha-in').value;
+    if(!fIn){
+      statusGen.innerHTML = '❌ Elegí una fecha primero.';
+      return;
+    }
+
+    const seleccionadas = [];
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
+    
+    const objFecha = new Date(fIn + 'T12:00:00');
+    const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
+    const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
+    
+    const tbody = document.getElementById('tbody-preview');
+    tbody.innerHTML = '';
+    
+    let currentProg = "";
+    let usadasEnProg = {};
+    let usadasWebEnProg = {};
+    
+    function getWebAleatorio(progName){
+      if(MAT_WEB.length === 0) return {n:'', c:''};
+      let arr = MAT_WEB.filter(w => !usadasWebEnProg[progName].includes(w.n));
+      if(arr.length === 0){
+        usadasWebEnProg[progName] = [];
+        arr = [...MAT_WEB];
+      }
+      arr = shuffle(arr);
+      let escogido = arr[0];
+      usadasWebEnProg[progName].push(escogido.n);
+      return escogido;
+    }
+    
+    GRILLA_LUN_VIE.forEach(bloque => {
+      if(bloque.p !== currentProg){
+        currentProg = bloque.p;
+        usadasEnProg[currentProg] = [];
+        usadasWebEnProg[currentProg] = [];
+        const trH = document.createElement('tr');
+        trH.className = 'prog-row';
+        trH.innerHTML = `<td colspan="7">${currentProg}</td>`;
+        tbody.appendChild(trH);
+      }
+      
+      let t1 = {n:'', c:''};
+      let t2 = {n:'', c:''};
+      
+      if(bloque.vacio){
+        if(!isFinde && bloque.fixT2){
+          t2 = bloque.fixT2;
+        }
+      } else {
+        let hasFixedT2 = !isFinde && bloque.fixT2;
+        let tematicaAsignada = false;
+        
+        let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
+        tagsDisponibles = shuffle(tagsDisponibles);
+        
+        for(let tag of tagsDisponibles){
+          let choca = false;
+          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
+            const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
+            if(horaAprox){
+              const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
+              if(proms && Array.isArray(proms)){
+                choca = proms.some(p => {
+                   let tagPromo = typeof p === 'string' ? p : (p.tag || p.n || p.nombre || '');
+                   tagPromo = tagPromo.toUpperCase().trim();
+                   let tagInter = tag.toUpperCase().trim();
+                   if(!tagPromo || !tagInter) return false;
+                   return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
+                });
+              }
+            }
+          }
+          
+          if(!choca && MAT_TEMATICAS[tag]){
+            let audios = MAT_TEMATICAS[tag];
+            let escogido = audios[Math.floor(Math.random() * audios.length)];
+            
+            if(bloque.noT2){
+              t1 = escogido;
+            } else if (hasFixedT2) {
+              t1 = escogido;
+              t2 = bloque.fixT2;
+            } else {
+              if(Math.random() > 0.5){
+                t1 = escogido;
+                t2 = getWebAleatorio(currentProg);
+              } else {
+                t1 = getWebAleatorio(currentProg);
+                t2 = escogido;
+              }
+            }
+            usadasEnProg[currentProg].push(tag);
+            tematicaAsignada = true;
+            break;
+          }
+        }
+        
+        if(!tematicaAsignada){
+          if(bloque.noT2){
+            t1 = getWebAleatorio(currentProg);
+          } else if(hasFixedT2){
+            t1 = getWebAleatorio(currentProg);
+            t2 = bloque.fixT2;
+          } else {
+            t1 = getWebAleatorio(currentProg);
+            t2 = getWebAleatorio(currentProg);
+          }
+        }
+      }
+      
+      const tr = document.createElement('tr');
+      tr.dataset.prog = currentProg;
+      tr.dataset.h = bloque.h;
+      tr.innerHTML = `
+        <td style="font-weight:bold; color:#555;">${decToTime(bloque.h)}</td>
+        <td class="t1-n" contenteditable="true">${t1.n || ''}</td>
+        <td class="t1-c" contenteditable="true">${t1.c || ''}</td>
+        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
+        <td class="t2-n" contenteditable="true">${t2.n || ''}</td>
+        <td class="t2-c" contenteditable="true">${t2.c || ''}</td>
+        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>
+      `;
+      tbody.appendChild(tr);
+    });
+    
+    document.getElementById('panel-preview').style.display = 'block';
+    statusGen.innerHTML = '✅ ¡Grilla generada! Revisala abajo.';
+    setTimeout(() => {
+      document.getElementById('panel-preview').scrollIntoView({behavior: 'smooth'});
+    }, 100);
+
+  } catch (err) {
+    statusGen.innerHTML = '❌ Fallo interno: ' + err.message;
+  }
+}
+
+function abrirModal(tr, tandaNum){
+  filaEditando = tr;
+  tandaEditando = tandaNum;
+  
+  const select = document.getElementById('select-material');
+  select.innerHTML = '<option value="|">-- Seleccionar para reemplazar --</option>';
+  
+  let gWeb = document.createElement('optgroup');
+  gWeb.label = "RELLENOS WEB";
+  MAT_WEB.sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => {
+     gWeb.innerHTML += `<option value="${m.n}|${m.c}">${m.n}</option>`;
+  });
+  select.appendChild(gWeb);
+  
+  let agrupar = {};
+  for(let tag in MAT_TEMATICAS){
+     MAT_TEMATICAS[tag].forEach(m => {
+        let cat = m.cat || 'OTRAS';
+        if(!agrupar[cat]) agrupar[cat] = [];
+        agrupar[cat].push(m);
+     });
+  }
+  
+  Object.keys(agrupar).sort((a,b)=>a.localeCompare(b)).forEach(cat => {
+     let g = document.createElement('optgroup');
+     g.label = cat;
+     agrupar[cat].sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => {
+        g.innerHTML += `<option value="${m.n}|${m.c}">${m.n}</option>`;
+     });
+     select.appendChild(g);
+  });
+
+  document.getElementById('modal-reemplazo').style.display = 'flex';
+}
+
+function cerrarModal(){
+  document.getElementById('modal-reemplazo').style.display = 'none';
+}
+
+function aplicarReemplazo(){
+  const val = document.getElementById('select-material').value;
+  if(val === "|") return;
+  const partes = val.split('|');
+  const n = partes[0];
+  const c = partes[1] || '';
+  
+  if(tandaEditando === 1){
+    filaEditando.querySelector('.t1-n').innerText = n;
+    filaEditando.querySelector('.t1-c').innerText = c;
+  } else {
+    filaEditando.querySelector('.t2-n').innerText = n;
+    filaEditando.querySelector('.t2-c').innerText = c;
+  }
+  cerrarModal();
+}
+
+function vaciarCelda(){
+  if(tandaEditando === 1){
+    filaEditando.querySelector('.t1-n').innerText = '';
+    filaEditando.querySelector('.t1-c').innerText = '';
+  } else {
+    filaEditando.querySelector('.t2-n').innerText = '';
+    filaEditando.querySelector('.t2-c').innerText = '';
+  }
+  cerrarModal();
+}
+
+function exportarDesdeTabla(){
+  const fIn = document.getElementById('fecha-in').value;
+  const objFecha = new Date(fIn + 'T12:00:00');
+  const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
+  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
+  const diaNombre = dias[objFecha.getDay()];
+  
+  let csv = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()},,,,\r\n,,,,\r\n`;
+  
+  const trs = document.querySelectorAll('#tbody-preview tr');
+  let currentProg = "";
+  
+  trs.forEach(tr => {
+    if(tr.classList.contains('prog-row')) return;
+    
+    let p = tr.dataset.prog;
+    if(p !== currentProg){
+      csv += `${p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
+      currentProg = p;
+    }
+    
+    let h = tr.dataset.h; 
+    let t1_n = tr.querySelector('.t1-n').innerText.trim();
+    let t1_c = tr.querySelector('.t1-c').innerText.trim();
+    let t2_n = tr.querySelector('.t2-n').innerText.trim();
+    let t2_c = tr.querySelector('.t2-c').innerText.trim();
+    
+    csv += `${h},${t1_n},${t1_c} ,${t2_n},${t2_c}\r\n`;
+  });
+  
+  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
+}
+</script>
+</body>
+</html>
