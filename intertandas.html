@@ -49,9 +49,9 @@
   </div>
 
   <div class="panel">
-    <label>3. Seleccionar Intertandas Temáticas a Pautar</label>
+    <label>3. Seleccionar Artistas a Pautar (1 vez x Programa)</label>
     <div class="list-container" id="lista-tematicas">
-      <p style="color:#888;font-size:0.9rem;">Cargando materiales...</p>
+      <p style="color:#888;font-size:0.9rem;">Cargando catálogo...</p>
     </div>
   </div>
 
@@ -61,7 +61,7 @@
 
 <script>
 let MAT_WEB = [];
-let MAT_TEMATICAS = [];
+let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
 
 const GRILLA_LUN_VIE = [
@@ -108,45 +108,54 @@ async function cargarMateriales(){
 function procesarCSV(text){
   const lines = text.split('\n');
   MAT_WEB = [];
-  MAT_TEMATICAS = [];
+  MAT_TEMATICAS = {};
   
   for(let i=1; i<lines.length; i++){
     const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    if(cols.length < 2) continue;
-    const n = cols[0] ? cols[0].toUpperCase() : '';
-    const c = cols[1] ? cols[1] : '';
-    const item = {n:cols[0], c:c};
+    if(cols.length < 2 || !cols[0]) continue;
     
-    if(n.includes('SEP LA 100 WEB') || n.includes('INTERT LA 100 WEB')){
+    const n = cols[0].toUpperCase();
+    const c = cols[1];
+    const cat = (cols.length > 2 && cols[2]) ? cols[2].toUpperCase() : '';
+    const tag = (cols.length > 3 && cols[3]) ? cols[3].toUpperCase() : n.replace('INTERT LA 100 ', '').trim();
+    
+    const item = {n:cols[0], c:c, tag:tag};
+    
+    if(n.includes('SEP LA 100 WEB') || n.includes('INTERT LA 100 WEB') || cat.includes('WEB')){
       MAT_WEB.push(item);
-    } else if(n.includes('INTERT LA 100')) {
-      MAT_TEMATICAS.push(item);
+    } else if(n.includes('INTERT LA 100') || cat.includes('INTERTANDA')) {
+      if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
+      MAT_TEMATICAS[tag].push(item);
     }
   }
   
-  setStatus('status-mat', `✅ ${MAT_WEB.length} de Relleno | ${MAT_TEMATICAS.length} Temáticas`, 'ok');
+  const tagsCount = Object.keys(MAT_TEMATICAS).length;
+  setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Artistas`, 'ok');
   renderTematicas();
 }
 
 function renderTematicas(){
   const list = document.getElementById('lista-tematicas');
   list.innerHTML = '';
-  if(MAT_TEMATICAS.length === 0){
-    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">No se encontraron intertandas temáticas.</p>';
+  const tags = Object.keys(MAT_TEMATICAS).sort();
+  
+  if(tags.length === 0){
+    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">No se encontraron intertandas.</p>';
     return;
   }
-  MAT_TEMATICAS.forEach((m, idx) => {
+  
+  tags.forEach((tag, idx) => {
     const div = document.createElement('div');
     div.className = 'check-item';
-    div.innerHTML = `<input type="checkbox" id="chk-${idx}" value="${idx}"> <label for="chk-${idx}" style="margin:0;font-weight:400;">${m.n} (${m.c})</label>`;
+    div.innerHTML = `<input type="checkbox" id="chk-${idx}" value="${tag}"> <label for="chk-${idx}" style="margin:0;font-weight:400;"><strong>${tag}</strong> (${MAT_TEMATICAS[tag].length} audios)</label>`;
     list.appendChild(div);
   });
 }
 
 async function bajarScheduleNube(){
   const f = document.getElementById('fecha-in').value;
-  if(!f){ setStatus('status-nube', 'Elegí una fecha primero', 'err'); return; }
-  setStatus('status-nube', 'Buscando...', 'load');
+  if(!f){ setStatus('status-nube', 'Elegí la fecha del Schedule primero', 'err'); return; }
+  setStatus('status-nube', 'Buscando en Drive...', 'load');
   
   try {
     const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
@@ -157,14 +166,14 @@ async function bajarScheduleNube(){
     if(found){
       const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
       SCHEDULE_PROMOS = await reqFile.json();
-      setStatus('status-nube', '✅ Schedule de promos cargado (Antichoques activado)', 'ok');
+      setStatus('status-nube', `✅ Schedule cargado. Antichoques activo.`, 'ok');
     } else {
       SCHEDULE_PROMOS = null;
-      setStatus('status-nube', '⚠️ No se encontró schedule. Se armará sin antichoques.', 'load');
+      setStatus('status-nube', `⚠️ No hay schedule guardado para esa fecha.`, 'err');
     }
   } catch(e) {
     SCHEDULE_PROMOS = null;
-    setStatus('status-nube', '❌ Error de red', 'err');
+    setStatus('status-nube', '❌ Error de red al conectar.', 'err');
   }
 }
 
@@ -174,13 +183,12 @@ function shuffle(arr){
 
 function generarExcel(){
   if(MAT_WEB.length === 0){
-    document.getElementById('status-export').innerHTML = '❌ Faltan cargar los materiales de relleno.';
+    document.getElementById('status-export').innerHTML = '❌ Faltan cargar los materiales.';
     return;
   }
   
   const seleccionadas = [];
-  const chks = document.querySelectorAll('input[type="checkbox"]:checked');
-  chks.forEach(c => seleccionadas.push(MAT_TEMATICAS[c.value]));
+  document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
   
   const fIn = document.getElementById('fecha-in').value;
   const objFecha = fIn ? new Date(fIn + 'T12:00:00') : new Date();
@@ -200,12 +208,17 @@ function generarExcel(){
   }
   
   let currentProg = "";
+  let usadasEnProg = {};
   
   GRILLA_LUN_VIE.forEach(bloque => {
     if(bloque.p !== currentProg){
       csv += `${bloque.p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
       currentProg = bloque.p;
+      usadasEnProg[currentProg] = [];
     }
+    
+    let t1 = getWebAleatorio();
+    let t2 = getWebAleatorio();
     
     if(bloque.vacio){
       let t2_n = "", t2_c = "";
@@ -217,23 +230,29 @@ function generarExcel(){
       return;
     }
     
-    let t1 = getWebAleatorio();
-    let t2 = getWebAleatorio();
-    
     if(!isFinde && bloque.fixT2){
       t2 = bloque.fixT2;
     } else {
-      if(seleccionadas.length > 0 && Math.random() > 0.5){
-        let cand = seleccionadas[Math.floor(Math.random() * seleccionadas.length)];
+      let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
+      tagsDisponibles = shuffle(tagsDisponibles);
+      
+      let asignada = false;
+      for(let tag of tagsDisponibles){
         let choca = false;
-        
         if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
           const proms = SCHEDULE_PROMOS.asignaciones[bloque.h];
-          if(proms && proms.some(p => cand.n.toUpperCase().includes(p.tag.toUpperCase()))){
+          if(proms && proms.some(p => p.tag.toUpperCase() === tag.toUpperCase())){
             choca = true;
           }
         }
-        if(!choca) t2 = cand;
+        
+        if(!choca){
+          let audiosDelArtista = MAT_TEMATICAS[tag];
+          t2 = audiosDelArtista[Math.floor(Math.random() * audiosDelArtista.length)];
+          usadasEnProg[currentProg].push(tag);
+          asignada = true;
+          break;
+        }
       }
     }
     
