@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   body{font-family:'Sora',sans-serif;background:#F4F6F9;margin:0;padding:20px;color:#333;}
-  .container{max-width:1000px;margin:0 auto;background:#fff;padding:30px;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.05);}
+  .container{max-width:1100px;margin:0 auto;background:#fff;padding:30px;border-radius:12px;box-shadow:0 8px 16px rgba(0,0,0,0.05);}
   h1{color:#1B1F6E;margin-top:0;font-size:1.8rem;}
   .panel{background:#FAFBFF;border:1px solid #E2E4F6;padding:20px;border-radius:8px;margin-bottom:20px;}
   label{font-weight:600;display:block;margin-bottom:8px;color:#1B1F6E;}
@@ -16,15 +16,24 @@
   button:hover{background:#2a2f96;}
   .btn-orange{background:#FF5722;}
   .btn-orange:hover{background:#e64a19;}
+  .btn-green{background:#2E7D32;}
+  .btn-green:hover{background:#1B5E20;}
   .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
   .chip{display:inline-block;padding:5px 10px;border-radius:15px;font-size:0.8rem;font-weight:600;margin-bottom:10px;}
   .chip.load{background:#FFF3E0;color:#E65100;}
   .chip.ok{background:#E8F5E9;color:#2E7D32;}
   .chip.err{background:#FFEBEE;color:#C62828;}
-  .list-container{max-height:300px;overflow-y:auto;border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;}
+  .list-container{max-height:200px;overflow-y:auto;border:1px solid #ccc;border-radius:6px;padding:10px;background:#fff;}
   .check-item{display:flex;align-items:center;padding:8px;border-bottom:1px solid #eee;}
   .check-item:last-child{border-bottom:none;}
   .check-item input{margin-right:10px;width:18px;height:18px;}
+  
+  table{width:100%;border-collapse:collapse;margin-top:20px;font-size:0.85rem;}
+  th, td{border:1px solid #E2E4F6;padding:8px;text-align:left;}
+  th{background:#1B1F6E;color:#fff;position:sticky;top:0;}
+  td[contenteditable="true"]{background:#FFFDE7;cursor:text;transition:0.2s;}
+  td[contenteditable="true"]:focus{background:#FFF59D;outline:2px solid #FF5722;}
+  .prog-row{background:#E8EAF6;font-weight:bold;color:#1B1F6E;}
 </style>
 </head>
 <body>
@@ -36,7 +45,7 @@
     <div class="panel">
       <label>1. Base de Datos (Google Sheet)</label>
       <input type="text" id="url-in" value="https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612">
-      <button onclick="cargarMateriales()" style="display:none;">Cargar Materiales</button>
+      <button onclick="cargarMateriales()" style="display:none;">Cargar</button>
       <div id="status-mat" style="margin-top:10px;"></div>
     </div>
     
@@ -55,8 +64,30 @@
     </div>
   </div>
 
-  <button class="btn-orange" style="width:100%;font-size:1.1rem;padding:15px;" onclick="generarExcel()">EXPORTAR EXCEL PARA PAUTAS</button>
-  <div id="status-export" style="margin-top:15px;text-align:center;font-weight:bold;"></div>
+  <button class="btn-orange" style="width:100%;font-size:1.1rem;padding:15px;" onclick="generarPrevisualizacion()">1️⃣ GENERAR GRILLA PREVIA</button>
+  <div id="status-gen" style="margin-top:10px;text-align:center;font-weight:bold;"></div>
+
+  <div id="panel-preview" class="panel" style="display:none; margin-top:30px; border-color:#FF5722;">
+    <h2 style="color:#FF5722; margin-top:0;">Revisión Manual</h2>
+    <p style="font-size:0.9rem; color:#666;">Hacé click en las celdas amarillas para modificar nombres o códigos manualmente antes de exportar.</p>
+    <div style="max-height:400px; overflow-y:auto; border:1px solid #ccc;">
+      <table id="tabla-preview">
+        <thead>
+          <tr>
+            <th style="width:60px;">HORA</th>
+            <th style="width:150px;">PROGRAMA</th>
+            <th>TANDA 1</th>
+            <th style="width:100px;">CÓD. 1</th>
+            <th>TANDA 2</th>
+            <th style="width:100px;">CÓD. 2</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-preview"></tbody>
+      </table>
+    </div>
+    <button class="btn-green" style="width:100%;font-size:1.1rem;padding:15px; margin-top:20px;" onclick="exportarDesdeTabla()">2️⃣ DESCARGAR EXCEL DEFINITIVO</button>
+  </div>
+
 </div>
 
 <script>
@@ -83,12 +114,12 @@ function setStatus(id, msg, type){
 
 async function cargarMateriales(){
   const url = document.getElementById('url-in').value.trim();
-  if(!url){ setStatus('status-mat', 'Pegá la URL del Sheet', 'err'); return; }
+  if(!url){ setStatus('status-mat', 'Pegá la URL', 'err'); return; }
   setStatus('status-mat', 'Conectando...', 'load');
   
   let fetchUrl = url;
   const m = url.match(/\/d\/([^\/\?]+)/);
-  const gidMatch = url.match(/[?&]gid=([^&#]+)/);
+  const gidMatch = url.match(/[?&#]gid=([^&#\s]+)/);
   let gidStr = gidMatch ? `&gid=${gidMatch[1]}` : '';
   
   if(m) fetchUrl = `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv${gidStr}`;
@@ -103,12 +134,17 @@ async function cargarMateriales(){
       const d = await r2.json();
       procesarCSV(d.contents);
     } catch(e2) {
-      setStatus('status-mat', 'Error de conexión', 'err');
+      setStatus('status-mat', '❌ Error de red.', 'err');
     }
   }
 }
 
 function procesarCSV(text){
+  if(text.toLowerCase().includes('<!doctype html>') || text.toLowerCase().includes('<html')){
+     setStatus('status-mat', '❌ Tu Sheet es PRIVADO.', 'err');
+     return;
+  }
+
   const lines = text.split('\n');
   MAT_WEB = [];
   MAT_TEMATICAS = {};
@@ -125,190 +161,4 @@ function procesarCSV(text){
        if(char === '"' && rawLine[j+1] === '"'){
            colVal += '"';
            j++;
-       } else if(char === '"'){
-           inQuotes = !inQuotes;
-       } else if(char === ',' && !inQuotes){
-           cols.push(colVal.trim());
-           colVal = '';
-       } else {
-           colVal += char;
-       }
-    }
-    cols.push(colVal.trim());
-    
-    if(cols.length < 2 || !cols[0]) continue;
-    
-    const n = cols[0].toUpperCase();
-    const c = cols[1] || '';
-    const cat = (cols[2] || '').toUpperCase();
-    let tag = (cols[3] || '').toUpperCase().trim();
-    
-    if(!tag) {
-      tag = n.replace('INTERT LA 100 ', '').trim();
-    }
-    
-    const item = {n:cols[0], c:c, tag:tag};
-    
-    if(n.includes('SEP LA 100 WEB') || n.includes('INTERT LA 100 WEB') || cat.includes('WEB')){
-      MAT_WEB.push(item);
-    } else if(n.includes('INTERT LA 100') || cat.includes('INTERTANDA') || cat.includes('TEMATICA')) {
-      if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
-      MAT_TEMATICAS[tag].push(item);
-    }
-  }
-  
-  const tagsCount = Object.keys(MAT_TEMATICAS).length;
-  setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Artistas`, 'ok');
-  renderTematicas();
-}
-
-function renderTematicas(){
-  const list = document.getElementById('lista-tematicas');
-  list.innerHTML = '';
-  const tags = Object.keys(MAT_TEMATICAS).sort();
-  
-  if(tags.length === 0){
-    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">No se encontraron intertandas.</p>';
-    return;
-  }
-  
-  tags.forEach((tag, idx) => {
-    const div = document.createElement('div');
-    div.className = 'check-item';
-    div.innerHTML = `<input type="checkbox" id="chk-${idx}" value="${tag}"> <label for="chk-${idx}" style="margin:0;font-weight:400;"><strong>${tag}</strong> (${MAT_TEMATICAS[tag].length} audios)</label>`;
-    list.appendChild(div);
-  });
-}
-
-async function bajarScheduleNube(){
-  const f = document.getElementById('fecha-in').value;
-  if(!f){ setStatus('status-nube', 'Elegí la fecha del Schedule primero', 'err'); return; }
-  setStatus('status-nube', 'Buscando en Drive...', 'load');
-  
-  try {
-    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
-    const data = await res.json();
-    const target = `asignaciones_${f}.json`;
-    const found = data.files.find(x => x.name === target);
-    
-    if(found){
-      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
-      SCHEDULE_PROMOS = await reqFile.json();
-      setStatus('status-nube', `✅ Schedule cargado. Antichoques activo.`, 'ok');
-    } else {
-      SCHEDULE_PROMOS = null;
-      setStatus('status-nube', `⚠️ No hay schedule guardado para esa fecha.`, 'err');
-    }
-  } catch(e) {
-    SCHEDULE_PROMOS = null;
-    setStatus('status-nube', '❌ Error de red al conectar.', 'err');
-  }
-}
-
-function shuffle(arr){
-  return arr.sort(() => Math.random() - 0.5);
-}
-
-function generarExcel(){
-  if(MAT_WEB.length === 0){
-    document.getElementById('status-export').innerHTML = '❌ Faltan cargar los materiales.';
-    return;
-  }
-  
-  const seleccionadas = [];
-  document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
-  
-  const fIn = document.getElementById('fecha-in').value;
-  const objFecha = fIn ? new Date(fIn + 'T12:00:00') : new Date();
-  const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
-  const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
-  const diaNombre = dias[objFecha.getDay()];
-  const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
-  
-  let csv = `INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()},,,,\r\n,,,,\r\n`;
-  
-  let lastWeb = null;
-  function getWebAleatorio(){
-    let arr = shuffle([...MAT_WEB]);
-    if(lastWeb && arr[0].c === lastWeb.c && arr.length > 1) arr.reverse();
-    lastWeb = arr[0];
-    return arr[0];
-  }
-  
-  let currentProg = "";
-  let usadasEnProg = {};
-  
-  GRILLA_LUN_VIE.forEach(bloque => {
-    if(bloque.p !== currentProg){
-      csv += `${bloque.p},,,,\r\nHORA,TANDA 1,,TANDA 2,\r\n`;
-      currentProg = bloque.p;
-      usadasEnProg[currentProg] = [];
-    }
-    
-    let t1 = getWebAleatorio();
-    let t2 = getWebAleatorio();
-    
-    if(bloque.vacio){
-      let t2_n = "", t2_c = "";
-      if(!isFinde && bloque.fixT2){
-        t2_n = bloque.fixT2.n;
-        t2_c = bloque.fixT2.c;
-      }
-      csv += `${bloque.h},,,${t2_n},${t2_c}\r\n`;
-      return;
-    }
-    
-    if(!isFinde && bloque.fixT2){
-      t2 = bloque.fixT2;
-    } else {
-      let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
-      tagsDisponibles = shuffle(tagsDisponibles);
-      
-      let asignada = false;
-      for(let tag of tagsDisponibles){
-        let choca = false;
-        
-        if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-          const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
-          if(horaAprox){
-            const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
-            if(proms.some(p => {
-               let tagPromo = (p.tag || '').toUpperCase().trim();
-               let tagInter = tag.toUpperCase().trim();
-               return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
-            })){
-              choca = true;
-            }
-          }
-        }
-        
-        if(!choca){
-          let audiosDelArtista = MAT_TEMATICAS[tag];
-          t2 = audiosDelArtista[Math.floor(Math.random() * audiosDelArtista.length)];
-          usadasEnProg[currentProg].push(tag);
-          asignada = true;
-          break;
-        }
-      }
-    }
-    
-    csv += `${bloque.h},${t1.n},${t1.c} ,${t2.n},${t2.c}\r\n`;
-  });
-  
-  const blob = new Blob(["\uFEFF" + csv], {type: 'text/csv;charset=utf-8;'});
-  const link = document.createElement("a");
-  const url = URL.createObjectURL(blob);
-  link.setAttribute("href", url);
-  link.setAttribute("download", `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.csv`);
-  link.style.visibility = 'hidden';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  
-  document.getElementById('status-export').innerHTML = '✅ ¡Excel descargado con éxito!';
-}
-
-window.onload = cargarMateriales;
-</script>
-</body>
-</html>
+       } else
