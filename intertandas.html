@@ -34,9 +34,9 @@
   
   <div class="grid-2">
     <div class="panel">
-      <label>1. Conectar Base de Datos (Google Sheet)</label>
-      <input type="text" id="url-in" placeholder="Pegá la URL del Sheet acá...">
-      <button onclick="cargarMateriales()">Cargar Materiales</button>
+      <label>1. Base de Datos (Google Sheet)</label>
+      <input type="text" id="url-in" value="https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=0#gid=0">
+      <button onclick="cargarMateriales()" style="display:none;">Cargar Materiales</button>
       <div id="status-mat" style="margin-top:10px;"></div>
     </div>
     
@@ -51,7 +51,7 @@
   <div class="panel">
     <label>3. Seleccionar Intertandas Temáticas a Pautar</label>
     <div class="list-container" id="lista-tematicas">
-      <p style="color:#888;font-size:0.9rem;">Cargá los materiales primero para ver la lista...</p>
+      <p style="color:#888;font-size:0.9rem;">Cargando materiales...</p>
     </div>
   </div>
 
@@ -112,23 +112,29 @@ function procesarCSV(text){
   
   for(let i=1; i<lines.length; i++){
     const cols = lines[i].split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-    if(cols.length < 3) continue;
-    const item = {n:cols[0], c:cols[1], cat:cols[2] ? cols[2].toUpperCase() : ''};
+    if(cols.length < 2) continue;
+    const n = cols[0] ? cols[0].toUpperCase() : '';
+    const c = cols[1] ? cols[1] : '';
+    const item = {n:cols[0], c:c};
     
-    if(item.n.includes('SEP LA 100 WEB') || item.n.includes('INTERT LA 100 WEB')){
+    if(n.includes('SEP LA 100 WEB') || n.includes('INTERT LA 100 WEB')){
       MAT_WEB.push(item);
-    } else if(item.n.includes('INTERT LA 100')) {
+    } else if(n.includes('INTERT LA 100')) {
       MAT_TEMATICAS.push(item);
     }
   }
   
-  setStatus('status-mat', `✅ ${MAT_WEB.length} Webs | ${MAT_TEMATICAS.length} Temáticas`, 'ok');
+  setStatus('status-mat', `✅ ${MAT_WEB.length} de Relleno | ${MAT_TEMATICAS.length} Temáticas`, 'ok');
   renderTematicas();
 }
 
 function renderTematicas(){
   const list = document.getElementById('lista-tematicas');
   list.innerHTML = '';
+  if(MAT_TEMATICAS.length === 0){
+    list.innerHTML = '<p style="color:#888;font-size:0.9rem;">No se encontraron intertandas temáticas.</p>';
+    return;
+  }
   MAT_TEMATICAS.forEach((m, idx) => {
     const div = document.createElement('div');
     div.className = 'check-item';
@@ -168,7 +174,7 @@ function shuffle(arr){
 
 function generarExcel(){
   if(MAT_WEB.length === 0){
-    document.getElementById('status-export').innerHTML = '❌ Tenés que cargar los materiales primero.';
+    document.getElementById('status-export').innerHTML = '❌ Faltan cargar los materiales de relleno.';
     return;
   }
   
@@ -246,6 +252,8 @@ function generarExcel(){
   
   document.getElementById('status-export').innerHTML = '✅ ¡Excel descargado con éxito!';
 }
+
+window.onload = cargarMateriales;
 </script>
 </body>
 </html>
