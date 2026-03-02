@@ -106,6 +106,17 @@ const GRILLA_LUN_VIE = [
   {h:0.6666666666666666, p:"SARASA"}, {h:0.7083333333333334, p:"SARASA"}
 ];
 
+window.onload = function() {
+  const hoy = new Date();
+  const yyyy = hoy.getFullYear();
+  let mm = hoy.getMonth() + 1;
+  let dd = hoy.getDate();
+  if(dd < 10) dd = '0' + dd;
+  if(mm < 10) mm = '0' + mm;
+  document.getElementById('fecha-in').value = yyyy + '-' + mm + '-' + dd;
+  cargarMateriales();
+};
+
 function setStatus(id, msg, type){
   const el = document.getElementById(id);
   if(el) el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
@@ -186,9 +197,9 @@ function procesarCSV(text){
     
     const item = {n:cols[0], c:c, tag:tag};
     
-    if(cat.includes('WEB') || n.includes('WEB')){
+    if(n.includes('WEB CORTO') || cat.includes('WEB')){
       MAT_WEB.push(item);
-    } else {
+    } else if(n.includes('INTERT LA 100') || n.includes('SEP LA 100')){
       if(!MAT_TEMATICAS[tag]) MAT_TEMATICAS[tag] = [];
       MAT_TEMATICAS[tag].push(item);
     }
@@ -198,7 +209,7 @@ function procesarCSV(text){
   if(MAT_WEB.length === 0 && tagsCount === 0){
      setStatus('status-mat', '⚠️ Archivo vacío o estructura incorrecta.', 'err');
   } else {
-     setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Artistas`, 'ok');
+     setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${tagsCount} Categorías`, 'ok');
   }
   renderTematicas();
 }
@@ -253,110 +264,118 @@ function shuffle(arr){
 
 function generarPrevisualizacion(){
   const statusGen = document.getElementById('status-gen');
-  statusGen.innerHTML = '';
+  statusGen.innerHTML = '⏳ Generando grilla...';
   
-  if(MAT_WEB.length === 0){
-    statusGen.innerHTML = '❌ Faltan cargar los materiales de la Hoja 3.';
-    return;
-  }
-  
-  const fIn = document.getElementById('fecha-in').value;
-  if(!fIn){
-    statusGen.innerHTML = '❌ Elegí una fecha primero.';
-    return;
-  }
-
-  const seleccionadas = [];
-  document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
-  
-  const objFecha = new Date(fIn + 'T12:00:00');
-  const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
-  const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
-  
-  let lastWeb = null;
-  function getWebAleatorio(){
-    if(MAT_WEB.length === 0) return {n:'', c:''};
-    let arr = shuffle([...MAT_WEB]);
-    if(lastWeb && arr[0].c === lastWeb.c && arr.length > 1) arr.reverse();
-    lastWeb = arr[0];
-    return arr[0] || {n:'', c:''};
-  }
-  
-  const tbody = document.getElementById('tbody-preview');
-  tbody.innerHTML = '';
-  
-  let currentProg = "";
-  let usadasEnProg = {};
-  
-  GRILLA_LUN_VIE.forEach(bloque => {
-    if(bloque.p !== currentProg){
-      currentProg = bloque.p;
-      usadasEnProg[currentProg] = [];
-      const trH = document.createElement('tr');
-      trH.className = 'prog-row';
-      trH.innerHTML = `<td colspan="6">${currentProg}</td>`;
-      tbody.appendChild(trH);
+  try {
+    if(MAT_WEB.length === 0){
+      statusGen.innerHTML = '❌ Faltan cargar los materiales de relleno (INTERT LA 100 WEB CORTO). Son fundamentales.';
+      return;
     }
     
-    let t1 = getWebAleatorio();
-    let t2 = getWebAleatorio();
+    const fIn = document.getElementById('fecha-in').value;
+    if(!fIn){
+      statusGen.innerHTML = '❌ Elegí una fecha primero.';
+      return;
+    }
+
+    const seleccionadas = [];
+    document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
     
-    if(bloque.vacio){
-      t1 = {n:'', c:''};
-      t2 = {n:'', c:''};
-      if(!isFinde && bloque.fixT2){
-        t2 = bloque.fixT2;
+    const objFecha = new Date(fIn + 'T12:00:00');
+    const diaNombre = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'][objFecha.getDay()];
+    const isFinde = (diaNombre === 'SABADO' || diaNombre === 'DOMINGO');
+    
+    let lastWeb = null;
+    function getWebAleatorio(){
+      if(MAT_WEB.length === 0) return {n:'', c:''};
+      let arr = shuffle([...MAT_WEB]);
+      if(lastWeb && arr[0].c === lastWeb.c && arr.length > 1) arr.reverse();
+      lastWeb = arr[0];
+      return arr[0] || {n:'', c:''};
+    }
+    
+    const tbody = document.getElementById('tbody-preview');
+    tbody.innerHTML = '';
+    
+    let currentProg = "";
+    let usadasEnProg = {};
+    
+    GRILLA_LUN_VIE.forEach(bloque => {
+      if(bloque.p !== currentProg){
+        currentProg = bloque.p;
+        usadasEnProg[currentProg] = [];
+        const trH = document.createElement('tr');
+        trH.className = 'prog-row';
+        trH.innerHTML = `<td colspan="6">${currentProg}</td>`;
+        tbody.appendChild(trH);
       }
-    } else {
-      if(!isFinde && bloque.fixT2){
-        t2 = bloque.fixT2;
+      
+      let t1 = getWebAleatorio();
+      let t2 = getWebAleatorio();
+      
+      if(bloque.vacio){
+        t1 = {n:'', c:''};
+        t2 = {n:'', c:''};
+        if(!isFinde && bloque.fixT2){
+          t2 = bloque.fixT2;
+        }
       } else {
-        let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
-        tagsDisponibles = shuffle(tagsDisponibles);
-        
-        for(let tag of tagsDisponibles){
-          let choca = false;
-          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-            const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
-            if(horaAprox){
-              const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
-              if(proms && proms.some(p => {
-                 let tagPromo = (p.tag || '').toUpperCase().trim();
-                 let tagInter = tag.toUpperCase().trim();
-                 return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
-              })){
-                choca = true;
+        if(!isFinde && bloque.fixT2){
+          t2 = bloque.fixT2;
+        } else {
+          let tagsDisponibles = seleccionadas.filter(tag => !usadasEnProg[currentProg].includes(tag));
+          tagsDisponibles = shuffle(tagsDisponibles);
+          
+          for(let tag of tagsDisponibles){
+            let choca = false;
+            if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
+              const horaAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
+              if(horaAprox){
+                const proms = SCHEDULE_PROMOS.asignaciones[horaAprox];
+                if(proms && Array.isArray(proms)){
+                  choca = proms.some(p => {
+                     let tagPromo = typeof p === 'string' ? p : (p.tag || p.n || p.nombre || '');
+                     tagPromo = tagPromo.toUpperCase().trim();
+                     let tagInter = tag.toUpperCase().trim();
+                     if(!tagPromo || !tagInter) return false;
+                     return tagInter.includes(tagPromo) || tagPromo.includes(tagInter);
+                  });
+                }
               }
             }
-          }
-          
-          if(!choca && MAT_TEMATICAS[tag]){
-            let audios = MAT_TEMATICAS[tag];
-            t2 = audios[Math.floor(Math.random() * audios.length)];
-            usadasEnProg[currentProg].push(tag);
-            break;
+            
+            if(!choca && MAT_TEMATICAS[tag]){
+              let audios = MAT_TEMATICAS[tag];
+              t2 = audios[Math.floor(Math.random() * audios.length)];
+              usadasEnProg[currentProg].push(tag);
+              break;
+            }
           }
         }
       }
-    }
+      
+      const tr = document.createElement('tr');
+      tr.dataset.prog = currentProg;
+      tr.innerHTML = `
+        <td>${bloque.h}</td>
+        <td style="color:#888;">${currentProg}</td>
+        <td contenteditable="true">${t1.n || ''}</td>
+        <td contenteditable="true">${t1.c || ''}</td>
+        <td contenteditable="true">${t2.n || ''}</td>
+        <td contenteditable="true">${t2.c || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
     
-    const tr = document.createElement('tr');
-    tr.dataset.prog = currentProg;
-    tr.innerHTML = `
-      <td>${bloque.h}</td>
-      <td style="color:#888;">${currentProg}</td>
-      <td contenteditable="true">${t1.n}</td>
-      <td contenteditable="true">${t1.c}</td>
-      <td contenteditable="true">${t2.n}</td>
-      <td contenteditable="true">${t2.c}</td>
-    `;
-    tbody.appendChild(tr);
-  });
-  
-  document.getElementById('panel-preview').style.display = 'block';
-  setTimeout(() => {
-    document.getElementById('panel-preview').scrollIntoView({behavior: 'smooth'});
-  }, 100);
+    document.getElementById('panel-preview').style.display = 'block';
+    statusGen.innerHTML = '✅ ¡Grilla generada! Revisala abajo.';
+    setTimeout(() => {
+      document.getElementById('panel-preview').scrollIntoView({behavior: 'smooth'});
+    }, 100);
+
+  } catch (err) {
+    statusGen.innerHTML = '❌ Fallo interno: ' + err.message;
+  }
 }
 
 function exportarDesdeTabla(){
@@ -402,8 +421,6 @@ function exportarDesdeTabla(){
   
   document.getElementById('status-gen').innerHTML = '✅ ¡Excel descargado con éxito!';
 }
-
-window.onload = cargarMateriales;
 </script>
 </body>
 </html>
