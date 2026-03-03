@@ -349,27 +349,40 @@ function generarPrevisualizacion(){
             currentP = { p: b.p, blocks: [] };
             programasData.push(currentP);
         }
-        currentP.blocks.push({...b, assignedTag: null});
+        let blockClone = {...b, assignedTag: null};
+        let bh = Math.floor(Math.round(blockClone.h * 24 * 60) / 60);
+        if (bh === 1 || bh === 3 || bh === 5) {
+            blockClone.noThematic = true;
+        }
+        currentP.blocks.push(blockClone);
     });
 
     let tagsObj = seleccionadas.map(tag => {
         let tU = tag.toUpperCase();
         let minH = 0;
-        if(isFinde) {
-           if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
-               minH = 0.54;
-           }
-        } else {
-           if (tU.includes("MORO")) { minH = 0.54; } 
-           else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
-           else if (tU.includes("SARASA")) { minH = 0.70; }
-           else if (tU.includes("ATARDECER")) { minH = 0.83; }
+        let isProg = false;
+        if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO") || tU.includes("WEEKEND") || tU.includes("RETRO")) {
+            isProg = true;
         }
-        return {tag, minH};
+        if(isProg) {
+            if(isFinde) {
+               minH = 0.5416;
+            } else {
+               if (tU.includes("MORO")) minH = 0.5416; 
+               else if (tU.includes("NETD") || tU.includes("TODO DICHO")) minH = 0.5833;
+               else if (tU.includes("SARASA")) minH = 0.7083;
+               else if (tU.includes("ATARDECER")) minH = 0.8333;
+               else minH = 0.5416;
+            }
+        }
+        return {tag, minH, isProg};
     });
 
     tagsObj = shuffle(tagsObj);
-    tagsObj.sort((a,b) => b.minH - a.minH);
+    tagsObj.sort((a,b) => {
+        if(a.isProg !== b.isProg) return a.isProg ? -1 : 1;
+        return b.minH - a.minH;
+    });
 
     programasData.forEach(prog => {
         usadasWebEnProg[prog.p] = [];
@@ -384,23 +397,33 @@ function generarPrevisualizacion(){
                 let block = prog.blocks[idx];
 
                 if(block.assignedTag) continue; 
-                if(block.h < minH) continue;
+                if(block.noThematic) continue;
+                if(block.h < minH - 0.001) continue; 
 
+                let blockHour = Math.floor(Math.round(block.h * 24 * 60) / 60);
                 let choca = false;
+
                 if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-                    const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - block.h) < 0.002);
-                    if(hAprox){
-                        const ps = SCHEDULE_PROMOS.asignaciones[hAprox];
-                        if(ps && Array.isArray(ps)){
-                            choca = ps.some(p => {
-                               let pTag = (p.tag || '').toUpperCase().trim();
-                               let pName = (p.n || p.nombre || '').toUpperCase().trim();
-                               let iTag = tag.toUpperCase().trim();
-                               if(pTag && (iTag.includes(pTag) || pTag.includes(iTag))) return true;
-                               if(pName && pName.includes(iTag)) return true;
-                               return false;
-                            });
+                    for (let k in SCHEDULE_PROMOS.asignaciones) {
+                        let pKHour = Math.floor(Math.round(parseFloat(k) * 24 * 60) / 60);
+                        if (pKHour === blockHour) {
+                            let ps = SCHEDULE_PROMOS.asignaciones[k];
+                            if (ps && Array.isArray(ps)) {
+                                choca = ps.some(p => {
+                                    let pTag = (p.tag || '').toUpperCase().trim();
+                                    let pName = (p.n || p.nombre || '').toUpperCase().trim();
+                                    let iTag = tag.toUpperCase().trim();
+                                    if (pTag && (iTag === pTag || pTag.includes(iTag) || iTag.includes(pTag))) return true;
+                                    if (pName && (pName.includes(iTag) || pName.includes(pTag))) return true;
+                                    let words = iTag.split(/\s+/).filter(w => w.length > 3 && !['INTERT','PROMO','CORTO','LA','100'].includes(w));
+                                    for (let w of words) {
+                                        if (pName.includes(w) || pTag.includes(w)) return true;
+                                    }
+                                    return false;
+                                });
+                            }
                         }
+                        if(choca) break;
                     }
                 }
 
@@ -417,7 +440,7 @@ function generarPrevisualizacion(){
         trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${prog.p}</td>`;
         tbody.appendChild(trH);
 
-        prog.blocks.forEach(bloque => {
+        prog.blocks.sort((a,b) => a.h - b.h).forEach(bloque => {
             let t1 = {n:'', c:''}; let t2 = {n:'', c:''};
             let hasFix = !isFinde && bloque.fixT2;
 
