@@ -62,7 +62,8 @@
     </div>
   </div>
   <div class="panel">
-    <label>3. Seleccionar Artistas a Pautar (1 vez x Programa)</label>
+    <label>3. Seleccionar intertanda para pautar (1 vez x Programa)</label>
+    <input type="text" id="search-intertanda" placeholder="🔍 Buscar por nombre o TAG..." onkeyup="filtrarIntertandas()" style="margin-bottom:10px; border-radius:6px; border:1px solid #ccc; padding:10px; width:100%; box-sizing:border-box; font-family:'Sora',sans-serif;">
     <div class="list-container" id="lista-tematicas">
       <p style="color:#888;font-size:0.9rem;">Conectando con Google Drive...</p>
     </div>
@@ -106,11 +107,13 @@ let filaEditando = null;
 let tandaEditando = null;
 const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6', '#F0FFF0', '#F5F5DC', '#FFFACD', '#E0FFFF'];
 let colorMap = {};
+
 function getColorForCat(cat) {
   if(cat.includes('WEB')) return '#FFF9C4'; 
   if (!colorMap[cat]) { colorMap[cat] = PALETA[Object.keys(colorMap).length % PALETA.length]; }
   return colorMap[cat];
 }
+
 const GRILLA_LUN_VIE = [
   {h:0.0, p:"LA HORA DE LOS LENTOS", noT2:true}, {h:0.0416, p:"LA HORA DE LOS LENTOS", noT2:true},
   {h:0.0833, p:"TRASNOCHE 100", noT2:true}, {h:0.125, p:"TRASNOCHE 100", noT2:true}, {h:0.1666, p:"TRASNOCHE 100", noT2:true}, {h:0.2083, p:"TRASNOCHE 100", noT2:true},
@@ -134,6 +137,7 @@ const GRILLA_DOMINGO = [
   {h:0.5833, p:"MUSIC WEEKEND", noT2:true}, {h:0.625, p:"MUSIC WEEKEND"}, {h:0.6666, p:"MUSIC WEEKEND"}, {h:0.7083, p:"MUSIC WEEKEND"},
   {h:0.75, p:"DISCO RETRO", noT2:true}, {h:0.7916, p:"DISCO RETRO", noT2:true}, {h:0.8333, p:"DISCO RETRO", noT2:true}, {h:0.875, p:"DISCO RETRO", noT2:true}, {h:0.9166, p:"DISCO RETRO", noT2:true}, {h:0.9583, p:"DISCO RETRO", noT2:true}
 ];
+
 window.onload = function() {
   const hoy = new Date();
   const yyyy = hoy.getFullYear();
@@ -144,6 +148,7 @@ window.onload = function() {
   document.getElementById('fecha-in').value = yyyy + '-' + mm + '-' + dd;
   cargarMateriales();
 };
+
 function resetearEstadoPorFecha() {
   document.getElementById('panel-preview').style.display = 'none';
   document.getElementById('status-gen').innerHTML = '';
@@ -152,16 +157,37 @@ function resetearEstadoPorFecha() {
   const checks = document.querySelectorAll('#lista-tematicas input[type="checkbox"]');
   checks.forEach(c => c.checked = false);
 }
+
+function filtrarIntertandas() {
+  const q = document.getElementById('search-intertanda').value.toLowerCase();
+  const items = document.querySelectorAll('#lista-tematicas .check-item');
+  items.forEach(el => {
+    if(el.innerText.toLowerCase().includes(q)) el.style.display = 'flex';
+    else el.style.display = 'none';
+  });
+  document.querySelectorAll('#lista-tematicas .cat-header').forEach(header => {
+    let next = header.nextElementSibling;
+    let hasVisible = false;
+    while(next && next.classList.contains('check-item')){
+      if(next.style.display !== 'none'){ hasVisible = true; break; }
+      next = next.nextElementSibling;
+    }
+    header.style.display = hasVisible ? 'block' : 'none';
+  });
+}
+
 function setStatus(id, msg, type){
   const el = document.getElementById(id);
   if(el) el.innerHTML = `<span class="chip ${type}">${msg}</span>`;
 }
+
 function decToTime(d){
   let m = Math.round(d * 24 * 60);
   let hh = Math.floor(m / 60);
   let mm = m % 60;
   return String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0');
 }
+
 async function cargarMateriales(){
   const url = 'https://docs.google.com/spreadsheets/d/1r7NzvlZPD7MqYSnYkjoeFM5fv9Boq7AM4ktjKTzp3aE/edit?gid=282563612#gid=282563612';
   setStatus('status-mat', 'Conectando...', 'load');
@@ -182,6 +208,7 @@ async function cargarMateriales(){
     } catch(e2) { setStatus('status-mat', '❌ Error.', 'err'); }
   }
 }
+
 function procesarCSV(text){
   if(!text || text.toLowerCase().includes('<html')){ setStatus('status-mat', '❌ Privado o Vacío.', 'err'); return; }
   const lines = text.split('\n');
@@ -215,6 +242,7 @@ function procesarCSV(text){
   setStatus('status-mat', `✅ ${MAT_WEB.length} Rellenos | ${Object.keys(MAT_TEMATICAS).length} Cat.`, 'ok');
   renderTematicas();
 }
+
 function renderTematicas(){
   const list = document.getElementById('lista-tematicas');
   if(!list) return;
@@ -242,6 +270,7 @@ function renderTematicas(){
     });
   });
 }
+
 async function bajarScheduleNube(){
   const f = document.getElementById('fecha-in').value;
   if(!f){ setStatus('status-nube', 'Fecha.', 'err'); return; }
@@ -258,12 +287,15 @@ async function bajarScheduleNube(){
     } else { SCHEDULE_PROMOS = null; setStatus('status-nube', `⚠️ No hay schedule.`, 'err'); }
   } catch(e) { SCHEDULE_PROMOS = null; setStatus('status-nube', '❌ Error.', 'err'); }
 }
+
 function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
+
 function borrarMaterial(e, td) {
   e.stopPropagation(); td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
   let tanda = td.className.includes('td-t1') ? 1 : 2;
   td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
 }
+
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
     let tanda = tdClass.includes('td-t1') ? 1 : 2;
@@ -276,6 +308,7 @@ function renderCelda(m, tdClass) {
             </div>
           </td>`;
 }
+
 function generarPrevisualizacion(){
   const status = document.getElementById('status-gen');
   status.innerHTML = '⏳ Generando...';
@@ -290,76 +323,159 @@ function generarPrevisualizacion(){
     if(diaNum === 6) grilla = GRILLA_SABADO;
     if(diaNum === 0) grilla = GRILLA_DOMINGO;
     const isFinde = (diaNum === 0 || diaNum === 6);
+    
     const tbody = document.getElementById('tbody-preview');
     tbody.innerHTML = '';
-    let currentProg = ""; let usadasEnProg = {}; let usadasWebEnProg = {};
+    
+    let usadasWebEnProg = {};
     function getWebAleatorio(prog){
       let arr = MAT_WEB.filter(w => !usadasWebEnProg[prog].includes(w.n));
       if(arr.length === 0){ usadasWebEnProg[prog] = []; arr = [...MAT_WEB]; }
       arr = shuffle(arr); let esc = arr[0]; usadasWebEnProg[prog].push(esc.n); return esc;
     }
-    grilla.forEach(bloque => {
-      if(bloque.p !== currentProg){
-        currentProg = bloque.p; usadasEnProg[currentProg] = []; usadasWebEnProg[currentProg] = [];
-        const trH = document.createElement('tr'); trH.className = 'prog-row';
-        trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${currentProg}</td>`;
-        tbody.appendChild(trH);
-      }
-      let t1 = {n:'', c:''}; let t2 = {n:'', c:''};
-      if(bloque.vacio){ if(!isFinde && bloque.fixT2) t2 = bloque.fixT2; }
-      else {
-        let hasFix = !isFinde && bloque.fixT2; let tematicaOK = false;
+
+    let bagTematicas = {};
+    function getAudioForTag(tag) {
+       if (!bagTematicas[tag] || bagTematicas[tag].length === 0) {
+           bagTematicas[tag] = shuffle([...MAT_TEMATICAS[tag]]);
+       }
+       return bagTematicas[tag].pop();
+    }
+
+    let programasData = [];
+    let currentP = null;
+    grilla.forEach(b => {
+        if(!currentP || currentP.p !== b.p) {
+            currentP = { p: b.p, blocks: [] };
+            programasData.push(currentP);
+        }
+        currentP.blocks.push({...b, assignedTag: null});
+    });
+
+    programasData.forEach(prog => {
+        usadasWebEnProg[prog.p] = [];
+        
         let tagsDispo = seleccionadas.filter(tag => {
-            if(usadasEnProg[currentProg].includes(tag)) return false;
             let tU = tag.toUpperCase();
             let minH = 0;
-            if (tU.includes("MORO")) { minH = 0.54; }
-            else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = (diaNum === 0) ? 0.54 : 0.58; }
-            else if (tU.includes("SARASA")) { minH = (diaNum === 0) ? 0.54 : 0.70; }
-            else if (tU.includes("ATARDECER")) { minH = (diaNum === 0) ? 0.54 : 0.83; }
-            else if (tU.includes("CASA")) { minH = 0.54; }
-            else if (tU.includes("ABIERTO")) { minH = 0.54; }
-            if (bloque.h < minH) return false;
-            return true;
-        });
-        tagsDispo = shuffle(tagsDispo);
-        for(let tag of tagsDispo){
-          let choca = false;
-          if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-            const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - bloque.h) < 0.0001);
-            if(hAprox){
-              const ps = SCHEDULE_PROMOS.asignaciones[hAprox];
-              if(ps && Array.isArray(ps)){
-                choca = ps.some(p => {
-                   let tp = typeof p === 'string' ? p : (p.tag || p.n || '');
-                   return tag.toUpperCase().includes(tp.toUpperCase().trim()) || tp.toUpperCase().trim().includes(tag.toUpperCase());
-                });
-              }
+            if(isFinde) {
+               if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
+                   minH = 0.54;
+               }
+            } else {
+               if (tU.includes("MORO")) { minH = 0.54; } 
+               else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
+               else if (tU.includes("SARASA")) { minH = 0.70; }
+               else if (tU.includes("ATARDECER")) { minH = 0.83; }
             }
-          }
-          if(!choca && MAT_TEMATICAS[tag]){
-            let escogido = MAT_TEMATICAS[tag][Math.floor(Math.random() * MAT_TEMATICAS[tag].length)];
-            if(bloque.noT2) t1 = escogido; else if (hasFix) { t1 = escogido; t2 = bloque.fixT2; }
-            else { if(Math.random() > 0.5){ t1 = escogido; t2 = getWebAleatorio(currentProg); } else { t1 = getWebAleatorio(currentProg); t2 = escogido; } }
-            usadasEnProg[currentProg].push(tag); tematicaOK = true; break;
-          }
+            let validBlocks = prog.blocks.filter(b => b.h >= minH);
+            return validBlocks.length > 0; 
+        });
+
+        tagsDispo = shuffle(tagsDispo);
+        let availableBlocks = shuffle(prog.blocks.map((b, i) => i));
+
+        for(let tag of tagsDispo) {
+            let tU = tag.toUpperCase();
+            let minH = 0;
+            if(isFinde) {
+               if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
+                   minH = 0.54;
+               }
+            } else {
+               if (tU.includes("MORO")) { minH = 0.54; } 
+               else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
+               else if (tU.includes("SARASA")) { minH = 0.70; }
+               else if (tU.includes("ATARDECER")) { minH = 0.83; }
+            }
+
+            for(let i=0; i<availableBlocks.length; i++) {
+                let idx = availableBlocks[i];
+                let block = prog.blocks[idx];
+
+                if(block.assignedTag) continue; 
+                if(block.h < minH) continue;
+
+                let choca = false;
+                if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
+                    const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - block.h) < 0.0001);
+                    if(hAprox){
+                        const ps = SCHEDULE_PROMOS.asignaciones[hAprox];
+                        if(ps && Array.isArray(ps)){
+                            choca = ps.some(p => {
+                               let tp = typeof p === 'string' ? p : (p.tag || p.n || '');
+                               return tag.toUpperCase().includes(tp.toUpperCase().trim()) || tp.toUpperCase().trim().includes(tag.toUpperCase());
+                            });
+                        }
+                    }
+                }
+
+                if(!choca) {
+                    block.assignedTag = tag;
+                    availableBlocks.splice(i, 1);
+                    break;
+                }
+            }
         }
-        if(!tematicaOK){
-          if(bloque.noT2) t1 = getWebAleatorio(currentProg); else if(hasFix){ t1 = getWebAleatorio(currentProg); t2 = bloque.fixT2; }
-          else { t1 = getWebAleatorio(currentProg); t2 = getWebAleatorio(currentProg); }
-        }
-      }
-      const tr = document.createElement('tr'); tr.dataset.prog = currentProg; tr.dataset.h = bloque.h;
-      tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
-        ${renderCelda(t1, 'td-t1')}
-        <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
-        ${renderCelda(t2, 'td-t2')}
-        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>`;
-      tbody.appendChild(tr);
+
+        const trH = document.createElement('tr'); 
+        trH.className = 'prog-row';
+        trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${prog.p}</td>`;
+        tbody.appendChild(trH);
+
+        prog.blocks.forEach(bloque => {
+            let t1 = {n:'', c:''}; let t2 = {n:'', c:''};
+            let hasFix = !isFinde && bloque.fixT2;
+
+            if(bloque.vacio){ 
+                if(hasFix) t2 = bloque.fixT2; 
+            } else {
+                if(bloque.assignedTag) {
+                    let escogido = getAudioForTag(bloque.assignedTag);
+                    if(bloque.noT2) {
+                        t1 = escogido;
+                    } else if(hasFix) {
+                        t1 = escogido; 
+                        t2 = bloque.fixT2;
+                    } else {
+                        if(Math.random() > 0.5){ 
+                            t1 = escogido; 
+                            t2 = getWebAleatorio(prog.p); 
+                        } else { 
+                            t1 = getWebAleatorio(prog.p); 
+                            t2 = escogido; 
+                        }
+                    }
+                } else {
+                    if(bloque.noT2) {
+                        t1 = getWebAleatorio(prog.p); 
+                    } else if(hasFix){ 
+                        t1 = getWebAleatorio(prog.p); 
+                        t2 = bloque.fixT2; 
+                    } else { 
+                        t1 = getWebAleatorio(prog.p); 
+                        t2 = getWebAleatorio(prog.p); 
+                    }
+                }
+            }
+
+            const tr = document.createElement('tr'); 
+            tr.dataset.prog = prog.p; 
+            tr.dataset.h = bloque.h;
+            tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
+              ${renderCelda(t1, 'td-t1')}
+              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
+              ${renderCelda(t2, 'td-t2')}
+              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>`;
+            tbody.appendChild(tr);
+        });
     });
-    document.getElementById('panel-preview').style.display = 'block'; status.innerHTML = '✅ OK.';
+    
+    document.getElementById('panel-preview').style.display = 'block'; 
+    status.innerHTML = '✅ OK.';
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
+
 function abrirModal(tr, tandaNum){
   filaEditando = tr; tandaEditando = tandaNum;
   const select = document.getElementById('select-material');
@@ -375,7 +491,9 @@ function abrirModal(tr, tandaNum){
   });
   document.getElementById('modal-reemplazo').style.display = 'flex';
 }
+
 function cerrarModal(){ document.getElementById('modal-reemplazo').style.display = 'none'; }
+
 function aplicarReemplazo(){
   const val = document.getElementById('select-material').value; if(val === "|") return;
   const ps = val.split('|'); const td = tandaEditando === 1 ? filaEditando.querySelector('.td-t1') : filaEditando.querySelector('.td-t2');
@@ -384,6 +502,7 @@ function aplicarReemplazo(){
     <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span></div>`;
   cerrarModal();
 }
+
 async function exportarDesdeTabla(){
   try {
       const fIn = document.getElementById('fecha-in').value; const objFecha = new Date(fIn + 'T12:00:00');
