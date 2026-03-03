@@ -298,7 +298,6 @@ function generarPrevisualizacion(){
       if(arr.length === 0){ usadasWebEnProg[prog] = []; arr = [...MAT_WEB]; }
       arr = shuffle(arr); let esc = arr[0]; usadasWebEnProg[prog].push(esc.n); return esc;
     }
-    const PROGRAM_LOCKS = { "EL CLUB DEL MORO": 0.5416, "NO ESTÁ TODO DICHO": 0.6666, "SARASA": 0.7916, "LO MEJOR DEL CLUB DEL MORO": 0.5, "ABIERTO LOS DOMINGOS": 0.7083 };
     grilla.forEach(bloque => {
       if(bloque.p !== currentProg){
         currentProg = bloque.p; usadasEnProg[currentProg] = []; usadasWebEnProg[currentProg] = [];
@@ -312,7 +311,15 @@ function generarPrevisualizacion(){
         let hasFix = !isFinde && bloque.fixT2; let tematicaOK = false;
         let tagsDispo = seleccionadas.filter(tag => {
             if(usadasEnProg[currentProg].includes(tag)) return false;
-            for(let key in PROGRAM_LOCKS) { if(tag.toUpperCase().includes(key) && bloque.h < PROGRAM_LOCKS[key]) return false; }
+            let tU = tag.toUpperCase();
+            let minH = 0;
+            if (tU.includes("MORO")) { minH = 0.54; }
+            else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = (diaNum === 0) ? 0.54 : 0.58; }
+            else if (tU.includes("SARASA")) { minH = (diaNum === 0) ? 0.54 : 0.70; }
+            else if (tU.includes("ATARDECER")) { minH = (diaNum === 0) ? 0.54 : 0.83; }
+            else if (tU.includes("CASA")) { minH = 0.54; }
+            else if (tU.includes("ABIERTO")) { minH = 0.54; }
+            if (bloque.h < minH) return false;
             return true;
         });
         tagsDispo = shuffle(tagsDispo);
@@ -325,7 +332,7 @@ function generarPrevisualizacion(){
               if(ps && Array.isArray(ps)){
                 choca = ps.some(p => {
                    let tp = typeof p === 'string' ? p : (p.tag || p.n || '');
-                   return tag.toUpperCase().trim() === tp.toUpperCase().trim();
+                   return tag.toUpperCase().includes(tp.toUpperCase().trim()) || tp.toUpperCase().trim().includes(tag.toUpperCase());
                 });
               }
             }
