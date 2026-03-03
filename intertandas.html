@@ -352,42 +352,32 @@ function generarPrevisualizacion(){
         currentP.blocks.push({...b, assignedTag: null});
     });
 
+    let tagsObj = seleccionadas.map(tag => {
+        let tU = tag.toUpperCase();
+        let minH = 0;
+        if(isFinde) {
+           if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
+               minH = 0.54;
+           }
+        } else {
+           if (tU.includes("MORO")) { minH = 0.54; } 
+           else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
+           else if (tU.includes("SARASA")) { minH = 0.70; }
+           else if (tU.includes("ATARDECER")) { minH = 0.83; }
+        }
+        return {tag, minH};
+    });
+
+    tagsObj = shuffle(tagsObj);
+    tagsObj.sort((a,b) => b.minH - a.minH);
+
     programasData.forEach(prog => {
         usadasWebEnProg[prog.p] = [];
-        
-        let tagsDispo = seleccionadas.filter(tag => {
-            let tU = tag.toUpperCase();
-            let minH = 0;
-            if(isFinde) {
-               if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
-                   minH = 0.54;
-               }
-            } else {
-               if (tU.includes("MORO")) { minH = 0.54; } 
-               else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
-               else if (tU.includes("SARASA")) { minH = 0.70; }
-               else if (tU.includes("ATARDECER")) { minH = 0.83; }
-            }
-            let validBlocks = prog.blocks.filter(b => b.h >= minH);
-            return validBlocks.length > 0; 
-        });
-
-        tagsDispo = shuffle(tagsDispo);
         let availableBlocks = shuffle(prog.blocks.map((b, i) => i));
 
-        for(let tag of tagsDispo) {
-            let tU = tag.toUpperCase();
-            let minH = 0;
-            if(isFinde) {
-               if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO")) {
-                   minH = 0.54;
-               }
-            } else {
-               if (tU.includes("MORO")) { minH = 0.54; } 
-               else if (tU.includes("NETD") || tU.includes("TODO DICHO")) { minH = 0.58; }
-               else if (tU.includes("SARASA")) { minH = 0.70; }
-               else if (tU.includes("ATARDECER")) { minH = 0.83; }
-            }
+        for(let item of tagsObj) {
+            let tag = item.tag;
+            let minH = item.minH;
 
             for(let i=0; i<availableBlocks.length; i++) {
                 let idx = availableBlocks[i];
@@ -398,13 +388,17 @@ function generarPrevisualizacion(){
 
                 let choca = false;
                 if(SCHEDULE_PROMOS && SCHEDULE_PROMOS.asignaciones){
-                    const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - block.h) < 0.0001);
+                    const hAprox = Object.keys(SCHEDULE_PROMOS.asignaciones).find(k => Math.abs(parseFloat(k) - block.h) < 0.002);
                     if(hAprox){
                         const ps = SCHEDULE_PROMOS.asignaciones[hAprox];
                         if(ps && Array.isArray(ps)){
                             choca = ps.some(p => {
-                               let tp = typeof p === 'string' ? p : (p.tag || p.n || '');
-                               return tag.toUpperCase().includes(tp.toUpperCase().trim()) || tp.toUpperCase().trim().includes(tag.toUpperCase());
+                               let pTag = (p.tag || '').toUpperCase().trim();
+                               let pName = (p.n || p.nombre || '').toUpperCase().trim();
+                               let iTag = tag.toUpperCase().trim();
+                               if(pTag && (iTag.includes(pTag) || pTag.includes(iTag))) return true;
+                               if(pName && pName.includes(iTag)) return true;
+                               return false;
                             });
                         }
                     }
@@ -509,9 +503,15 @@ async function exportarDesdeTabla(){
       const dias = ['DOMINGO','LUNES','MARTES','MIERCOLES','JUEVES','VIERNES','SABADO'];
       const meses = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
       const diaNombre = dias[objFecha.getDay()];
+      const mesNombre = meses[objFecha.getMonth()];
+      const dNum = String(objFecha.getDate()).padStart(2, '0');
+      const yyyy = objFecha.getFullYear();
+
+      const fileName = `INTERTANDAS ${yyyy} ${mesNombre} ${dNum} - ${diaNombre}.xlsx`;
+
       const wb = new ExcelJS.Workbook(); const ws = wb.addWorksheet('INTERTANDAS', {views: [{showGridLines: false}]});
       ws.columns = [{ width: 10 }, { width: 45 }, { width: 12 }, { width: 3 }, { width: 45 }, { width: 12 }];
-      const rowT = ws.addRow([`INTERTANDAS ${diaNombre} ${objFecha.getDate()} DE ${meses[objFecha.getMonth()]} DE ${objFecha.getFullYear()}`]);
+      const rowT = ws.addRow([fileName.replace('.xlsx', '')]);
       ws.mergeCells('A1:F1'); rowT.height = 30;
       for(let i=1; i<=6; i++){ let c = rowT.getCell(i); c.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A237E' } }; c.alignment = { vertical: 'middle', horizontal: 'center' }; }
@@ -540,7 +540,7 @@ async function exportarDesdeTabla(){
       const buffer = await wb.xlsx.writeBuffer();
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
-      link.download = `INTERTANDAS_${diaNombre}_${objFecha.getDate()}.xlsx`; link.click();
+      link.download = fileName; link.click();
   } catch (error) { status.innerHTML = '❌ Error: ' + error.message; }
 }
 </script>
