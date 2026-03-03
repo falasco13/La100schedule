@@ -90,6 +90,13 @@ a.nav-link:hover{color:#fff;}
 .picker-title{font-weight:700;font-size:0.92rem;color:var(--navy);}
 .picker-sub{font-size:0.72rem;color:var(--muted);margin-top:2px;}
 .picker-search-wrap{padding:12px 20px;border-bottom:1px solid var(--border);}
+.picker-history{margin-bottom:12px;}
+.ph-box{display:flex;gap:10px;font-size:0.72rem;background:var(--accent-lt);padding:10px 14px;border-radius:8px;border:1px solid #C4CBFF;color:var(--navy);}
+.ph-col{flex:1;}
+.ph-day{font-weight:700;font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+.ph-art{font-weight:700;color:var(--accent);}
+.ph-free{color:#9AA0D6;font-weight:400;font-style:italic;}
+.ph-load{font-size:0.7rem;color:var(--muted);background:var(--off);padding:10px;border-radius:8px;text-align:center;}
 .picker-search{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:0.85rem;font-family:'Sora',sans-serif;outline:none;background:var(--off);}
 .picker-search:focus{border-color:var(--accent);}
 .picker-list{overflow-y:auto;flex:1;padding:8px 0 24px;}
@@ -180,6 +187,7 @@ a.nav-link:hover{color:#fff;}
       <div class="picker-sub" id="picker-sub"></div>
     </div>
     <div class="picker-search-wrap">
+      <div class="picker-history" id="picker-history"></div>
       <input type="search" id="picker-search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Buscar...">
     </div>
     <div class="picker-list" id="picker-list"></div>
@@ -215,8 +223,12 @@ let ARTISTS = [];
 let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
 let assignments = {};
 let pickerTarget = null;
+let historyData = {};
+let historyStatus = 'idle';
+
 function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
 initAssignments();
+
 function parseDur(s){
   if(!s) return 0;
   s=String(s).trim();
@@ -295,6 +307,70 @@ function setContent(state){
 }
 function saveUrl(){try{localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}catch(e){}}
 function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}catch(e){}}
+
+function getPastDates(baseStr) {
+  if(!baseStr) return [];
+  const [y, m, d] = baseStr.split('-').map(Number);
+  const d1 = new Date(y, m - 1, d - 1);
+  const d2 = new Date(y, m - 1, d - 2);
+  const f1 = `${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
+  const f2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
+  return [f1, f2];
+}
+
+async function loadHistory(fechaVal) {
+  if(!fechaVal) return;
+  historyStatus = 'loading';
+  historyData = {};
+  if(pickerTarget) updatePickerHistory();
+  const [f1, f2] = getPastDates(fechaVal);
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
+    const data = await res.json();
+    if (data && data.files) {
+      for (let f of [f1, f2]) {
+        const target = `asignaciones_${f}.json`;
+        if (data.files.find(x => x.name === target)) {
+          const req = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
+          const fileData = await req.json();
+          if (fileData && fileData.asignaciones) {
+            historyData[f] = {};
+            fileData.asignaciones.forEach(a => {
+              historyData[f][a.hora] = a.artista;
+            });
+          }
+        }
+      }
+    }
+    historyStatus = 'done';
+  } catch(e) {
+    historyStatus = 'error';
+  }
+  if(pickerTarget) updatePickerHistory();
+}
+
+function updatePickerHistory() {
+  const histDiv = document.getElementById('picker-history');
+  if(!pickerTarget) return;
+  const h = pickerTarget.h;
+  if (historyStatus === 'loading') {
+     histDiv.innerHTML = `<div class="ph-load">⏳ Buscando historial a las ${String(h).padStart(2,'0')}:00...</div>`;
+  } else if (historyStatus === 'done') {
+     const fechaVal = document.getElementById('fecha').value;
+     const [f1, f2] = getPastDates(fechaVal);
+     const d1Obj = new Date(f1+'T12:00:00');
+     const d2Obj = new Date(f2+'T12:00:00');
+     const diasNombres = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+     const n1 = diasNombres[d1Obj.getDay()];
+     const n2 = diasNombres[d2Obj.getDay()];
+     const a1 = (historyData[f1] && historyData[f1][h]) ? `<span class="ph-art">${historyData[f1][h]}</span>` : '<span class="ph-free">Sin pauta</span>';
+     const a2 = (historyData[f2] && historyData[f2][h]) ? `<span class="ph-art">${historyData[f2][h]}</span>` : '<span class="ph-free">Sin pauta</span>';
+     histDiv.innerHTML = `<div class="ph-box"><div class="ph-col"><div class="ph-day">Hace 2 días (${n2})</div>${a2}</div><div class="ph-col"><div class="ph-day">Ayer (${n1})</div>${a1}</div></div>`;
+  } else {
+     histDiv.innerHTML = '';
+  }
+}
+
 function renderGrid(){
   const fechaVal = document.getElementById('fecha').value;
   if(!fechaVal){
@@ -314,28 +390,35 @@ function renderGrid(){
   }).join('')}</div>`;
   updateProgress();renderSummary();
 }
+
 document.getElementById('main-content').addEventListener('click',e=>{
   const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
   const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
 });
+
 function openPicker(pid,h){
   pickerTarget={pid,h};
   const prog=PROGS.find(p=>p.id===pid);
   document.getElementById('picker-title').textContent=prog.name;
   document.getElementById('picker-sub').textContent=`${String(h).padStart(2,'0')}:00 · Elegí el artista`;
   document.getElementById('picker-search').value='';
+  updatePickerHistory();
   renderPickerList('');
   document.getElementById('picker-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('picker-search').focus(),320);
 }
+
 function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;}
+
 document.getElementById('picker-search').addEventListener('input',function(){renderPickerList(this.value);});
+
 document.getElementById('picker-list').addEventListener('click',e=>{
   const item=e.target.closest('[data-lbl]');
   if(!item||!pickerTarget)return;
   const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
   if(artist){assignments[pickerTarget.pid][pickerTarget.h]=artist;closePicker();renderGrid();}
 });
+
 function renderPickerList(q){
   const qn=q.toLowerCase();
   if(!pickerTarget) return;
@@ -350,6 +433,7 @@ function renderPickerList(q){
   }
   document.getElementById('picker-list').innerHTML=html||`<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.8rem;">Sin resultados</div>`;
 }
+
 function updateProgress(){
   let total=0,done=0;PROGS.forEach(p=>p.horas.forEach(h=>{total++;if(assignments[p.id][h.h])done++;}));
   document.getElementById('prog-bar').style.width=total?`${(done/total)*100}%`:'0%';
@@ -357,6 +441,7 @@ function updateProgress(){
   document.getElementById('prog-total').textContent=`de ${total}`;
   document.getElementById('ef-note').textContent=done?`${done}/${total} slots — exportá cuando estés listo.`:'Asigná promos y exportá.';
 }
+
 function renderSummary(){
   let counts = {};
   let any = false;
@@ -377,7 +462,9 @@ function renderSummary(){
   }
   document.getElementById('summary').innerHTML = any ? html : '<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
 }
+
 function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){initAssignments();renderGrid();}}
+
 function exportar(){
   const fecha=document.getElementById('fecha').value;
   if(!fecha){alert('Seleccioná la fecha primero');return;}
@@ -412,6 +499,7 @@ function exportar(){
     document.getElementById('ef-note').innerHTML='❌ Falló la conexión al guardar.';
   });
 }
+
 document.getElementById('fecha').addEventListener('change', function() {
   const fechaVal = this.value;
   if (!fechaVal) { renderGrid(); return; }
@@ -421,8 +509,10 @@ document.getElementById('fecha').addEventListener('change', function() {
   else if (dia === 6) PROGS = PROGS_SAB;
   else PROGS = PROGS_LUN_VIE;
   initAssignments();
+  loadHistory(fechaVal);
   if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
 });
+
 document.getElementById('fecha').value = '';
 loadUrl();
 </script>
