@@ -105,9 +105,6 @@ a.nav-link:hover{color:#fff;}
 .pk-artist:hover{background:var(--off);}
 .pk-artist.used{opacity:.3;pointer-events:none;}
 .pk-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.dot-shows{background:#4F5EFF;}
-.dot-lolla{background:#F5A623;}
-.dot-conc{background:#0B6B48;}
 .pk-a-name{font-weight:700;font-size:0.84rem;color:var(--text);flex:1;}
 .pk-a-vers{font-size:0.67rem;color:var(--accent);font-weight:600;}
 @media(max-width:680px){
@@ -220,7 +217,6 @@ const PROGS_DOM = [
 ];
 let PROGS = PROGS_LUN_VIE;
 let ARTISTS = [];
-let MAT = {shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
 let assignments = {};
 let pickerTarget = null;
 let historyData = {};
@@ -251,26 +247,24 @@ function parseCSV(text){
   for(let i=1;i<lines.length;i++){
     const p=splitCSV(lines[i]);
     if(p.length<3) continue;
-    const cat=(p[iCAT]||'').toUpperCase();
+    const cat=(p[iCAT]||'OTRAS').toUpperCase().trim();
     const art=iART>=0?(p[iART]||'').trim():'';
     const cod=(p[iCOD]||'').trim();
     const dur=parseDur(iDUR>=0?p[iDUR]:'');
     const nom=(p[iNOM]||'').trim();
     if(!cod||!nom) continue;
     const item={c:cod,n:nom,d:dur};
-    if(cat==='SEP_VERANO'){if(!amap['__SEP'])amap['__SEP']={label:'SEP_VERANO',cat:'sep_verano',variants:[]};amap['__SEP'].variants.push(item);continue;}
-    if(cat==='EXITO_VISTA'){if(!amap['__EV'])amap['__EV']={label:'EXITO_VISTA',cat:'exito_vista',variants:[]};amap['__EV'].variants.push(item);continue;}
+    if(cat==='SEP_VERANO'){if(!amap['__SEP'])amap['__SEP']={label:'SEP_VERANO',cat:'SEP_VERANO',variants:[]};amap['__SEP'].variants.push(item);continue;}
+    if(cat==='EXITO_VISTA'){if(!amap['__EV'])amap['__EV']={label:'EXITO_VISTA',cat:'EXITO_VISTA',variants:[]};amap['__EV'].variants.push(item);continue;}
     const key=`${cat}||${art||nom}`;
     if(!amap[key])amap[key]={label:art||nom,cat,variants:[]};
     amap[key].variants.push(item);
   }
-  const result={shows:[],mini_lolla:[],concursos:[],sep_verano:[],exito_vista:[]};
+  const result={sep_verano:[],exito_vista:[],list:[]};
   for(const[k,g] of Object.entries(amap)){
     if(k==='__SEP'){result.sep_verano=g.variants;continue;}
     if(k==='__EV'){result.exito_vista=g.variants;continue;}
-    if(g.cat==='SHOWS')result.shows.push(g);
-    else if(g.cat==='MINI_LOLLA')result.mini_lolla.push(g);
-    else result.concursos.push(g);
+    result.list.push(g);
   }
   return result;
 }
@@ -292,8 +286,8 @@ async function recargar(){
   }
   if(!text||text.length<30){setStatus('❌ No se pudo conectar','err');setContent('empty');return;}
   try{
-    MAT=parseCSV(text);
-    ARTISTS=[...MAT.shows.map(a=>({...a,cat:'shows'})),...MAT.mini_lolla.map(a=>({...a,cat:'mini_lolla'})),...MAT.concursos.map(a=>({...a,cat:'concursos'}))];
+    const mat=parseCSV(text);
+    ARTISTS=mat.list;
     const nv=ARTISTS.reduce((s,a)=>s+a.variants.length,0);
     setStatus(`✅ ${ARTISTS.length} artistas · ${nv} materiales cargados`,'ok');
     renderGrid();
@@ -423,13 +417,36 @@ function renderPickerList(q){
   const qn=q.toLowerCase();
   if(!pickerTarget) return;
   const used=new Set(Object.values(assignments[pickerTarget.pid]).filter(Boolean).map(a=>a.label));
-  const cats=[{cat:'shows',label:'🎸 Shows',dot:'dot-shows'},{cat:'mini_lolla',label:'🎪 Mini Lolla',dot:'dot-lolla'},{cat:'concursos',label:'🏆 Concursos',dot:'dot-conc'}];
+  const catConfig = {
+    'SHOWS': { icon: '🎸', color: '#4F5EFF' },
+    'MINI_LOLLA': { icon: '🎪', color: '#F5A623' },
+    'CONCURSOS': { icon: '🏆', color: '#0B6B48' },
+    'ESPECIALES': { icon: '✨', color: '#9C27B0' },
+    'PODCAST': { icon: '🎧', color: '#E91E63' }
+  };
+  const fallbackColors = ['#00BCD4','#3F51B5','#009688','#4CAF50','#FF9800','#FF5722','#795548','#607D8B'];
+  const allCats = [...new Set(ARTISTS.map(a=>a.cat))].sort();
   let html='';
-  for(const {cat,label,dot} of cats){
+  let colorIdx = 0;
+  for(const cat of allCats){
     const items=ARTISTS.filter(a=>a.cat===cat&&(!q||a.label.toLowerCase().includes(qn)));
     if(!items.length) continue;
-    html+=`<div class="pk-cat-label">${label}</div>`;
-    for(const a of items)html+=`<div class="pk-artist ${used.has(a.label)?'used':''}" data-lbl="${a.label}" data-cat="${a.cat}"><div class="pk-dot ${dot}"></div><div class="pk-a-name">${a.label}</div>${a.variants.length>1?`<span class="pk-a-vers">${a.variants.length} versiones</span>`:''}</div>`;
+    let cIcon = '🏷️';
+    let cColor = fallbackColors[colorIdx % fallbackColors.length];
+    if(catConfig[cat]) {
+      cIcon = catConfig[cat].icon;
+      cColor = catConfig[cat].color;
+    } else {
+      colorIdx++;
+    }
+    html+=`<div class="pk-cat-label">${cIcon} ${cat}</div>`;
+    for(const a of items) {
+      html+=`<div class="pk-artist ${used.has(a.label)?'used':''}" data-lbl="${a.label}" data-cat="${a.cat}">
+        <div class="pk-dot" style="background:${cColor}"></div>
+        <div class="pk-a-name">${a.label}</div>
+        ${a.variants.length>1?`<span class="pk-a-vers">${a.variants.length} versiones</span>`:''}
+      </div>`;
+    }
   }
   document.getElementById('picker-list').innerHTML=html||`<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.8rem;">Sin resultados</div>`;
 }
