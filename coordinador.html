@@ -61,11 +61,12 @@ a.nav-link:hover{color:#fff;}
 .pc-name{color:#fff;font-weight:700;font-size:0.78rem;}
 .pc-count{background:rgba(255,255,255,.18);color:rgba(255,255,255,.9);font-size:0.65rem;font-weight:600;padding:2px 8px;border-radius:10px;font-family:'DM Mono',monospace;}
 .pc-body{padding:10px 14px;}
-.slot-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border);}
+.slot-row{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 0;border-bottom:1px solid var(--border);transition:background .2s;}
 .slot-row:last-child{border-bottom:none;}
 .slot-time{font-family:'DM Mono',monospace;font-size:0.73rem;font-weight:500;color:var(--navy);min-width:38px;}
 .slot-body{flex:1;}
-.slot-chip{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--accent-lt);border:1.5px solid #C4CBFF;border-radius:8px;}
+.slot-chip{display:flex;align-items:center;gap:8px;padding:5px 10px;background:var(--accent-lt);border:1.5px solid #C4CBFF;border-radius:8px;cursor:grab;}
+.slot-chip:active{cursor:grabbing;}
 .sc-name{font-weight:700;font-size:0.77rem;color:var(--navy);flex:1;}
 .sc-vars{font-size:0.62rem;color:var(--accent);font-weight:600;}
 .sc-rm{background:none;border:none;cursor:pointer;color:#C4CBFF;font-size:0.72rem;padding:2px 5px;border-radius:4px;transition:all .12s;font-family:inherit;}
@@ -161,7 +162,7 @@ a.nav-link:hover{color:#fff;}
   <div class="main-area">
     <div class="main-header">
       <div class="main-title">Asignación de promos</div>
-      <div class="main-sub">Elegí el artista para cada horario. Se muestran artistas, no códigos individuales.</div>
+      <div class="main-sub">Elegí el artista para cada horario. Arrastrá para reordenar.</div>
       <div class="btn-row-main">
         <button class="btn btn-ghost btn-sm" onclick="limpiar()">🗑 Limpiar todo</button>
       </div>
@@ -376,9 +377,9 @@ function renderGrid(){
     const slots=prog.horas.map(hr=>{
       const a=assignments[prog.id][hr.h];
       const body=a
-        ?`<div class="slot-chip"><span class="sc-name">${a.label}</span>${a.variants.length>1?`<span class="sc-vars">${a.variants.length}v</span>`:''}<button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
+        ?`<div class="slot-chip" draggable="true" data-drag-p="${prog.id}" data-drag-h="${hr.h}"><span class="sc-name">${a.label}</span>${a.variants.length>1?`<span class="sc-vars">${a.variants.length}v</span>`:''}<button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
         :`<button class="slot-add-btn" data-open="${prog.id}" data-h="${hr.h}"><span class="plus">+</span><span>Asignar promo</span></button>`;
-      return `<div class="slot-row"><span class="slot-time">${String(hr.h).padStart(2,'0')}:00</span><div class="slot-body">${body}</div></div>`;
+      return `<div class="slot-row" data-drop-p="${prog.id}" data-drop-h="${hr.h}"><span class="slot-time">${String(hr.h).padStart(2,'0')}:00</span><div class="slot-body">${body}</div></div>`;
     }).join('');
     return `<div class="prog-card"><div class="pc-hdr"><span class="pc-name">🎙 ${prog.name}</span><span class="pc-count">${done}/${prog.horas.length}</span></div><div class="pc-body">${slots}</div></div>`;
   }).join('')}</div>`;
@@ -388,6 +389,42 @@ function renderGrid(){
 document.getElementById('main-content').addEventListener('click',e=>{
   const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
   const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
+});
+
+let dragSrc = null;
+const mc = document.getElementById('main-content');
+mc.addEventListener('dragstart', e => {
+  const c = e.target.closest('.slot-chip');
+  if(!c) return;
+  dragSrc = {p: c.dataset.dragP, h: +c.dataset.dragH};
+  setTimeout(() => c.style.opacity = '0.4', 0);
+});
+mc.addEventListener('dragend', e => {
+  const c = e.target.closest('.slot-chip');
+  if(c) c.style.opacity = '1';
+  document.querySelectorAll('.slot-row').forEach(el => el.style.background = '');
+  dragSrc = null;
+});
+mc.addEventListener('dragover', e => {
+  e.preventDefault();
+  const row = e.target.closest('.slot-row');
+  if(row) row.style.background = 'var(--accent-lt)';
+});
+mc.addEventListener('dragleave', e => {
+  const row = e.target.closest('.slot-row');
+  if(row && !row.contains(e.relatedTarget)) row.style.background = '';
+});
+mc.addEventListener('drop', e => {
+  e.preventDefault();
+  const row = e.target.closest('.slot-row');
+  if(!row || !dragSrc) return;
+  row.style.background = '';
+  const tgtP = row.dataset.dropP, tgtH = +row.dataset.dropH;
+  if(tgtP === dragSrc.p && tgtH === dragSrc.h) return;
+  const t = assignments[dragSrc.p][dragSrc.h];
+  assignments[dragSrc.p][dragSrc.h] = assignments[tgtP][tgtH];
+  assignments[tgtP][tgtH] = t;
+  renderGrid();
 });
 
 function openPicker(pid,h){
