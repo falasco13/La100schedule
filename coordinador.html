@@ -84,7 +84,7 @@ a.nav-link:hover{color:#fff;}
 .picker-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:flex-end;pointer-events:none;opacity:0;transition:opacity .2s;}
 .picker-overlay.open{pointer-events:all;opacity:1;}
 .picker-bg{position:absolute;inset:0;background:rgba(13,14,46,.55);backdrop-filter:blur(4px);}
-.picker-panel{position:relative;background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:540px;margin:0 auto;max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 -8px 40px rgba(0,0,0,.15);}
+.picker-panel{position:relative;background:#fff;border-radius:22px 22px 0 0;width:100%;max-width:540px;margin:0 auto;height:85vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .28s cubic-bezier(.34,1.56,.64,1);box-shadow:0 -8px 40px rgba(0,0,0,.15);}
 .picker-overlay.open .picker-panel{transform:translateY(0);}
 .picker-drag{width:38px;height:4px;background:var(--border);border-radius:4px;margin:12px auto 0;}
 .picker-hdr{padding:14px 20px 12px;border-bottom:1px solid var(--border);}
@@ -115,7 +115,6 @@ a.nav-link:hover{color:#fff;}
   .prog-grid{grid-template-columns:1fr;}
 }
 #picker-list {
-  max-height: 220px !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
 }
@@ -222,10 +221,8 @@ let assignments = {};
 let pickerTarget = null;
 let historyData = {};
 let historyStatus = 'idle';
-
 function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
 initAssignments();
-
 function parseDur(s){
   if(!s) return 0;
   s=String(s).trim();
@@ -302,7 +299,6 @@ function setContent(state){
 }
 function saveUrl(){try{localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}catch(e){}}
 function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}catch(e){}}
-
 function getPastDates(baseStr) {
   if(!baseStr) return [];
   const [y, m, d] = baseStr.split('-').map(Number);
@@ -312,7 +308,6 @@ function getPastDates(baseStr) {
   const f2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
   return [f1, f2];
 }
-
 async function loadHistory(fechaVal) {
   if(!fechaVal) return;
   historyStatus = 'loading';
@@ -343,7 +338,6 @@ async function loadHistory(fechaVal) {
   }
   if(pickerTarget) updatePickerHistory();
 }
-
 function updatePickerHistory() {
   const histDiv = document.getElementById('picker-history');
   if(!pickerTarget) return;
@@ -365,7 +359,6 @@ function updatePickerHistory() {
      histDiv.innerHTML = '';
   }
 }
-
 function renderGrid(){
   const fechaVal = document.getElementById('fecha').value;
   if(!fechaVal){
@@ -385,12 +378,10 @@ function renderGrid(){
   }).join('')}</div>`;
   updateProgress();renderSummary();
 }
-
 document.getElementById('main-content').addEventListener('click',e=>{
   const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
   const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
 });
-
 let dragSrc = null;
 const mc = document.getElementById('main-content');
 mc.addEventListener('dragstart', e => {
@@ -426,7 +417,6 @@ mc.addEventListener('drop', e => {
   assignments[tgtP][tgtH] = t;
   renderGrid();
 });
-
 function openPicker(pid,h){
   pickerTarget={pid,h};
   const prog=PROGS.find(p=>p.id===pid);
@@ -438,18 +428,14 @@ function openPicker(pid,h){
   document.getElementById('picker-overlay').classList.add('open');
   setTimeout(()=>document.getElementById('picker-search').focus(),320);
 }
-
 function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;}
-
 document.getElementById('picker-search').addEventListener('input',function(){renderPickerList(this.value);});
-
 document.getElementById('picker-list').addEventListener('click',e=>{
   const item=e.target.closest('[data-lbl]');
   if(!item||!pickerTarget)return;
   const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
   if(artist){assignments[pickerTarget.pid][pickerTarget.h]=artist;closePicker();renderGrid();}
 });
-
 function renderPickerList(q){
   const qn=q.toLowerCase();
   if(!pickerTarget) return;
@@ -487,7 +473,6 @@ function renderPickerList(q){
   }
   document.getElementById('picker-list').innerHTML=html||`<div style="padding:24px;text-align:center;color:var(--muted);font-size:0.8rem;">Sin resultados</div>`;
 }
-
 function updateProgress(){
   let total=0,done=0;PROGS.forEach(p=>p.horas.forEach(h=>{total++;if(assignments[p.id][h.h])done++;}));
   document.getElementById('prog-bar').style.width=total?`${(done/total)*100}%`:'0%';
@@ -495,7 +480,6 @@ function updateProgress(){
   document.getElementById('prog-total').textContent=`de ${total}`;
   document.getElementById('ef-note').textContent=done?`${done}/${total} slots — exportá cuando estés listo.`:'Asigná promos y exportá.';
 }
-
 function renderSummary(){
   let counts = {};
   let any = false;
@@ -516,9 +500,7 @@ function renderSummary(){
   }
   document.getElementById('summary').innerHTML = any ? html : '<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
 }
-
 function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){initAssignments();renderGrid();}}
-
 function exportar(){
   const fecha=document.getElementById('fecha').value;
   if(!fecha){alert('Seleccioná la fecha primero');return;}
@@ -535,7 +517,6 @@ function exportar(){
   const fileName=`asignaciones_${fecha}.json`;
   const contentStr=JSON.stringify(payload,null,2);
   document.getElementById('ef-note').innerHTML='⏳ Guardando en la nube...';
-  
   fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec',{
     method:'POST',
     headers:{'Content-Type':'text/plain'},
@@ -553,7 +534,6 @@ function exportar(){
     document.getElementById('ef-note').innerHTML='❌ Falló la conexión al guardar.';
   });
 }
-
 document.getElementById('fecha').addEventListener('change', function() {
   const fechaVal = this.value;
   if (!fechaVal) { renderGrid(); return; }
@@ -566,7 +546,6 @@ document.getElementById('fecha').addEventListener('change', function() {
   loadHistory(fechaVal);
   if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
 });
-
 document.getElementById('fecha').value = '';
 loadUrl();
 </script>
