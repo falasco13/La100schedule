@@ -20,40 +20,28 @@
   --c-oclk-bg:#F5F5F5;--c-oclk-bd:#DDD;--c-oclk-tx:#555;
 }
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-
-/* NAV */
 nav{background:var(--navy);height:54px;padding:0 18px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .logo{background:var(--gold);color:var(--navy);font-weight:800;font-size:0.85rem;padding:4px 10px;border-radius:6px;text-decoration:none;}
 .nav-t{color:#fff;font-weight:600;font-size:0.85rem;}
 .nav-r{margin-left:auto;display:flex;gap:10px;align-items:center;}
 a.nav-link{color:rgba(255,255,255,.5);font-size:0.73rem;text-decoration:none;transition:color .15s;}
 a.nav-link:hover{color:#fff;}
-
-/* APP LAYOUT */
 .app{display:flex;height:calc(100vh - 54px);}
-
-/* SIDEBAR */
 .sb{width:260px;min-width:260px;background:var(--card);border-right:1.5px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;}
 .sbs{padding:13px 15px;border-bottom:1px solid var(--border);}
 .sbs-lbl{font-size:0.59rem;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
-
-/* URL INPUT */
 .url-in{width:100%;padding:7px 9px;border:1.5px solid var(--border);border-radius:7px;font-size:0.72rem;font-family:'Sora',sans-serif;outline:none;color:var(--text);background:#FAFBFF;transition:border .15s;}
 .url-in:focus{border-color:var(--accent);}
 .status-chip{margin-top:6px;padding:5px 9px;border-radius:6px;font-size:0.68rem;display:none;line-height:1.4;}
 .sch-ok{background:#E6F7EE;color:#0B5E38;}
 .sch-err{background:#FDEAED;color:#8B0F24;}
 .sch-load{background:#FFF8E1;color:#7A5800;}
-
-/* IMPORT DROP */
 .drop-zone{border:2px dashed var(--border);border-radius:9px;padding:14px 12px;text-align:center;cursor:pointer;transition:all .15s;background:#FAFBFF;}
 .drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:var(--accent-lt);}
 .drop-zone input{display:none;}
 .dz-icon{font-size:1.6rem;margin-bottom:4px;}
 .dz-text{font-size:0.71rem;color:var(--muted);line-height:1.5;}
 .dz-ok{background:#E6F7EE;border:1px solid #A8D5B8;border-radius:7px;padding:7px 9px;font-size:0.71rem;color:#0B5E38;margin-top:7px;}
-
-/* BUTTONS */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;padding:7px 13px;border-radius:8px;border:none;cursor:pointer;font-size:0.74rem;font-weight:700;font-family:'Sora',sans-serif;transition:all .15s;text-decoration:none;}
 .btn-navy{background:var(--navy);color:#fff;}.btn-navy:hover{background:var(--accent);}
 .btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#085c3e;}
@@ -65,15 +53,11 @@ a.nav-link:hover{color:#fff;}
 .t-ok{background:#E6F7EE;color:#0B5E38;display:block;}
 .t-warn{background:#FFF8E1;color:#7A5800;display:block;}
 .t-err{background:#FDEAED;color:#8B0F24;display:block;}
-
-/* STATS */
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
 .stat-box{background:var(--off);border:1px solid var(--border);border-radius:8px;padding:8px 10px;text-align:center;}
 .stat-n{font-size:1.3rem;font-weight:800;color:var(--navy);line-height:1;font-family:'DM Mono',monospace;}
 .stat-n.warn{color:var(--red);}
 .stat-l{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-top:2px;}
-
-/* MAT PANEL */
 .mg{margin-bottom:4px;}
 .mg-hdr{display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--off);border:1px solid var(--border);border-radius:5px;cursor:pointer;font-size:0.7rem;font-weight:700;color:var(--navy);transition:background .12s;}
 .mg-hdr:hover{background:var(--accent-lt);}
@@ -84,16 +68,12 @@ a.nav-link:hover{color:#fff;}
 .mi-code{color:var(--navy);font-weight:700;font-family:'DM Mono',monospace;font-size:0.62rem;min-width:66px;}
 .mi-name{flex:1;color:#444;font-size:0.63rem;}
 .mi-dur{color:#bbb;font-family:'DM Mono',monospace;font-size:0.6rem;white-space:nowrap;}
-
-/* MAIN SCHEDULE */
 .main{flex:1;overflow-y:auto;}
 .main-hdr{background:var(--navy);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .mh-title{color:#fff;font-weight:700;font-size:0.9rem;}
 .mh-sub{color:rgba(255,255,255,.45);font-size:0.65rem;margin-top:1px;}
 .mh-actions{display:flex;gap:7px;flex-wrap:wrap;}
 .schedule-body{padding:16px 20px;}
-
-/* PROGRAM BLOCK */
 .prog-block{margin-bottom:18px;}
 .pb-title{background:var(--navy);color:#fff;font-weight:700;font-size:0.73rem;text-transform:uppercase;letter-spacing:0.5px;padding:7px 12px;border-radius:8px 8px 0 0;}
 table.sched{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;overflow:hidden;}
@@ -103,8 +83,6 @@ table.sched td{padding:3px 5px;border-bottom:1px solid #EDF0F7;border-right:1px 
 table.sched td:last-child{border-right:none;}
 table.sched tr:last-child td{border-bottom:none;}
 td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-size:0.71rem;text-align:center;font-family:'DM Mono',monospace;min-width:44px;white-space:nowrap;}
-
-/* CHIPS IN TABLE */
 .chip{display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:6px;border:1.5px solid transparent;cursor:pointer;position:relative;font-size:0.68rem;transition:filter .12s;}
 .chip:hover{filter:brightness(.94);}
 .chip-code{font-weight:700;font-size:0.63rem;white-space:nowrap;font-family:'DM Mono',monospace;min-width:64px;}
@@ -119,8 +97,6 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 .empty-chip{display:flex;align-items:center;justify-content:center;height:30px;border:1.5px dashed var(--border);border-radius:6px;color:#ccc;font-size:0.65rem;cursor:pointer;transition:all .12s;}
 .empty-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-lt);}
 .locked-cell{height:28px;display:flex;align-items:center;padding:0 6px;color:#ddd;font-size:0.63rem;font-style:italic;}
-
-/* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(13,14,46,.5);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
 .modal-overlay.open{display:flex;}
 .modal{background:#fff;border-radius:14px;width:460px;max-width:95vw;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.2);border:1px solid var(--border);}
@@ -137,15 +113,10 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 .m-item-code{font-weight:700;font-size:0.64rem;color:var(--navy);min-width:72px;font-family:'DM Mono',monospace;}
 .m-item-name{flex:1;font-size:0.75rem;}
 .m-item-dur{font-size:0.61rem;color:#bbb;white-space:nowrap;font-family:'DM Mono',monospace;}
-
-/* EMPTY STATE */
 .sched-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:400px;text-align:center;padding:40px;}
 .se-icon{font-size:3rem;margin-bottom:14px;opacity:.5;}
 .se-title{font-size:0.95rem;font-weight:700;color:var(--navy);margin-bottom:7px;}
 .se-text{font-size:0.78rem;color:var(--muted);line-height:1.8;max-width:340px;}
-.se-steps{margin-top:16px;display:inline-flex;flex-direction:column;gap:5px;text-align:left;}
-.se-step{font-size:0.77rem;color:#444;display:flex;align-items:center;gap:8px;}
-
 @media(max-width:700px){
   .app{flex-direction:column;height:auto;}
   .sb{width:100%;min-width:0;border-right:none;border-bottom:1.5px solid var(--border);}
@@ -163,10 +134,7 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 </nav>
 
 <div class="app">
-
-  <!-- SIDEBAR -->
   <div class="sb">
-
     <div class="sbs">
       <div class="sbs-lbl">📊 Google Sheet (materiales)</div>
       <input class="url-in" id="url-in" placeholder="URL del Sheet publicado como CSV…" oninput="saveUrl()">
@@ -176,7 +144,6 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       </div>
       <div id="sheet-chip" class="status-chip"></div>
     </div>
-
     <div class="sbs">
       <div class="sbs-lbl">📥 Asignaciones del coordinador</div>
       <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-in').click()">
@@ -188,7 +155,6 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       <div id="nube-list" style="display:none; margin-top:10px; background:#FAFBFF; border:1px solid #E2E4F6; border-radius:6px; padding:10px; max-height:150px; overflow-y:auto; font-size:0.8rem;"></div>
       <div id="import-ok" style="display:none;" class="dz-ok"></div>
     </div>
-
     <div class="sbs">
       <div class="sbs-lbl">🎲 Auto-asignar</div>
       <p style="font-size:0.68rem;color:var(--muted);margin-bottom:7px;line-height:1.5;">Rellena slots vacíos al azar, sin repetir en el día.</p>
@@ -198,7 +164,6 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
         <button class="btn btn-navy btn-sm btn-full" onclick="autoAsignar('ambos')">✨ Ambos</button>
       </div>
     </div>
-
     <div class="sbs">
       <div class="sbs-lbl">📊 Estadísticas</div>
       <div class="stats-grid">
@@ -209,22 +174,17 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       </div>
       <div id="alerts"></div>
     </div>
-
     <div class="sbs">
       <div class="sbs-lbl">📤 Exportar</div>
       <button class="btn btn-ghost btn-sm" onclick="validar()" style="margin-bottom:6px;width:100%;">🔎 Validar duplicados</button>
       <button class="btn btn-green btn-full" onclick="exportarExcel()">⬇ EXPORTAR EXCEL</button>
 <button id="btn-stats" class="btn btn-full" style="background:#F4F5FF; color:#1B1F6E; border:1.5px solid #1B1F6E; margin-top:10px;">📊 Ver Estadísticas Históricas</button>
     </div>
-
     <div class="sbs" style="flex:1;">
       <div class="sbs-lbl">📋 Materiales en rotación</div>
       <div id="mat-panel"><div style="font-size:0.71rem;color:var(--muted);">Conectá el Sheet para ver los materiales.</div></div>
     </div>
-
   </div>
-
-  <!-- SCHEDULE -->
   <div class="main">
     <div class="main-hdr">
       <div><div class="mh-title" id="main-title">Schedule LA 100</div><div class="mh-sub" id="main-sub">Importá las asignaciones del coordinador para comenzar</div></div>
@@ -240,10 +200,8 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       </div>
     </div>
   </div>
-
 </div>
 
-<!-- MODAL -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-hdr">
@@ -273,6 +231,15 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
           <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">🎙 Programa</label>
           <select id="filtro-prog" style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
             <option value="">Todos los programas</option>
+          </select>
+        </div>
+        <div style="flex:1; min-width:140px;">
+          <label style="font-size:0.7rem; font-weight:700; color:#7478A8; display:block; margin-bottom:5px;">🏷️ Tipo</label>
+          <select id="filtro-tipo" style="width:100%; padding:8px; border:1.5px solid #E2E4F6; border-radius:6px; font-family:'Sora'; outline:none;">
+            <option value="">Todos los tipos</option>
+            <option value="Promo">Promos</option>
+            <option value="Éxito a la Vista">Éxito a la Vista</option>
+            <option value="Sep. Compañía">Sep. Compañía</option>
           </select>
         </div>
         <div style="flex:1; min-width:120px;">
@@ -321,23 +288,23 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
             <tr>
               <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Fecha</th>
               <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Programa</th>
-              <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Promo / Material</th>
+              <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Material</th>
+              <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Tipo</th>
               <th style="padding:10px; border-bottom:2px solid #E2E4F6; color:#7478A8;">Duración</th>
             </tr>
           </thead>
           <tbody id="tabla-resultados">
-            <tr><td colspan="4" style="padding:20px; text-align:center; color:#7478A8;">Ingresá filtros para ver resultados...</td></tr>
+            <tr><td colspan="5" style="padding:20px; text-align:center; color:#7478A8;">Ingresá filtros para ver resultados...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
+
 <script>
-// ─── DEFAULTS ─────────────────────────────────────────────────────────────────
 const DEFAULT_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
 
-// ─── PROGRAMAS POR DÍA ────────────────────────────────────────────────────────
 const PROGS_LUN_VIE = [
   {name:'LA HORA DE LOS LENTOS',horas:[{h:0,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:1,t1i:null,t1c:'exito',t2i:null,t2c:null}]},
   {name:'TRASNOCHE 100',horas:[{h:2,t1i:'promo',t1c:null,t2i:null,t2c:null},{h:3,t1i:null,t1c:null,t2i:null,t2c:'exito'},{h:4,t1i:'promo',t1c:null,t2i:null,t2c:'exito'},{h:5,t1i:null,t1c:null,t2i:null,t2c:'exito'}]},
@@ -422,7 +389,6 @@ const PROGS_DOM = [
 let PROGS = PROGS_LUN_VIE;
 let OCLOCK={c:'—',n:'Buscando Oclock...',d:0};
 
-// ─── STATE ─────────────────────────────────────────────────────────────────────
 let MAT={shows:[],mini_lolla:[],concursos:[],sep_comp:[],exito_vista:[]};
 let SCH={};
 let inited=false, importFecha='';
@@ -436,7 +402,6 @@ const getMat=c=>{for(const cat of Object.values(MAT)){const m=(Array.isArray(cat
 
 function initSCH(){SCH={};for(let h=0;h<24;h++)SCH[h]={t1i:null,t1c:null,t2i:null,t2c:null};SCH[6].t1i={...OCLOCK};inited=true;}
 
-// ─── CSV ───────────────────────────────────────────────────────────────────────
 function parseDur(s){if(!s)return 0;s=String(s).trim();if(s.includes(':')){const p=s.split(':').map(Number);return p.length===2?p[0]*60+p[1]:p[0]*3600+p[1]*60+(p[2]||0);}return parseInt(s)||0;}
 function splitCSV(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){if(l[i]==='"'){q=!q;continue;}if(l[i]===','&&!q){r.push(c.trim());c='';continue;}c+=l[i];}r.push(c.trim());return r;}
 function parseCSV(text){
@@ -448,10 +413,10 @@ function parseCSV(text){
   const B={shows:[],mini_lolla:[],concursos:[],sep_comp:[],exito_vista:[]};
   for(let i=1;i<lines.length;i++){
     const p=splitCSV(lines[i]);if(p.length<2)continue;
-    const cat=iCAT>=0?(p[iCAT]||'').toUpperCase():'';
+    const cat=iCAT>=0?(p[iCAT]||'').toUpperCase().trim():'';
     const cod=(p[iCOD]||'').trim(),dur=parseDur(iDUR>=0?p[iDUR]:''),nom=(p[iNOM]||'').trim();
     if(!cod||!nom)continue;
-    const item={c:cod,n:nom,d:dur};
+    const item={c:cod,n:nom,d:dur,cat:cat};
     
     if(nom.toUpperCase().startsWith('SEP LA 100') || cat.includes('SEP')) B.sep_comp.push(item);
     else if(cat==='EXITO_VISTA')B.exito_vista.push(item);
@@ -463,7 +428,6 @@ function parseCSV(text){
   return B;
 }
 
-// ─── LOAD SHEET ────────────────────────────────────────────────────────────────
 async function recargarSheet(){
   const url=(document.getElementById('url-in').value||'').trim();
   if(!url){setChip('Pegá la URL del Sheet','err');return;}
@@ -495,7 +459,6 @@ function setChip(msg,type){const el=document.getElementById('sheet-chip');el.sty
 function saveUrl(){try{localStorage.setItem('la100s_url',document.getElementById('url-in').value.trim());}catch(e){}}
 function loadUrl(){try{const v=localStorage.getItem('la100s_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargarSheet();}}catch(e){}}
 
-// ─── FILE IMPORT ───────────────────────────────────────────────────────────────
 document.getElementById('file-in').addEventListener('change',function(){if(this.files[0])importJSON(this.files[0]);});
 const dz=document.getElementById('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
@@ -594,7 +557,6 @@ function importJSON(file){
   reader.readAsText(file);
 }
 
-// ─── RENDER SCHEDULE ──────────────────────────────────────────────────────────
 function renderSchedule(){
   if(!inited)return;
   let html='';
@@ -626,7 +588,7 @@ function rSlot(h,slot,rtype,mat){
   let colorType = effectiveType;
 
   if(mat){
-    if(mat.n.toUpperCase().includes('SEP LA 100')) colorType = 'sep';
+    if(mat.n.toUpperCase().includes('SEP LA 100') || mat.cat==='SEP_VERANO' || mat.cat==='SEP_COMP' || mat.cat==='SEPARADORES') colorType = 'sep';
     else if(mat.cat==='EXITO_VISTA' || mat.n.toUpperCase().includes('EXITO')) colorType = 'exito';
     else colorType = 'promo';
   }
@@ -662,7 +624,6 @@ function updateStats(){
   document.getElementById('s-v').textContent=v;
 }
 
-// ─── AUTO-ASIGNAR ─────────────────────────────────────────────────────────────
 function autoAsignar(tipo){
   if(!inited){alert('Importá las asignaciones del coordinador primero');return;}
   if((tipo==='exito'||tipo==='ambos')&&!MAT.exito_vista.length){showToast('⚠ No hay Éxito a la Vista en el Sheet','warn');if(tipo==='exito')return;}
@@ -683,7 +644,6 @@ function autoAsignar(tipo){
   renderSchedule();showToast('✅ Auto-asignación completada.','ok');
 }
 
-// ─── MODAL ─────────────────────────────────────────────────────────────────────
 const CAT_FOR={exito:['exito_vista'],sep:['sep_comp','shows','mini_lolla','concursos'],promo:['shows','mini_lolla','concursos'],libre:['shows','mini_lolla','concursos','sep_comp','exito_vista']};
 const CAT_LBL={shows:'🎸 Shows',mini_lolla:'🎪 Mini Lolla',concursos:'🏆 Concursos',sep_comp:'🌅 Sep. Compañía',exito_vista:'🎵 Éxito a la Vista'};
 
@@ -718,7 +678,6 @@ function renderModalList(q){
   document.getElementById('modal-list').innerHTML=html;
 }
 
-// ─── VALIDAR ──────────────────────────────────────────────────────────────────
 function validar(){
   if(!inited){showToast('Importá las asignaciones primero','warn');return;}
   clearToasts();const used={};let errs=0,vacios=0;
@@ -735,11 +694,9 @@ function validar(){
   else if(!errs&&vacios)showToast(`⚠ ${vacios} slot(s) vacíos.`,'warn');
 }
 
-// ─── ALERTS ───────────────────────────────────────────────────────────────────
 function showToast(msg,type){const d=document.createElement('div');d.className=`toast t-${type}`;d.textContent=msg;document.getElementById('alerts').appendChild(d);setTimeout(()=>d.remove(),9000);}
 function clearToasts(){document.getElementById('alerts').innerHTML='';}
 
-// ─── MAT PANEL ────────────────────────────────────────────────────────────────
 function renderMatPanel(){
   const cats=[{k:'shows',l:'🎸 Shows'},{k:'mini_lolla',l:'🎪 Mini Lolla'},{k:'concursos',l:'🏆 Concursos'},{k:'sep_comp',l:'🌅 Sep. Compañía'},{k:'exito_vista',l:'🎵 Éxito a la Vista'}];
   document.getElementById('mat-panel').innerHTML=cats.map(c=>{
@@ -751,14 +708,12 @@ function renderMatPanel(){
 function toggleMat(k){const b=document.getElementById(`mb-${k}`),a=document.getElementById(`arr-${k}`);const o=b.classList.toggle('open');a.textContent=o?'▲':'▼';}
 renderMatPanel();
 
-// ─── FORMAT HELPERS ────────────────────────────────────────────────────────────
 const MESES=['','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 const MESES_U=['','ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
 const DIAS_U=['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
 function fmtFecha(s){if(!s)return'';const[y,m,d]=s.split('-');return`${parseInt(d)} de ${MESES[parseInt(m)]} de ${y}`;}
 function fmtFechaU(s){if(!s)return'LUNES';const[y,m,d]=s.split('-');const dt=new Date(parseInt(y),parseInt(m)-1,parseInt(d));return`${DIAS_U[dt.getDay()]} ${parseInt(d)} DE ${MESES_U[parseInt(m)]} DE ${y}`;}
 
-// ─── EXCEL EXPORT (EXCELJS — FULL COLOR) ─────────────────────────────────────
 async function exportarExcel(){
   if(!inited){showToast('Importá las asignaciones primero','warn');return;}
 
@@ -768,15 +723,15 @@ async function exportarExcel(){
   const ws=wb.addWorksheet('Schedule',{views:[{showGridLines:false}]});
 
   const C={
-    navyFg:'FFFFFF', navyBg:'1B1F6E',    
+    navyFg:'FFFFFF', navyBg:'1B1F6E',   
     midBg:'2D3396',  midFg:'FFFFFF',      
-    hourBg:'EEF0FF', hourFg:'1B1F6E',    
+    hourBg:'EEF0FF', hourFg:'1B1F6E',   
     colHdrBg:'C4CBFF', colHdrFg:'1B1F6E', 
     promoBg:'EEF0FF', promoFg:'1B1F6E', promoBd:'C4CBFF', 
     exitoBg:'E6F7EE', exitoFg:'0B5E38', exitoBd:'A8D5B8', 
     sepBg:'FFF8E1',  sepFg:'7A5800',  sepBd:'FFD97D',  
     oclkBg:'F5F5F5', oclkFg:'555555', oclkBd:'DDDDDD', 
-    emptyBg:'FFF0F0', emptyFg:'CC4444',                   
+    emptyBg:'FFF0F0', emptyFg:'CC4444',                    
     rowAlt:'FAFBFF',
   };
 
@@ -964,8 +919,8 @@ function enviarEstadisticas() {
         if(!mat) continue;
 
         let tipo_real = 'Promo';
-        if (mat.n.toUpperCase().includes('SEP LA 100')) tipo_real = 'Sep. Compañía';
-        else if (mat.n.toUpperCase().includes('EXITO')) tipo_real = 'Éxito a la Vista';
+        if (mat.cat === 'SEP_VERANO' || mat.cat === 'SEP_COMP' || mat.n.toUpperCase().includes('SEP LA 100')) tipo_real = 'Sep. Compañía';
+        else if (mat.cat === 'EXITO_VISTA' || mat.n.toUpperCase().includes('EXITO')) tipo_real = 'Éxito a la Vista';
         else if (rtype === 'oclock') tipo_real = "O'Clock";
 
         payload.items.push({
@@ -1029,7 +984,7 @@ function prepararFiltros(data) {
     progSelect.appendChild(opt);
   });
 
-  ['filtro-nombre', 'filtro-prog', 'filtro-desde', 'filtro-hasta'].forEach(id => {
+  ['filtro-nombre', 'filtro-prog', 'filtro-tipo', 'filtro-desde', 'filtro-hasta'].forEach(id => {
     document.getElementById(id).addEventListener('input', aplicarFiltros);
   });
   
@@ -1073,6 +1028,7 @@ function formatDuracionTotal(segs) {
 function aplicarFiltros() {
   const q = document.getElementById('filtro-nombre').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const p = document.getElementById('filtro-prog').value;
+  const t = document.getElementById('filtro-tipo').value;
   const d = document.getElementById('filtro-desde').value;
   const h = document.getElementById('filtro-hasta').value;
 
@@ -1080,11 +1036,12 @@ function aplicarFiltros() {
     if(!row.nombre) return false;
     const matchQ = !q || row.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').includes(q) || (row.codigo && row.codigo.toLowerCase().includes(q));
     const matchP = !p || row.programa === p;
+    const matchT = !t || row.tipo === t;
     const fechaRow = row.fecha_schedule || row.fecha || ''; 
     const fCorta = fechaRow.split('T')[0];
     const matchD = !d || fCorta >= d;
     const matchH = !h || fCorta <= h;
-    return matchQ && matchP && matchD && matchH;
+    return matchQ && matchP && matchT && matchD && matchH;
   });
 
   resultadosExportar = resultados;
@@ -1108,12 +1065,13 @@ function aplicarFiltros() {
       <td style="padding:8px 10px; color:#1B1F6E; font-family:'DM Mono', monospace;">${f.split('T')[0]}</td>
       <td style="padding:8px 10px;">${prog}</td>
       <td style="padding:8px 10px;"><strong>${r.codigo || ''}</strong> <span style="color:#7478A8;">${r.nombre}</span></td>
+      <td style="padding:8px 10px; font-size:0.65rem; color:#7478A8;">${r.tipo || '—'}</td>
       <td style="padding:8px 10px; font-family:'DM Mono', monospace;">${formatDuracionTotal(segs)}</td>
     </tr>`;
   });
 
   if(resultados.length === 0) {
-    htmlDetalle = '<tr><td colspan="4" style="padding:20px; text-align:center; color:#7478A8;">No se encontraron resultados para estos filtros.</td></tr>';
+    htmlDetalle = '<tr><td colspan="5" style="padding:20px; text-align:center; color:#7478A8;">No se encontraron resultados para estos filtros.</td></tr>';
   }
 
   let htmlCarga = '';
@@ -1165,7 +1123,7 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.addRow(['REPORTE DE AUDITORÍA - LA 100']);
   ws.getRow(1).font = { bold: true, size: 14, color: { argb: 'FFFFFFFF' } };
   ws.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
-  ws.mergeCells('A1:E1');
+  ws.mergeCells('A1:F1');
 
   ws.addRow(['Total de Emisiones:', resultadosExportar.length, '', 'Tiempo Total en Aire:', formatDuracionTotal(totalSegundos)]);
   ws.getRow(2).font = { bold: true };
@@ -1174,15 +1132,15 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.addRow(['RESUMEN POR PROGRAMA']);
   ws.getRow(4).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   ws.getRow(4).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B6B48' } };
-  ws.mergeCells('A4:E4');
+  ws.mergeCells('A4:F4');
 
-  ws.addRow(['Programa', 'Cant. Promos', 'Tiempo de Aire', '', '']);
+  ws.addRow(['Programa', 'Cant. Promos', 'Tiempo de Aire', '', '', '']);
   ws.getRow(5).font = { bold: true };
 
   const programasOrdenados = Object.keys(cargaPorPrograma).sort((a,b) => cargaPorPrograma[b].segs - cargaPorPrograma[a].segs);
   programasOrdenados.forEach(prog => {
     const datos = cargaPorPrograma[prog];
-    ws.addRow([prog, datos.cant, formatDuracionTotal(datos.segs), '', '']);
+    ws.addRow([prog, datos.cant, formatDuracionTotal(datos.segs), '', '', '']);
   });
 
   ws.addRow([]); 
@@ -1191,9 +1149,9 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.addRow(['DETALLE DE EMISIONES']);
   ws.getRow(startDetalle).font = { bold: true, color: { argb: 'FFFFFFFF' } };
   ws.getRow(startDetalle).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1B1F6E' } };
-  ws.mergeCells(`A${startDetalle}:E${startDetalle}`);
+  ws.mergeCells(`A${startDetalle}:F${startDetalle}`);
 
-  ws.addRow(['FECHA', 'PROGRAMA', 'CÓDIGO', 'MATERIAL', 'DURACIÓN']);
+  ws.addRow(['FECHA', 'PROGRAMA', 'CÓDIGO', 'MATERIAL', 'TIPO', 'DURACIÓN']);
   ws.getRow(startDetalle + 1).font = { bold: true };
 
   resultadosExportar.forEach(r => {
@@ -1205,6 +1163,7 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
       r.programa || '—',
       r.codigo || '',
       r.nombre || '',
+      r.tipo || '',
       formatDuracionTotal(segs)
     ]);
   });
@@ -1213,7 +1172,8 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.getColumn(2).width = 35;
   ws.getColumn(3).width = 15;
   ws.getColumn(4).width = 50;
-  ws.getColumn(5).width = 15;
+  ws.getColumn(5).width = 20;
+  ws.getColumn(6).width = 15;
 
   const buf = await wb.xlsx.writeBuffer();
   const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
