@@ -525,7 +525,7 @@ document.getElementById('btn-nube').addEventListener('click', async () => {
       btn.innerText = '☁️ La nube está vacía';
     }
   } catch (e) {
-    btn.innerText = '❌ Error de connection';
+    btn.innerText = '❌ Error de conexión';
   }
 });
 
@@ -754,7 +754,7 @@ async function exportarExcel(){
     rowAlt:'FAFBFF',
   };
 
-  const font=(bold,color,size=9)=>({name:'Roboto',size,bold,color:{argb:`FF${color}`}});
+  const font=(bold,color,size=9)=>({name:'Calibri',size,bold,color:{argb:`FF${color}`}});
   const fill=bg=>({type:'pattern',pattern:'solid',fgColor:{argb:`FF${bg}`}});
   const border=(col)=>({top:{style:'thin',color:{argb:`FF${col}`}},left:{style:'thin',color:{argb:`FF${col}`}},bottom:{style:'thin',color:{argb:`FF${col}`}},right:{style:'thin',color:{argb:`FF${col}`}}});
   const align=(h,v='middle',wrap=false)=>({horizontal:h,vertical:v,wrapText:wrap});
@@ -787,13 +787,13 @@ async function exportarExcel(){
   ws.mergeCells(`J${row.number}:Q${row.number}`);
   const tCell=ws.getCell(`C${row.number}`);
   tCell.value=`SCHEDULE PROMOS LA 100  —  ${fmtFechaU(importFecha)}`;
-  tCell.font={name:'Roboto',size:14,bold:true,color:{argb:`FF${C.navyFg}`}};
+  tCell.font={name:'Calibri',size:14,bold:true,color:{argb:`FF${C.navyFg}`}};
   tCell.fill=fill(C.navyBg);
   tCell.alignment=align('center','middle');
   row.height=28;
   for(let c=1;c<=17;c++){const cell=ws.getCell(row.number,c);if(c<3)cell.fill=fill(C.navyBg);}
   const rCell=ws.getCell(`J${row.number}`);
-  rCell.value='LA 100 FM';rCell.font={name:'Roboto',size:11,bold:true,color:{argb:`FF${C.gold||'F5C842'}`}};
+  rCell.value='LA 100 FM';rCell.font={name:'Calibri',size:11,bold:true,color:{argb:`FF${C.gold||'F5C842'}`}};
   rCell.fill=fill(C.navyBg);rCell.alignment=align('right','middle');
 
   ws.addRow([]);
@@ -803,7 +803,7 @@ async function exportarExcel(){
     ws.mergeCells(`B${row.number}:Q${row.number}`);
     const phCell=ws.getCell(`B${row.number}`);
     phCell.value=`  🎙  ${prog.name}`;
-    phCell.font={name:'Roboto',size:10,bold:true,color:{argb:`FF${C.midFg}`}};
+    phCell.font={name:'Calibri',size:10,bold:true,color:{argb:`FF${C.midFg}`}};
     phCell.fill=fill(C.midBg);
     phCell.alignment=align('left','middle');
     row.height=20;
