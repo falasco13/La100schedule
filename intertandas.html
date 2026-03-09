@@ -565,24 +565,24 @@ async function exportarDesdeTabla(){
       ws.columns = [{ width: 10 }, { width: 45 }, { width: 12 }, { width: 3 }, { width: 45 }, { width: 12 }];
       const rowT = ws.addRow([fileName.replace('.xlsx', '')]);
       ws.mergeCells('A1:F1'); rowT.height = 30;
-      for(let i=1; i<=6; i++){ let c = rowT.getCell(i); c.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+      for(let i=1; i<=6; i++){ let c = rowT.getCell(i); c.font = { name: 'Roboto', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
           c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A237E' } }; c.alignment = { vertical: 'middle', horizontal: 'center' }; }
       ws.addRow([]);
       const trs = document.querySelectorAll('#tbody-preview tr');
       trs.forEach(tr => {
         if(tr.classList.contains('prog-row')) {
             const progRow = ws.addRow([tr.innerText.trim()]); ws.mergeCells(`A${progRow.number}:F${progRow.number}`);
-            for(let i=1; i<=6; i++){ let c = progRow.getCell(i); c.font = { name: 'Calibri', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+            for(let i=1; i<=6; i++){ let c = progRow.getCell(i); c.font = { name: 'Roboto', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
                 c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF3949AB' } }; c.alignment = { vertical: 'middle', horizontal: 'center' }; }
             const sub = ws.addRow(['HORA', 'TANDA 1', '', '', 'TANDA 2', '']);
-            for(let i=1; i<=6; i++){ let c = sub.getCell(i); c.font = { name: 'Calibri', size: 10, bold: true, color: { argb: 'FF1A237E' } };
+            for(let i=1; i<=6; i++){ let c = sub.getCell(i); c.font = { name: 'Roboto', size: 10, bold: true, color: { argb: 'FF1A237E' } };
                 c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC5CAE9' } }; 
                 if(i !== 4) { c.border = { top: {style:'thin', color:{argb:'FF9FA8DA'}}, bottom: {style:'thin', color:{argb:'FF9FA8DA'}}, left: {style:'medium', color:{argb:'FF9FA8DA'}}, right: {style:'medium', color:{argb:'FF9FA8DA'}} }; } }
             return;
         }
         let d1 = tr.querySelector('.td-t1'); let d2 = tr.querySelector('.td-t2');
         const dr = ws.addRow([parseFloat(tr.dataset.h), d1.dataset.n || '', d1.dataset.c || '', '', d2.dataset.n || '', d2.dataset.c || '']);
-        dr.font = { name: 'Calibri', size: 11, color: { argb: 'FF333333' } };
+        dr.font = { name: 'Roboto', size: 11, color: { argb: 'FF333333' } };
         let ch = dr.getCell(1); ch.numFmt = 'hh:mm'; ch.alignment = { horizontal: 'center', vertical: 'middle' };
         ch.border = { top: {style:'thin', color:{argb:'FFEEEEEE'}}, bottom: {style:'thin', color:{argb:'FFEEEEEE'}}, left: {style:'medium', color:{argb:'FF9FA8DA'}}, right: {style:'medium', color:{argb:'FF9FA8DA'}} };
         [2, 3, 5, 6].forEach(i => { let c = dr.getCell(i); c.alignment = { vertical: 'middle', wrapText: true };
