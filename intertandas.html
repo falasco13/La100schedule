@@ -118,8 +118,8 @@
 let MAT_WEB = [];
 let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
-let filaEditando = null;
-let tandaEditando = null;
+let celdaEditando = null;
+
 const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6', '#F0FFF0', '#F5F5DC', '#FFFACD', '#E0FFFF'];
 let colorMap = {};
 
@@ -302,21 +302,23 @@ async function bajarScheduleNube(){
 
 function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
 
-function borrarMaterial(e, td) {
-  e.stopPropagation(); td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
+function borrarMaterial(e, el) {
+  e.stopPropagation(); 
+  let td = el.closest('td');
+  td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
   let tanda = td.className.includes('td-t1') ? 1 : 2;
-  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
+  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this, ${tanda})">+ Agregar</div>`;
 }
 
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
     let tanda = tdClass.includes('td-t1') ? 1 : 2;
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this, ${tanda})">+ Agregar</div></td>`;
   }
   return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
             <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
               ${m.n}<small>${m.c}</small>
-              <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span>
+              <span class="delete-btn" onclick="borrarMaterial(event, this)">×</span>
             </div>
           </td>`;
 }
@@ -349,6 +351,7 @@ function generarPrevisualizacion(){
     let bagTematicas = {};
     function getAudioForTag(tag) {
        if (!bagTematicas[tag] || bagTematicas[tag].length === 0) {
+           if(!MAT_TEMATICAS[tag]) return {n:'MATERIAL NO ENCONTRADO', c:'---', cat:'OTRAS'};
            bagTematicas[tag] = shuffle([...MAT_TEMATICAS[tag]]);
        }
        return bagTematicas[tag].pop();
@@ -373,7 +376,8 @@ function generarPrevisualizacion(){
         let tU = tag.toUpperCase();
         let minH = 0;
         let isProg = false;
-        if (tU.includes("MORO") || tU.includes("NETD") || tU.includes("TODO DICHO") || tU.includes("SARASA") || tU.includes("ATARDECER") || tU.includes("CASA") || tU.includes("ABIERTO") || tU.includes("WEEKEND") || tU.includes("RETRO")) {
+        const keywordsProg = ["MORO", "NETD", "TODO DICHO", "SARASA", "ATARDECER", "CASA", "ABIERTO", "WEEKEND", "RETRO"];
+        if (keywordsProg.some(k => tU.includes(k))) {
             isProg = true;
         }
         if(isProg) {
@@ -398,27 +402,22 @@ function generarPrevisualizacion(){
 
     programasData.forEach(prog => {
         usadasWebEnProg[prog.p] = [];
-        let availableBlocks = shuffle(prog.blocks.map((b, i) => i));
+        let availableBlocks = [...prog.blocks];
 
         for(let item of tagsObj) {
             let tag = item.tag;
             let minH = item.minH;
 
-            for(let i=0; i<availableBlocks.length; i++) {
-                let idx = availableBlocks[i];
-                let block = prog.blocks[idx];
-
-                if(block.assignedTag) continue; 
-                if(block.noThematic) continue;
-                if(block.h < minH) continue; 
-
+            let validBlocks = availableBlocks.filter(block => {
+                if (block.assignedTag) return false;
+                if (block.noThematic) return false;
+                if (block.h < minH) return false;
+                
                 let blockHour = block.h;
-                let choca = false;
-
-                if(SCHEDULE_PROMOS && Array.isArray(SCHEDULE_PROMOS.asignaciones)){
+                if (SCHEDULE_PROMOS && Array.isArray(SCHEDULE_PROMOS.asignaciones)) {
                     let promosInHour = SCHEDULE_PROMOS.asignaciones.filter(p => p.hora === blockHour);
-                    if(promosInHour.length > 0){
-                        choca = promosInHour.some(p => {
+                    if (promosInHour.length > 0) {
+                        let choca = promosInHour.some(p => {
                             let pTag = (p.artista || p.tag || '').toUpperCase().trim();
                             let pName = (p.name || p.nombre || p.n || '').toUpperCase().trim();
                             let iTag = tag.toUpperCase().trim();
@@ -430,6 +429,7 @@ function generarPrevisualizacion(){
                             }
                             return false;
                         });
+                        if (choca) return false;
                     }
                 }
 
@@ -445,12 +445,15 @@ function generarPrevisualizacion(){
                     }
                     if (chocaConsecutivo) break;
                 }
+                if (chocaConsecutivo) return false;
 
-                if(!choca && !chocaConsecutivo) {
-                    block.assignedTag = tag;
-                    availableBlocks.splice(i, 1);
-                    break;
-                }
+                return true;
+            });
+
+            if (validBlocks.length > 0) {
+                let chosenBlock = validBlocks[Math.floor(Math.random() * validBlocks.length)];
+                chosenBlock.assignedTag = tag;
+                availableBlocks = availableBlocks.filter(b => b !== chosenBlock);
             }
         }
 
@@ -500,9 +503,9 @@ function generarPrevisualizacion(){
             tr.dataset.h = bloque.h;
             tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
               ${renderCelda(t1, 'td-t1')}
-              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 1)">🔄</button></td>
+              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this, 1)">🔄</button></td>
               ${renderCelda(t2, 'td-t2')}
-              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.parentElement.parentElement, 2)">🔄</button></td>`;
+              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this, 2)">🔄</button></td>`;
             tbody.appendChild(tr);
         });
     });
@@ -512,8 +515,10 @@ function generarPrevisualizacion(){
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
 
-function abrirModal(tr, tandaNum){
-  filaEditando = tr; tandaEditando = tandaNum;
+function abrirModal(el, tandaNum){
+  let tr = el.closest('tr');
+  celdaEditando = tr.querySelector(tandaNum === 1 ? '.td-t1' : '.td-t2');
+  
   const select = document.getElementById('select-material');
   select.innerHTML = '<option value="|">-- Seleccionar --</option>';
   let gW = document.createElement('optgroup'); gW.label = "RELLENOS WEB";
@@ -528,14 +533,15 @@ function abrirModal(tr, tandaNum){
   document.getElementById('modal-reemplazo').style.display = 'flex';
 }
 
-function cerrarModal(){ document.getElementById('modal-reemplazo').style.display = 'none'; }
+function cerrarModal(){ document.getElementById('modal-reemplazo').style.display = 'none'; celdaEditando = null; }
 
 function aplicarReemplazo(){
+  if(!celdaEditando) return;
   const val = document.getElementById('select-material').value; if(val === "|") return;
-  const ps = val.split('|'); const td = tandaEditando === 1 ? filaEditando.querySelector('.td-t1') : filaEditando.querySelector('.td-t2');
-  td.dataset.n = ps[0]; td.dataset.c = ps[1]; td.dataset.cat = ps[2];
-  td.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[2] || 'OTRAS')}">${ps[0]}<small>${ps[1]}</small>
-    <span class="delete-btn" onclick="borrarMaterial(event, this.parentElement.parentElement)">×</span></div>`;
+  const ps = val.split('|'); 
+  celdaEditando.dataset.n = ps[0]; celdaEditando.dataset.c = ps[1]; celdaEditando.dataset.cat = ps[2];
+  celdaEditando.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[2] || 'OTRAS')}">${ps[0]}<small>${ps[1]}</small>
+    <span class="delete-btn" onclick="borrarMaterial(event, this)">×</span></div>`;
   cerrarModal();
 }
 
