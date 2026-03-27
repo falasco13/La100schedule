@@ -82,7 +82,7 @@
     </div>
   </div>
   <div class="panel">
-    <label>3. Seleccionar intertanda para pautar (1 vez x Programa)</label>
+    <label>3. Seleccionar intertanda para pautar</label>
     <input type="text" id="search-intertanda" placeholder="🔍 Buscar por nombre o TAG..." onkeyup="filtrarIntertandas()" style="margin-bottom:10px; border-radius:6px; border:1px solid #ccc; padding:10px; width:100%; box-sizing:border-box; font-family:'Sora',sans-serif;">
     <div class="list-container" id="lista-tematicas">
       <p style="color:#888;font-size:0.9rem;">Conectando con Google Drive...</p>
@@ -109,6 +109,7 @@
     <button class="btn-green" style="width:100%;font-size:1.1rem;padding:15px; margin-top:20px;" onclick="exportarDesdeTabla()">2️⃣ DESCARGAR EXCEL DEFINITIVO</button>
   </div>
 </div>
+
 <div id="modal-reemplazo">
   <div class="modal-content" style="padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:85vh;">
     <div style="padding:20px 20px 10px 20px;">
@@ -122,6 +123,7 @@
     </div>
   </div>
 </div>
+
 <script>
 let MAT_WEB = [];
 let MAT_TEMATICAS = {};
@@ -316,13 +318,13 @@ function borrarMaterial(e, spanElement) {
   let td = spanElement.closest('td');
   td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
   let tanda = td.className.includes('td-t1') ? 1 : 2;
-  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
+  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div>`;
 }
 
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
     let tanda = tdClass.includes('td-t1') ? 1 : 2;
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div></td>`;
   }
   return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
             <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
@@ -515,9 +517,9 @@ function generarPrevisualizacion(){
             tr.dataset.h = bloque.h;
             tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
               ${renderCelda(t1, 'td-t1')}
-              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this, 1)">🔄</button></td>
+              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t1'), 1)">🔄</button></td>
               ${renderCelda(t2, 'td-t2')}
-              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this, 2)">🔄</button></td>`;
+              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t2'), 2)">🔄</button></td>`;
             tbody.appendChild(tr);
         });
     });
@@ -527,9 +529,8 @@ function generarPrevisualizacion(){
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
 
-function abrirModal(el, tandaNum) {
-  let tr = el.closest('tr');
-  celdaEditando = tr.querySelector(tandaNum === 1 ? '.td-t1' : '.td-t2');
+function abrirModal(tdElement, tandaNum) {
+  celdaEditando = tdElement;
   document.getElementById('search-modal').value = '';
   
   modalItemsData = [];
@@ -543,14 +544,26 @@ function abrirModal(el, tandaNum) {
       ag[cat].push(m); 
     }); 
   }
-  Object.keys(ag).forEach(cat => {
-     ag[cat].forEach(m => modalItemsData.push({ ...m, group: cat }));
+  
+  Object.keys(ag).sort((a,b)=>a.localeCompare(b)).forEach(cat => {
+     ag[cat].sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => modalItemsData.push({ ...m, group: cat }));
   });
 
   renderModalList('');
   document.getElementById('modal-reemplazo').style.display = 'flex';
   setTimeout(() => document.getElementById('search-modal').focus(), 100);
 }
+
+function cerrarModal() { 
+  document.getElementById('modal-reemplazo').style.display = 'none'; 
+  celdaEditando = null; 
+}
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.getElementById('modal-reemplazo').style.display === 'flex') {
+      cerrarModal();
+  }
+});
 
 function renderModalList(query) {
   const list = document.getElementById('lista-materiales-modal');
@@ -574,7 +587,7 @@ function renderModalList(query) {
      divG.innerText = g;
      list.appendChild(divG);
 
-     groups[g].sort((a,b) => a.n.localeCompare(b.n)).forEach(m => {
+     groups[g].forEach(m => {
         let divI = document.createElement('div');
         divI.className = 'mod-item';
         divI.innerHTML = `<span><strong>${m.n}</strong></span> <span style="color:#7478A8; font-size:0.7rem; font-family:'DM Mono', monospace;">${m.c}</span>`;
@@ -592,7 +605,7 @@ function filtrarModal() {
    renderModalList(document.getElementById('search-modal').value);
 }
 
-function aplicarReemplazo(n, c, cat){
+function aplicarReemplazo(n, c, cat) {
   if(!celdaEditando) return;
   celdaEditando.dataset.n = n; 
   celdaEditando.dataset.c = c; 
