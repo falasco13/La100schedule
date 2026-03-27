@@ -122,7 +122,7 @@ a.nav-link:hover{color:#fff;}
 </head>
 <body>
 <nav>
-  <a href="index.html" class="logo">LA 100</a>
+  <a href="coordinador.html" class="logo">LA 100</a>
   <span class="nav-t">Coordinador</span>
   <div class="nav-r">
     <a href="schedule.html" class="nav-link">Schedule →</a>
@@ -156,6 +156,7 @@ a.nav-link:hover{color:#fff;}
       <div class="ef-note" id="ef-note">Asigná promos y exportá el archivo para el schedule.</div>
       <button class="btn btn-green btn-full" onclick="exportar()">⬇ Exportar para Schedule</button>
       <button onclick="window.open('intertandas.html', '_blank')" style="width:100%; margin-top:10px; padding:12px; background:#FF5722; color:#fff; border:none; border-radius:6px; cursor:pointer; font-weight:700; font-family:'Sora',sans-serif; text-transform:uppercase; box-shadow:0 4px 6px rgba(255,87,34,0.3);">INTERTANDAS</button>
+      <button class="btn btn-ghost btn-full" onclick="abrirHeatmap()" style="border-color:var(--accent); color:var(--accent); margin-top:10px;">🗺️ Mapa de Calor Semanal</button>
     </div>
   </div>
   <div class="main-area">
@@ -190,6 +191,37 @@ a.nav-link:hover{color:#fff;}
     <div class="picker-list" id="picker-list"></div>
   </div>
 </div>
+
+<div id="heatmap-modal" style="display:none; position:fixed; inset:0; background:rgba(13,14,46,.7); z-index:9999; padding:20px; overflow-y:auto; align-items:flex-start; justify-content:center; backdrop-filter:blur(4px);">
+  <div style="background:#fff; width:100%; max-width:900px; margin:20px auto; padding:25px; border-radius:14px; position:relative; font-family:'Sora',sans-serif; box-shadow:0 10px 40px rgba(0,0,0,.3); display:flex; flex-direction:column; min-height:80vh;">
+    <button onclick="document.getElementById('heatmap-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; background:none; border:none; cursor:pointer; color:#7478A8; transition:color .2s;">&times;</button>
+    <h2 style="margin-bottom:5px; color:#1B1F6E; font-weight:800;">🗺️ Mapa de Calor Semanal</h2>
+    <p style="font-size:0.8rem; color:#7478A8; margin-bottom:20px;">Visualizá dónde cae cada promo a lo largo de toda la semana para evitar concentraciones.</p>
+    
+    <div id="heatmap-loading" style="text-align:center; padding:60px; color:#7478A8; flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="font-size:2rem; margin-bottom:10px;">⏳ <span class="loading-dots"></span></div>
+        <div>Buscando la programación de la semana en la nube</div>
+    </div>
+    
+    <div id="heatmap-content" style="display:none; flex:1; display:flex; flex-direction:column;">
+        <div style="background:#FAFBFF; padding:15px; border-radius:10px; border:1px solid #E2E4F6; margin-bottom:20px;">
+            <label style="font-size:0.75rem; font-weight:700; color:#1B1F6E; display:block; margin-bottom:8px;">🔍 Seleccioná la Promo/Artista a rastrear:</label>
+            <select id="heatmap-select" onchange="dibujarHeatmap(this.value)" style="width:100%; padding:10px; border:1.5px solid #C4CBFF; border-radius:8px; font-family:'Sora',sans-serif; font-size:0.9rem; outline:none; color:#1B1F6E; font-weight:600;">
+            </select>
+        </div>
+        
+        <div style="flex:1; overflow:auto; border:1px solid #E2E4F6; border-radius:10px; background:#fff; box-shadow:inset 0 0 10px rgba(0,0,0,.02);">
+            <table style="width:100%; border-collapse:collapse; font-size:0.75rem; min-width:600px;">
+              <thead style="background:#FAFBFF; position:sticky; top:0; z-index:10; box-shadow:0 2px 4px rgba(0,0,0,.05);">
+                <tr id="heatmap-thead-tr"></tr>
+              </thead>
+              <tbody id="heatmap-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const DEFAULT_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS8tViHsYkBBsf5EzW322dc1MAiWMMFdQzuLxym_6x6_ZQrbxv6lpU3DQdMb_s729dKRh2yIiT3RFmb/pub?gid=0&single=true&output=csv';
 const PROGS_LUN_VIE = [
@@ -573,6 +605,102 @@ document.getElementById('fecha').addEventListener('change', function() {
   loadHistory(fechaVal);
   if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
 });
+
+let heatmapData = {};
+let heatmapFechas = [];
+
+async function abrirHeatmap() {
+  const fIn = document.getElementById('fecha').value;
+  if(!fIn) { alert('Seleccioná una fecha en el panel izquierdo para definir la semana.'); return; }
+  document.getElementById('heatmap-modal').style.display = 'flex';
+  document.getElementById('heatmap-loading').style.display = 'flex';
+  document.getElementById('heatmap-content').style.display = 'none';
+  const parts = fIn.split('-');
+  const d = new Date(parts[0], parts[1]-1, parts[2]);
+  const day = d.getDay() || 7; 
+  d.setDate(d.getDate() - day + 1); 
+  heatmapFechas = [];
+  for(let i=0; i<7; i++) {
+    const nd = new Date(d);
+    nd.setDate(d.getDate() + i);
+    const y = nd.getFullYear();
+    const m = String(nd.getMonth()+1).padStart(2,'0');
+    const dStr = String(nd.getDate()).padStart(2,'0');
+    heatmapFechas.push(`${y}-${m}-${dStr}`);
+  }
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
+    const data = await res.json();
+    heatmapData = {};
+    const fetchPromises = [];
+    if (data && data.files) {
+      for(let f of heatmapFechas) {
+        heatmapData[f] = {};
+        const target = `asignaciones_${f}.json`;
+        if(data.files.find(x => x.name === target)) {
+          const p = fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`)
+            .then(r => r.json())
+            .then(fileData => {
+              if(fileData && fileData.asignaciones) {
+                fileData.asignaciones.forEach(a => {
+                   heatmapData[f][a.hora] = a.artista;
+                });
+              }
+            }).catch(e => {});
+          fetchPromises.push(p);
+        }
+      }
+    }
+    await Promise.all(fetchPromises);
+    const artistasUnicos = new Set();
+    for (const f in heatmapData) {
+      for (const h in heatmapData[f]) {
+         if (heatmapData[f][h]) artistasUnicos.add(heatmapData[f][h]);
+      }
+    }
+    const artistasOrdenados = [...artistasUnicos].sort();
+    const sel = document.getElementById('heatmap-select');
+    sel.innerHTML = '<option value="">-- Elegí un artista para ver su mapa --</option>';
+    artistasOrdenados.forEach(a => {
+       sel.innerHTML += `<option value="${a}">${a}</option>`;
+    });
+    document.getElementById('heatmap-loading').style.display = 'none';
+    document.getElementById('heatmap-content').style.display = 'flex';
+    dibujarHeatmap('');
+  } catch(e) {
+    document.getElementById('heatmap-loading').innerHTML = '<div style="color:red; font-weight:bold; margin-top:20px;">❌ Error de conexión con la nube. Cerrá e intentá de nuevo.</div>';
+  }
+}
+
+function dibujarHeatmap(artistaFiltro) {
+   const tbody = document.getElementById('heatmap-tbody');
+   tbody.innerHTML = '';
+   const thead = document.getElementById('heatmap-thead-tr');
+   const dias = ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'];
+   let ths = '<th style="padding:10px; border-bottom:2px solid #E2E4F6; background:#FAFBFF; position:sticky; left:0; z-index:2; width:60px;">Hora</th>';
+   for(let i=0; i<7; i++) {
+     const parts = heatmapFechas[i].split('-');
+     ths += `<th style="padding:10px; border-bottom:2px solid #E2E4F6; text-align:center;">${dias[i]}<br><span style="font-size:0.65rem; color:#7478A8;">${parts[2]}/${parts[1]}</span></th>`;
+   }
+   thead.innerHTML = ths;
+   for(let h=0; h<24; h++) {
+      let tr = `<tr style="border-bottom:1px solid #EDF0F7;">`;
+      tr += `<td style="padding:6px 10px; font-weight:700; color:#1B1F6E; background:#FAFBFF; position:sticky; left:0; font-family:'DM Mono',monospace; border-right:1px solid #E2E4F6; text-align:center;">${String(h).padStart(2,'0')}:00</td>`;
+      for(let i=0; i<7; i++) {
+         const f = heatmapFechas[i];
+         const art = heatmapData[f] ? heatmapData[f][h] : null;
+         if(artistaFiltro && art === artistaFiltro) {
+             tr += `<td style="padding:6px; text-align:center;"><div style="background:#4F5EFF; color:#fff; font-size:0.65rem; font-weight:700; padding:6px; border-radius:6px; box-shadow:0 3px 8px rgba(79,94,255,.4);">🔴 HIT</div></td>`;
+         } else if (art) {
+             tr += `<td style="padding:6px; text-align:center;"><div style="background:#F4F5FF; color:#A0A4CC; font-size:0.6rem; padding:4px; border-radius:4px; border:1px solid #E2E4F6; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:80px; margin:0 auto;" title="${art}">${art}</div></td>`;
+         } else {
+             tr += `<td style="padding:6px; text-align:center;"><div style="background:#fff; border:1px dashed #E2E4F6; border-radius:4px; height:24px; width:40px; margin:0 auto;"></div></td>`;
+         }
+      }
+      tr += `</tr>`;
+      tbody.innerHTML += tr;
+   }
+}
 
 document.getElementById('fecha').value = '';
 loadUrl();
