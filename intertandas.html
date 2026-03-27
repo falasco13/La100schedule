@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>La 100 - Intertandas</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <style>
   body{font-family:'Sora',sans-serif;background:#F4F6F9;margin:0;padding:0;color:#333;}
@@ -48,15 +48,20 @@
   .empty-slot { color: #888; font-style: italic; text-align: center; padding: 15px; border: 1px dashed #ccc; border-radius: 8px; cursor: pointer; background: #FAFBFF; transition: 0.2s; }
   .empty-slot:hover { background: #F0F2F5; border-color: #999; color: #333; }
   #modal-reemplazo{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;}
-  .modal-content{background:#fff;padding:25px;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);}
+  .modal-content{background:#fff;border-radius:12px;width:90%;max-width:500px;box-shadow:0 10px 25px rgba(0,0,0,0.2);}
+  .mod-item { padding: 10px 15px; border-bottom: 1px solid #E2E4F6; cursor: pointer; font-size: 0.85rem; transition: background 0.15s; display:flex; justify-content:space-between; align-items:center;}
+  .mod-item:last-child { border-bottom: none; }
+  .mod-item:hover { background: #EEF0FF; color: #1B1F6E; }
+  .mod-cat { background: #E2E4F6; padding: 6px 15px; font-size: 0.7rem; font-weight: 800; color: #1B1F6E; position: sticky; top: 0; z-index: 10; text-transform: uppercase; letter-spacing: 0.5px;}
+  #search-modal:focus { border-color: #4F5EFF; }
 </style>
 </head>
 <body>
 <nav>
-  <a href="index.html" class="logo">LA 100</a>
+  <a href="coordinador.html" class="logo">LA 100</a>
   <span class="nav-t">Intertandas</span>
   <div class="nav-r">
-    <a href="index.html" class="nav-link">← Volver a Promos</a>
+    <a href="coordinador.html" class="nav-link">← Volver a Promos</a>
     <a href="schedule.html" class="nav-link">Schedule Planner →</a>
   </div>
 </nav>
@@ -105,12 +110,15 @@
   </div>
 </div>
 <div id="modal-reemplazo">
-  <div class="modal-content">
-    <h3 style="margin-top:0;color:#1B1F6E;">Seleccionar Material</h3>
-    <select id="select-material" style="width:100%; padding:12px; font-family:'Sora',sans-serif; margin-bottom:20px; border-radius:6px; border:1px solid #ccc;"></select>
-    <div style="display:flex; gap:10px;">
-      <button onclick="aplicarReemplazo()" style="flex:1; background:#4CAF50;">Aplicar</button>
-      <button onclick="cerrarModal()" style="flex:1; background:#757575;">Cancelar</button>
+  <div class="modal-content" style="padding:0; overflow:hidden; display:flex; flex-direction:column; max-height:85vh;">
+    <div style="padding:20px 20px 10px 20px;">
+      <h3 style="margin-top:0;color:#1B1F6E;margin-bottom:12px;">Seleccionar Material</h3>
+      <input type="text" id="search-modal" placeholder="🔍 Buscar por nombre o código..." onkeyup="filtrarModal()" style="width:100%; padding:12px; border:1.5px solid #E2E4F6; border-radius:8px; font-family:'Sora',sans-serif; outline:none; font-size:0.9rem;">
+    </div>
+    <div id="lista-materiales-modal" style="flex:1; overflow-y:auto; background:#fff; border-top:1px solid #E2E4F6;">
+    </div>
+    <div style="padding:15px 20px; background:#FAFBFF; border-top:1px solid #E2E4F6;">
+      <button onclick="cerrarModal()" style="width:100%; background:#7478A8;">Cancelar</button>
     </div>
   </div>
 </div>
@@ -118,7 +126,8 @@
 let MAT_WEB = [];
 let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
-let celdaActiva = null;
+let celdaEditando = null;
+let modalItemsData = [];
 
 const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6', '#F0FFF0', '#F5F5DC', '#FFFACD', '#E0FFFF'];
 let colorMap = {};
@@ -306,12 +315,14 @@ function borrarMaterial(e, spanElement) {
   e.stopPropagation(); 
   let td = spanElement.closest('td');
   td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
-  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement)">+ Agregar</div>`;
+  let tanda = td.className.includes('td-t1') ? 1 : 2;
+  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
 }
 
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement)">+ Agregar</div></td>`;
+    let tanda = tdClass.includes('td-t1') ? 1 : 2;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
   }
   return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
             <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
@@ -430,9 +441,9 @@ function generarPrevisualizacion(){
                             }
                             return false;
                         });
+                        if (choca) return false;
                     }
                 }
-                if (choca) return false;
 
                 let chocaConsecutivo = false;
                 for (let checkP of programasData) {
@@ -504,9 +515,9 @@ function generarPrevisualizacion(){
             tr.dataset.h = bloque.h;
             tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
               ${renderCelda(t1, 'td-t1')}
-              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t1'))">🔄</button></td>
+              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this, 1)">🔄</button></td>
               ${renderCelda(t2, 'td-t2')}
-              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t2'))">🔄</button></td>`;
+              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this, 2)">🔄</button></td>`;
             tbody.appendChild(tr);
         });
     });
@@ -516,30 +527,77 @@ function generarPrevisualizacion(){
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
 
-function abrirModal(tdElement){
-  celdaActiva = tdElement;
-  const select = document.getElementById('select-material');
-  select.innerHTML = '<option value="|">-- Seleccionar --</option>';
-  let gW = document.createElement('optgroup'); gW.label = "RELLENOS WEB";
-  MAT_WEB.sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => { gW.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`; });
-  select.appendChild(gW);
-  let ag = {}; for(let tag in MAT_TEMATICAS){ MAT_TEMATICAS[tag].forEach(m => { let cat = m.cat || 'OTRAS'; if(!ag[cat]) ag[cat] = []; ag[cat].push(m); }); }
-  Object.keys(ag).sort((a,b)=>a.localeCompare(b)).forEach(cat => {
-     let g = document.createElement('optgroup'); g.label = cat;
-     ag[cat].sort((a,b)=>a.n.localeCompare(b.n)).forEach(m => { g.innerHTML += `<option value="${m.n}|${m.c}|${m.cat}">${m.n}</option>`; });
-     select.appendChild(g);
+function abrirModal(el, tandaNum) {
+  let tr = el.closest('tr');
+  celdaEditando = tr.querySelector(tandaNum === 1 ? '.td-t1' : '.td-t2');
+  document.getElementById('search-modal').value = '';
+  
+  modalItemsData = [];
+  MAT_WEB.forEach(m => modalItemsData.push({ ...m, group: 'RELLENOS WEB' }));
+  
+  let ag = {}; 
+  for(let tag in MAT_TEMATICAS){ 
+    MAT_TEMATICAS[tag].forEach(m => { 
+      let cat = m.cat || 'OTRAS'; 
+      if(!ag[cat]) ag[cat] = []; 
+      ag[cat].push(m); 
+    }); 
+  }
+  Object.keys(ag).forEach(cat => {
+     ag[cat].forEach(m => modalItemsData.push({ ...m, group: cat }));
   });
+
+  renderModalList('');
   document.getElementById('modal-reemplazo').style.display = 'flex';
+  setTimeout(() => document.getElementById('search-modal').focus(), 100);
 }
 
-function cerrarModal(){ document.getElementById('modal-reemplazo').style.display = 'none'; celdaActiva = null; }
+function renderModalList(query) {
+  const list = document.getElementById('lista-materiales-modal');
+  list.innerHTML = '';
+  let q = query.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
-function aplicarReemplazo(){
-  if(!celdaActiva) return;
-  const val = document.getElementById('select-material').value; if(val === "|") return;
-  const ps = val.split('|'); 
-  celdaActiva.dataset.n = ps[0]; celdaActiva.dataset.c = ps[1]; celdaActiva.dataset.cat = ps[2];
-  celdaActiva.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(ps[2] || 'OTRAS')}">${ps[0]}<small>${ps[1]}</small>
+  let groups = {};
+  modalItemsData.forEach(m => {
+     let nNorm = m.n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+     let cNorm = m.c.toLowerCase();
+     if (nNorm.includes(q) || cNorm.includes(q)) {
+        if (!groups[m.group]) groups[m.group] = [];
+        groups[m.group].push(m);
+     }
+  });
+
+  let sortedGroups = Object.keys(groups).sort();
+  sortedGroups.forEach(g => {
+     let divG = document.createElement('div');
+     divG.className = 'mod-cat';
+     divG.innerText = g;
+     list.appendChild(divG);
+
+     groups[g].sort((a,b) => a.n.localeCompare(b.n)).forEach(m => {
+        let divI = document.createElement('div');
+        divI.className = 'mod-item';
+        divI.innerHTML = `<span><strong>${m.n}</strong></span> <span style="color:#7478A8; font-size:0.7rem; font-family:'DM Mono', monospace;">${m.c}</span>`;
+        divI.onclick = () => aplicarReemplazo(m.n, m.c, m.cat);
+        list.appendChild(divI);
+     });
+  });
+
+  if (sortedGroups.length === 0) {
+     list.innerHTML = '<div style="padding:30px; text-align:center; color:#7478A8; font-size:0.9rem;">No se encontraron materiales</div>';
+  }
+}
+
+function filtrarModal() {
+   renderModalList(document.getElementById('search-modal').value);
+}
+
+function aplicarReemplazo(n, c, cat){
+  if(!celdaEditando) return;
+  celdaEditando.dataset.n = n; 
+  celdaEditando.dataset.c = c; 
+  celdaEditando.dataset.cat = cat;
+  celdaEditando.innerHTML = `<div class="material-chip" style="background-color:${getColorForCat(cat || 'OTRAS')}">${n}<small>${c}</small>
     <span class="delete-btn" onclick="borrarMaterial(event, this)">×</span></div>`;
   cerrarModal();
 }
