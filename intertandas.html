@@ -82,7 +82,7 @@
     </div>
   </div>
   <div class="panel">
-    <label>3. Seleccionar intertanda para pautar</label>
+    <label>3. Seleccionar intertanda para pautar (Múltiples opciones)</label>
     <input type="text" id="search-intertanda" placeholder="🔍 Buscar por nombre o TAG..." onkeyup="filtrarIntertandas()" style="margin-bottom:10px; border-radius:6px; border:1px solid #ccc; padding:10px; width:100%; box-sizing:border-box; font-family:'Sora',sans-serif;">
     <div class="list-container" id="lista-tematicas">
       <p style="color:#888;font-size:0.9rem;">Conectando con Google Drive...</p>
@@ -135,7 +135,7 @@ const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6'
 let colorMap = {};
 
 function getColorForCat(cat) {
-  if(cat.includes('WEB')) return '#FFF9C4'; 
+  if(cat && typeof cat === 'string' && cat.includes('WEB')) return '#FFF9C4'; 
   if (!colorMap[cat]) { colorMap[cat] = PALETA[Object.keys(colorMap).length % PALETA.length]; }
   return colorMap[cat];
 }
@@ -318,13 +318,13 @@ function borrarMaterial(e, spanElement) {
   let td = spanElement.closest('td');
   td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
   let tanda = td.className.includes('td-t1') ? 1 : 2;
-  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div>`;
+  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
 }
 
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
     let tanda = tdClass.includes('td-t1') ? 1 : 2;
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div></td>`;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
   }
   return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
             <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
@@ -340,8 +340,10 @@ function generarPrevisualizacion(){
   try {
     const fIn = document.getElementById('fecha-in').value;
     if(!fIn || MAT_WEB.length === 0){ status.innerHTML = '❌ Falta fecha o catálogo.'; return; }
+    
     const seleccionadas = [];
     document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
+    
     const objFecha = new Date(fIn + 'T12:00:00');
     const diaNum = objFecha.getDay();
     let grilla = GRILLA_LUN_VIE;
@@ -375,11 +377,13 @@ function generarPrevisualizacion(){
             currentP = { p: b.p, blocks: [] };
             programasData.push(currentP);
         }
-        let blockClone = {...b, assignedTag: null};
-        let bh = blockClone.h;
-        if (bh === 1 || bh === 3 || bh === 5) {
-            blockClone.noThematic = true;
-        }
+        let blockClone = {...b, assignedTags: []};
+        
+        let maxTags = 2;
+        if (blockClone.noT2 || blockClone.fixT2) maxTags = 1;
+        if (blockClone.vacio || [1,3,5].includes(blockClone.h)) maxTags = 0; 
+        
+        blockClone.maxTags = maxTags;
         currentP.blocks.push(blockClone);
     });
 
@@ -408,11 +412,11 @@ function generarPrevisualizacion(){
     programasData.forEach(prog => {
         usadasWebEnProg[prog.p] = [];
         let availableBlocks = [...prog.blocks];
-        let tagsParaEstePrograma = shuffle([...tagsObj]);
         
+        let tagsParaEstePrograma = [...tagsObj]; 
         tagsParaEstePrograma.sort((a,b) => {
             if(a.isProg !== b.isProg) return a.isProg ? -1 : 1;
-            return b.minH - a.minH;
+            return b.minH - a.minH; 
         });
 
         for(let item of tagsParaEstePrograma) {
@@ -420,9 +424,8 @@ function generarPrevisualizacion(){
             let minH = item.minH;
 
             let validBlocks = availableBlocks.filter(block => {
-                if (block.assignedTag) return false;
-                if (block.noThematic) return false;
-                if (block.vacio) return false; 
+                if (block.assignedTags.length >= block.maxTags) return false;
+                if (block.assignedTags.includes(tag)) return false; 
                 if (block.h < minH) return false;
                 
                 let blockHour = block.h;
@@ -450,7 +453,7 @@ function generarPrevisualizacion(){
                 let chocaConsecutivo = false;
                 for (let checkP of programasData) {
                     for (let checkB of checkP.blocks) {
-                        if (checkB.assignedTag === tag) {
+                        if (checkB.assignedTags.includes(tag)) {
                             if (Math.abs(checkB.h - blockHour) <= 1) {
                                 chocaConsecutivo = true;
                                 break;
@@ -466,8 +469,10 @@ function generarPrevisualizacion(){
 
             if (validBlocks.length > 0) {
                 let chosenBlock = validBlocks[Math.floor(Math.random() * validBlocks.length)];
-                chosenBlock.assignedTag = tag;
-                availableBlocks = availableBlocks.filter(b => b !== chosenBlock);
+                chosenBlock.assignedTags.push(tag);
+                if (chosenBlock.assignedTags.length >= chosenBlock.maxTags) {
+                    availableBlocks = availableBlocks.filter(b => b !== chosenBlock);
+                }
             }
         }
 
@@ -477,37 +482,33 @@ function generarPrevisualizacion(){
         tbody.appendChild(trH);
 
         prog.blocks.sort((a,b) => a.h - b.h).forEach(bloque => {
-            let t1 = {n:'', c:''}; let t2 = {n:'', c:''};
+            let t1 = null; let t2 = null;
             let hasFix = !isFinde && bloque.fixT2;
+            let tagsToPlace = [...bloque.assignedTags];
 
             if(bloque.vacio){ 
                 if(hasFix) t2 = bloque.fixT2; 
             } else {
-                if(bloque.assignedTag) {
-                    let escogido = getAudioForTag(bloque.assignedTag);
-                    if(bloque.noT2) {
-                        t1 = escogido;
-                    } else if(hasFix) {
-                        t1 = escogido; 
-                        t2 = bloque.fixT2;
-                    } else {
-                        if(Math.random() > 0.5){ 
-                            t1 = escogido; 
-                            t2 = getWebAleatorio(prog.p); 
-                        } else { 
-                            t1 = getWebAleatorio(prog.p); 
-                            t2 = escogido; 
-                        }
-                    }
+                if (bloque.noT2) {
+                    if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
+                    else t1 = getWebAleatorio(prog.p);
+                } else if (hasFix) {
+                    if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
+                    else t1 = getWebAleatorio(prog.p);
+                    t2 = bloque.fixT2;
                 } else {
-                    if(bloque.noT2) {
-                        t1 = getWebAleatorio(prog.p); 
-                    } else if(hasFix){ 
-                        t1 = getWebAleatorio(prog.p); 
-                        t2 = bloque.fixT2; 
-                    } else { 
-                        t1 = getWebAleatorio(prog.p); 
-                        t2 = getWebAleatorio(prog.p); 
+                    if (tagsToPlace.length === 2) {
+                        t1 = getAudioForTag(tagsToPlace[0]);
+                        t2 = getAudioForTag(tagsToPlace[1]);
+                        if (Math.random() > 0.5) { let temp = t1; t1 = t2; t2 = temp; }
+                    } else if (tagsToPlace.length === 1) {
+                        let theTag = getAudioForTag(tagsToPlace[0]);
+                        let web = getWebAleatorio(prog.p);
+                        if (Math.random() > 0.5) { t1 = theTag; t2 = web; }
+                        else { t1 = web; t2 = theTag; }
+                    } else {
+                        t1 = getWebAleatorio(prog.p);
+                        t2 = getWebAleatorio(prog.p);
                     }
                 }
             }
@@ -517,9 +518,9 @@ function generarPrevisualizacion(){
             tr.dataset.h = bloque.h;
             tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(bloque.h)}</td>
               ${renderCelda(t1, 'td-t1')}
-              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t1'), 1)">🔄</button></td>
+              <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this, 1)">🔄</button></td>
               ${renderCelda(t2, 'td-t2')}
-              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t2'), 2)">🔄</button></td>`;
+              <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this, 2)">🔄</button></td>`;
             tbody.appendChild(tr);
         });
     });
@@ -529,8 +530,9 @@ function generarPrevisualizacion(){
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
 
-function abrirModal(tdElement, tandaNum) {
-  celdaEditando = tdElement;
+function abrirModal(el, tandaNum) {
+  let tr = el.closest('tr');
+  celdaEditando = tr.querySelector(tandaNum === 1 ? '.td-t1' : '.td-t2');
   document.getElementById('search-modal').value = '';
   
   modalItemsData = [];
@@ -563,6 +565,9 @@ document.addEventListener('keydown', e => {
   if(e.key === 'Escape' && document.getElementById('modal-reemplazo').style.display === 'flex') {
       cerrarModal();
   }
+});
+document.getElementById('modal-reemplazo').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
 });
 
 function renderModalList(query) {
