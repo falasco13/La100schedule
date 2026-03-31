@@ -122,7 +122,7 @@ a.nav-link:hover{color:#fff;}
 </head>
 <body>
 <nav>
-  <a href="coordinador.html" class="logo">LA 100</a>
+  <a href="index.html" class="logo">LA 100</a>
   <span class="nav-t">Coordinador</span>
   <div class="nav-r">
     <a href="schedule.html" class="nav-link">Schedule →</a>
@@ -164,6 +164,7 @@ a.nav-link:hover{color:#fff;}
       <div class="main-title">Asignación de promos</div>
       <div class="main-sub">Elegí el artista para cada horario. Arrastrá para reordenar.</div>
       <div class="btn-row-main">
+        <button class="btn btn-ghost btn-sm" onclick="undo()" id="btn-undo" style="opacity:0.5; pointer-events:none;">↩ Deshacer</button>
         <button class="btn btn-ghost btn-sm" onclick="limpiar()">🗑 Limpiar todo</button>
       </div>
     </div>
@@ -253,6 +254,28 @@ let assignments = {};
 let pickerTarget = null;
 let historyData = {};
 let historyStatus = 'idle';
+let historyStack = [];
+
+function saveState(){
+  historyStack.push(JSON.stringify(assignments));
+  if(historyStack.length>50) historyStack.shift();
+  const b=document.getElementById('btn-undo');
+  b.style.opacity='1'; b.style.pointerEvents='all';
+}
+
+function undo(){
+  if(!historyStack.length)return;
+  assignments=JSON.parse(historyStack.pop());
+  renderGrid();
+  if(!historyStack.length){
+    const b=document.getElementById('btn-undo');
+    b.style.opacity='0.5'; b.style.pointerEvents='none';
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();undo();}
+});
 
 function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
 initAssignments();
@@ -419,7 +442,7 @@ function renderGrid(){
 
 document.getElementById('main-content').addEventListener('click',e=>{
   const ob=e.target.closest('[data-open]');if(ob){openPicker(ob.dataset.open,+ob.dataset.h);return;}
-  const rm=e.target.closest('[data-p]');if(rm){assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
+  const rm=e.target.closest('[data-p]');if(rm){saveState();assignments[rm.dataset.p][+rm.dataset.h]=null;renderGrid();}
 });
 
 let dragSrc = null;
@@ -452,6 +475,7 @@ mc.addEventListener('drop', e => {
   row.style.background = '';
   const tgtP = row.dataset.dropP, tgtH = +row.dataset.dropH;
   if(tgtP === dragSrc.p && tgtH === dragSrc.h) return;
+  saveState();
   const t = assignments[dragSrc.p][dragSrc.h];
   assignments[dragSrc.p][dragSrc.h] = assignments[tgtP][tgtH];
   assignments[tgtP][tgtH] = t;
@@ -483,6 +507,7 @@ document.getElementById('picker-list').addEventListener('click',e=>{
     if(yaPautado) {
       if(!confirm(`⚠️ OJO: Ya pautaste "${artist.label}" en este programa.\n\n¿Estás seguro de que querés repetirlo?`)) return;
     }
+    saveState();
     assignments[pickerTarget.pid][pickerTarget.h]=artist;
     closePicker();
     renderGrid();
@@ -556,7 +581,7 @@ function renderSummary(){
   document.getElementById('summary').innerHTML = any ? html : '<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
 }
 
-function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){initAssignments();renderGrid();}}
+function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){saveState();initAssignments();renderGrid();}}
 
 function exportar(){
   const fecha=document.getElementById('fecha').value;
@@ -601,6 +626,9 @@ document.getElementById('fecha').addEventListener('change', function() {
   if (dia === 0) PROGS = PROGS_DOM;
   else if (dia === 6) PROGS = PROGS_SAB;
   else PROGS = PROGS_LUN_VIE;
+  historyStack=[];
+  document.getElementById('btn-undo').style.opacity='0.5';
+  document.getElementById('btn-undo').style.pointerEvents='none';
   initAssignments();
   loadHistory(fechaVal);
   if (typeof ARTISTS !== 'undefined' && ARTISTS.length > 0) { renderGrid(); updateProgress(); renderSummary(); }
