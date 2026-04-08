@@ -554,8 +554,15 @@ function importJSON(file){
       
       const usedCodes=new Set();
       for(const asig of data.asignaciones){
-        let mat=getMat(asig.code);
-        if(!mat&&asig.allVariants){for(const vc of asig.allVariants){const m=getMat(vc);if(m&&!usedCodes.has(vc)){mat=m;break;}}}
+        let mat=null;
+        if(asig.allVariants&&asig.allVariants.length>0){
+          const pool=shuffle([...asig.allVariants]);
+          let vCode=pool.find(c=>!usedCodes.has(c));
+          if(!vCode) vCode=pool[0];
+          mat=getMat(vCode);
+        }
+        if(!mat)mat=getMat(asig.code);
+        
         if(!mat){showToast(`⚠ Código ${asig.code} (${asig.artista}) no está en rotación actual`,'warn');continue;}
         if(usedCodes.has(mat.c)){showToast(`⚠ ${asig.artista}: material repetido`,'warn');}
         const prog=PROGS.find(p=>p.name===asig.prog);
