@@ -143,9 +143,9 @@ function getColorForCat(cat) {
 const GRILLA_LUN_VIE = [
   {h:0, p:"LA HORA DE LOS LENTOS", noT2:true}, {h:1, p:"LA HORA DE LOS LENTOS", noT2:true},
   {h:2, p:"TRASNOCHE 100", noT2:true}, {h:3, p:"TRASNOCHE 100", noT2:true}, {h:4, p:"TRASNOCHE 100", noT2:true}, {h:5, p:"TRASNOCHE 100", noT2:true},
-  {h:6, p:"EL CLUB DEL MORO"}, {h:7, p:"EL CLUB DEL MORO"}, {h:8, p:"EL CLUB DEL MORO"}, {h:9, p:"EL CLUB DEL MORO", fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053", cat:"COMING"}},
+  {h:6, p:"EL CLUB DEL MORO", vacio:true}, {h:7, p:"EL CLUB DEL MORO", vacio:true}, {h:8, p:"EL CLUB DEL MORO", vacio:true}, {h:9, p:"EL CLUB DEL MORO", vacio:true, fixT2:{n:"COMING LA 100 NETD NEW 01", c:"C2102053", cat:"COMING"}},
   {h:10, p:"NO ESTÁ TODO DICHO"}, {h:11, p:"NO ESTÁ TODO DICHO"}, {h:12, p:"NO ESTÁ TODO DICHO"}, {h:13, p:"NO ESTÁ TODO DICHO", fixT2:{n:"COMING LA 100 SARASA NEW", c:"C2102054", cat:"COMING"}},
-  {h:14, p:"SARASA"}, {h:15, p:"SARASA"}, {h:16, p:"SARASA"},
+  {h:14, p:"SARASA"}, {h:15, p:"SARASA"}, {h:16, p:"SARASA", fixT2:{n:"COMING LA 100 ATARDECER NEW 01", c:"C2102051", cat:"COMING"}},
   {h:17, p:"ATARDECER DE UN DIA AGITADO"}, {h:18, p:"ATARDECER DE UN DIA AGITADO"}, {h:19, p:"ATARDECER DE UN DIA AGITADO"},
   {h:20, p:"ROMANTICOS", noT2:true}, {h:21, p:"ROMANTICOS", noT2:true}, {h:22, p:"ROMANTICOS", noT2:true}, {h:23, p:"ROMANTICOS", noT2:true}
 ];
@@ -318,13 +318,13 @@ function borrarMaterial(e, spanElement) {
   let td = spanElement.closest('td');
   td.dataset.n = ''; td.dataset.c = ''; td.dataset.cat = '';
   let tanda = td.className.includes('td-t1') ? 1 : 2;
-  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div>`;
+  td.innerHTML = `<div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div>`;
 }
 
 function renderCelda(m, tdClass) {
   if (!m || !m.n) {
     let tanda = tdClass.includes('td-t1') ? 1 : 2;
-    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.parentElement, ${tanda})">+ Agregar</div></td>`;
+    return `<td class="${tdClass}" data-n="" data-c="" data-cat=""><div class="empty-slot" onclick="abrirModal(this.closest('tr').querySelector('.td-t${tanda}'), ${tanda})">+ Agregar</div></td>`;
   }
   return `<td class="${tdClass}" data-n="${m.n}" data-c="${m.c}" data-cat="${m.cat || ''}">
             <div class="material-chip" style="background-color:${getColorForCat(m.cat || 'OTRAS')}">
@@ -341,7 +341,6 @@ function generarPrevisualizacion(){
     const fIn = document.getElementById('fecha-in').value;
     if(!fIn || MAT_WEB.length === 0){ status.innerHTML = '❌ Falta fecha o catálogo.'; return; }
     
-    // Obtenemos los checks tal cual los tildó el usuario (orden del DOM)
     const seleccionadas = [];
     document.querySelectorAll('input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
     
@@ -380,8 +379,9 @@ function generarPrevisualizacion(){
         }
         let blockClone = {...b, assignedTags: []};
         
-        let maxTags = 2; // Dos tandas libres por hora
-        if (blockClone.noT2 || blockClone.fixT2) maxTags = 1;
+        let maxTags = 2;
+        if (blockClone.vacio) maxTags = 0;
+        else if (blockClone.noT2 || blockClone.fixT2) maxTags = 1;
         
         blockClone.maxTags = maxTags;
         currentP.blocks.push(blockClone);
@@ -397,13 +397,17 @@ function generarPrevisualizacion(){
         }
         if(isProg) {
             if(isFinde) {
-               minH = 13;
+               if (tU.includes("MORO")) minH = 9;
+               else if (tU.includes("CASA")) minH = 13;
+               else if (tU.includes("ABIERTO")) minH = 14;
+               else if (tU.includes("WEEKEND")) minH = 18;
+               else minH = 9;
             } else {
-               if (tU.includes("MORO")) minH = 13; 
+               if (tU.includes("MORO")) minH = 10; 
                else if (tU.includes("NETD") || tU.includes("TODO DICHO")) minH = 14;
                else if (tU.includes("SARASA")) minH = 17;
                else if (tU.includes("ATARDECER")) minH = 20;
-               else minH = 13;
+               else minH = 10;
             }
         }
         return {tag, minH, isProg};
@@ -413,63 +417,62 @@ function generarPrevisualizacion(){
         usadasWebEnProg[prog.p] = [];
         let availableBlocks = [...prog.blocks];
         
-        for(let item of tagsObj) {
+        let tagsParaEstePrograma = [...tagsObj]; 
+        tagsParaEstePrograma.sort((a,b) => {
+            if(a.isProg !== b.isProg) return a.isProg ? -1 : 1;
+            return b.minH - a.minH; 
+        });
+
+        for(let item of tagsParaEstePrograma) {
             let tag = item.tag;
             let minH = item.minH;
 
-            // Busca todas las opciones válidas
             let validBlocks = availableBlocks.filter(block => {
                 if (block.assignedTags.length >= block.maxTags) return false;
                 if (block.assignedTags.includes(tag)) return false; 
                 if (block.h < minH) return false;
-                return true;
-            });
-
-            if (validBlocks.length === 0) continue; // No hay lugar en este programa
-
-            // Primero, buscamos bloques que NO choquen con la pauta
-            let blocksWithoutHardCollision = validBlocks.filter(block => {
+                
                 let blockHour = block.h;
+                let choca = false;
+
                 if (SCHEDULE_PROMOS && Array.isArray(SCHEDULE_PROMOS.asignaciones)) {
                     let promosInHour = SCHEDULE_PROMOS.asignaciones.filter(p => p.hora === blockHour);
                     if (promosInHour.length > 0) {
-                        return !promosInHour.some(p => {
+                        choca = promosInHour.some(p => {
                             let pTag = (p.artista || p.tag || '').toUpperCase().trim();
                             let pName = (p.name || p.nombre || p.n || '').toUpperCase().trim();
                             let iTag = tag.toUpperCase().trim();
                             if (pTag && (iTag === pTag || pTag.includes(iTag) || iTag.includes(pTag))) return true;
                             if (pName && (pName.includes(iTag) || pName.includes(pTag))) return true;
                             let words = iTag.split(/\s+/).filter(w => w.length > 3 && !['INTERT','PROMO','CORTO','LA','100'].includes(w));
-                            return words.some(w => pName.includes(w) || pTag.includes(w));
+                            for (let w of words) {
+                                if (pName.includes(w) || pTag.includes(w)) return true;
+                            }
+                            return false;
                         });
+                        if (choca) return false;
                     }
                 }
+
+                let chocaConsecutivo = false;
+                for (let checkP of programasData) {
+                    for (let checkB of checkP.blocks) {
+                        if (checkB.assignedTags.includes(tag)) {
+                            if (Math.abs(checkB.h - blockHour) <= 1) {
+                                chocaConsecutivo = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (chocaConsecutivo) break;
+                }
+                if (chocaConsecutivo) return false;
+
                 return true;
             });
 
-            let viableBlocks = blocksWithoutHardCollision.length > 0 ? blocksWithoutHardCollision : validBlocks;
-
-            // Segundo, intentamos separar las mismas intertandas de horas contiguas globalmente
-            let blocksWithoutSoftCollision = viableBlocks.filter(block => {
-                let blockHour = block.h;
-                let hasAdjacent = false;
-                for (let checkP of programasData) {
-                    for (let checkB of checkP.blocks) {
-                        if (checkB.assignedTags.includes(tag) && Math.abs(checkB.h - blockHour) <= 1) {
-                            hasAdjacent = true;
-                            break;
-                        }
-                    }
-                    if (hasAdjacent) break;
-                }
-                return !hasAdjacent;
-            });
-
-            let finalBlocks = blocksWithoutSoftCollision.length > 0 ? blocksWithoutSoftCollision : viableBlocks;
-
-            // Asignamos al azar dentro de los mejores bloques posibles
-            if (finalBlocks.length > 0) {
-                let chosenBlock = finalBlocks[Math.floor(Math.random() * finalBlocks.length)];
+            if (validBlocks.length > 0) {
+                let chosenBlock = validBlocks[Math.floor(Math.random() * validBlocks.length)];
                 chosenBlock.assignedTags.push(tag);
                 if (chosenBlock.assignedTags.length >= chosenBlock.maxTags) {
                     availableBlocks = availableBlocks.filter(b => b !== chosenBlock);
@@ -487,26 +490,30 @@ function generarPrevisualizacion(){
             let hasFix = !isFinde && bloque.fixT2;
             let tagsToPlace = [...bloque.assignedTags];
 
-            if (bloque.noT2) {
-                if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
-                else t1 = getWebAleatorio(prog.p);
-            } else if (hasFix) {
-                if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
-                else t1 = getWebAleatorio(prog.p);
-                t2 = bloque.fixT2;
+            if(bloque.vacio){ 
+                if(hasFix) t2 = bloque.fixT2; 
             } else {
-                if (tagsToPlace.length >= 2) {
-                    t1 = getAudioForTag(tagsToPlace[0]);
-                    t2 = getAudioForTag(tagsToPlace[1]);
-                    if (Math.random() > 0.5) { let temp = t1; t1 = t2; t2 = temp; }
-                } else if (tagsToPlace.length === 1) {
-                    let theTag = getAudioForTag(tagsToPlace[0]);
-                    let web = getWebAleatorio(prog.p);
-                    if (Math.random() > 0.5) { t1 = theTag; t2 = web; }
-                    else { t1 = web; t2 = theTag; }
+                if (bloque.noT2) {
+                    if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
+                    else t1 = getWebAleatorio(prog.p);
+                } else if (hasFix) {
+                    if (tagsToPlace.length > 0) t1 = getAudioForTag(tagsToPlace[0]);
+                    else t1 = getWebAleatorio(prog.p);
+                    t2 = bloque.fixT2;
                 } else {
-                    t1 = getWebAleatorio(prog.p);
-                    t2 = getWebAleatorio(prog.p);
+                    if (tagsToPlace.length >= 2) {
+                        t1 = getAudioForTag(tagsToPlace[0]);
+                        t2 = getAudioForTag(tagsToPlace[1]);
+                        if (Math.random() > 0.5) { let temp = t1; t1 = t2; t2 = temp; }
+                    } else if (tagsToPlace.length === 1) {
+                        let theTag = getAudioForTag(tagsToPlace[0]);
+                        let web = getWebAleatorio(prog.p);
+                        if (Math.random() > 0.5) { t1 = theTag; t2 = web; }
+                        else { t1 = web; t2 = theTag; }
+                    } else {
+                        t1 = getWebAleatorio(prog.p);
+                        t2 = getWebAleatorio(prog.p);
+                    }
                 }
             }
 
