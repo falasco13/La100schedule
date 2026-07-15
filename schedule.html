@@ -161,8 +161,9 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       <div class="btn-row">
         <button class="btn btn-ghost btn-sm" onclick="autoAsignar('sep')">🌅 Sep. Compañía</button>
         <button class="btn btn-ghost btn-sm" onclick="autoAsignar('exito')">🎵 Éxito</button>
-        <button class="btn btn-navy btn-sm btn-full" onclick="autoAsignar('ambos')">✨ Ambos</button>
+        <button class="btn btn-navy btn-sm" onclick="autoAsignar('ambos')">✨ Ambos</button>
       </div>
+      <button class="btn btn-ghost btn-sm btn-full" onclick="autoAsignarLogos(true)" style="border-color:var(--accent); color:var(--accent); margin-top:6px;">📻 Auto-pautar Logos 99.9</button>
     </div>
     <div class="sbs">
       <div class="sbs-lbl">📊 Estadísticas</div>
@@ -478,6 +479,57 @@ function setChip(msg,type){const el=document.getElementById('sheet-chip');el.sty
 function saveUrl(){try{localStorage.setItem('la100s_url',document.getElementById('url-in').value.trim());}catch(e){}}
 function loadUrl(){try{const v=localStorage.getItem('la100s_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargarSheet();}}catch(e){}}
 
+window.autoAsignarLogos = function(showMsg = true) {
+  if(!inited){ if(showMsg) showToast('Importá las asignaciones primero','warn'); return;}
+  
+  let logos = Object.values(MAT).flat().filter(m => m.n.toUpperCase().includes('LOGO 99 9'));
+  if(logos.length === 0) {
+     if(showMsg) showToast('⚠ No se encontraron los separadores LOGO 99 9 en el Sheet', 'warn');
+     return;
+  }
+  
+  let pool = shuffle([...logos]);
+  let i = 0;
+  const getNext = () => pool[(i++) % pool.length];
+
+  const f = document.getElementById('fecha-in') ? document.getElementById('fecha-in').value : importFecha;
+  const dayMatch = f ? f.split('-') : [];
+  let seed = dayMatch.length === 3 ? parseInt(dayMatch[2]) : Math.floor(Math.random() * 31);
+
+  let asignados = 0;
+
+  for (const prog of PROGS) {
+    if (prog.name.includes('MORO')) {
+      for (const hr of prog.horas) {
+        if (!SCH[hr.h].t2i || SCH[hr.h].t2i.n.toUpperCase().includes('LOGO 99 9')) {
+            SCH[hr.h].t2i = getNext();
+            asignados++;
+        } else if (!SCH[hr.h].t2i) {
+            SCH[hr.h].t2i = getNext();
+            asignados++;
+        }
+        
+        if (hr.t1i !== 'oclock' && !SCH[hr.h].t1i) {
+           SCH[hr.h].t1i = getNext();
+           asignados++;
+        }
+      }
+    } 
+    else if (['NO ESTÁ TODO DICHO', 'SARASA', 'ATARDECER DE UN DÍA AGITADO', 'ATARDECER DE UN DIA AGITADO'].includes(prog.name)) {
+      const horas = prog.horas.map(x => x.h);
+      if(horas.length > 0) {
+         const chosenHour = horas[seed % horas.length];
+         seed += 7; 
+         SCH[chosenHour].t2i = getNext();
+         asignados++;
+      }
+    }
+  }
+  
+  renderSchedule();
+  if(showMsg) showToast(`✅ ${asignados} Separadores LOGO 99 9 pautados.`,'ok');
+};
+
 document.getElementById('file-in').addEventListener('change',function(){if(this.files[0])importJSON(this.files[0]);});
 const dz=document.getElementById('drop-zone');
 dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
@@ -572,6 +624,9 @@ function importJSON(file){
         SCH[asig.hora][asig.slot]=mat;
         usedCodes.add(mat.c);
       }
+      
+      autoAsignarLogos(false);
+      
       document.getElementById('import-ok').style.display='block';
       document.getElementById('import-ok').textContent=`✅ ${data.asignaciones.length} promos aplicadas · ${fmtFecha(data.fecha)}`;
       document.getElementById('main-title').textContent=`Schedule LA 100 · ${fmtFecha(data.fecha)}`;
@@ -1252,7 +1307,7 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.getColumn(6).width = 15;
 
   const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   saveAs(blob, 'Reporte_Estadisticas_LA100.xlsx');
 });
   loadUrl();
