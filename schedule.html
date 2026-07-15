@@ -161,7 +161,7 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       <div class="btn-row">
         <button class="btn btn-ghost btn-sm" onclick="autoAsignar('sep')">🌅 Sep. Compañía</button>
         <button class="btn btn-ghost btn-sm" onclick="autoAsignar('exito')">🎵 Éxito</button>
-        <button class="btn btn-navy btn-sm" onclick="autoAsignar('ambos')">✨ Ambos</button>
+        <button class="btn btn-navy btn-sm btn-full" onclick="autoAsignar('ambos')">✨ Ambos</button>
       </div>
       <button class="btn btn-ghost btn-sm btn-full" onclick="autoAsignarLogos(true)" style="border-color:var(--accent); color:var(--accent); margin-top:6px;">📻 Auto-pautar Logos 99.9</button>
     </div>
@@ -718,7 +718,7 @@ function autoAsignar(tipo){
       for(const sl of todasLasTandas)if(hr[sl]==='exito'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
   }
   if(tipo==='sep'||tipo==='ambos'){
-    const pool=shuffle([...MAT.sep_comp]);let i=0;
+    const pool=shuffle([...MAT.sep_comp].filter(m=>!m.n.toUpperCase().includes('LOGO 99 9')));let i=0;
     for(const prog of PROGS)for(const hr of prog.horas)
       for(const sl of todasLasTandas)if(hr[sl]==='sep'&&!SCH[hr.h][sl]&&pool.length>0)SCH[hr.h][sl]=pool[(i++)%pool.length];
   }
