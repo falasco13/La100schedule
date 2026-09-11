@@ -13,14 +13,16 @@
   --border:#E2E4F6;--green:#0B6B48;--card:#fff;
 }
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-nav{background:var(--navy);height:54px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.logo{background:var(--gold);color:var(--navy);font-weight:800;font-size:0.85rem;padding:4px 10px;border-radius:6px;text-decoration:none;letter-spacing:-0.2px;}
-.nav-t{color:#fff;font-weight:600;font-size:0.85rem;}
-.container{flex:1;max-width:1050px;margin:0 auto;padding:50px 20px;display:flex;flex-direction:column;justify-content:center;}
+nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.logo-link{display:flex;align-items:center;text-decoration:none;}
+.nav-logo-img{height:30px;width:auto;object-fit:contain;display:block;}
+.nav-divider{color:rgba(255,255,255,.3);font-size:1.1rem;font-weight:300;}
+.nav-t{color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:-0.2px;}
+.container{flex:1;max-width:1160px;margin:0 auto;padding:50px 24px;display:flex;flex-direction:column;justify-content:center;width:100%;}
 .hero{text-align:center;margin-bottom:45px;}
-.hero-title{font-size:2rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;}
+.hero-title{font-size:2.1rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;}
 .hero-sub{font-size:0.95rem;color:var(--muted);font-weight:400;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
 .card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:32px 26px;display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;color:inherit;transition:all .22s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 18px rgba(27,31,110,.04);position:relative;overflow:hidden;}
 .card:hover{transform:translateY(-5px);border-color:var(--accent);box-shadow:0 12px 30px rgba(79,94,255,.14);}
 .card-icon{width:56px;height:56px;border-radius:14px;background:var(--accent-lt);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px;transition:background .2s;}
@@ -32,17 +34,24 @@ nav{background:var(--navy);height:54px;padding:0 24px;display:flex;align-items:c
 .card-btn span{transition:transform .2s;}
 .card:hover .card-btn span{transform:translateX(4px);}
 .tag-pill{position:absolute;top:20px;right:20px;background:#FAFBFF;border:1px solid var(--border);color:var(--muted);font-size:0.65rem;font-weight:700;padding:4px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
+@media(max-width:980px){
+  .grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+}
 @media(max-width:640px){
   .container{padding:30px 16px;}
   .hero-title{font-size:1.6rem;}
+  .grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="logo">LA 100</a>
-  <span class="nav-t">Gestión de Emisión</span>
+  <a href="index.html" class="logo-link">
+    <img src="LOGO LA 100 NO REDONDO PLANO una linea OOOK.png" alt="La 100" class="nav-logo-img">
+  </a>
+  <span class="nav-divider">-</span>
+  <span class="nav-t">Gestión de Schedules</span>
 </nav>
 
 <div class="container">
