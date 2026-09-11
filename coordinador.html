@@ -122,7 +122,7 @@ a.nav-link:hover{color:#fff;}
 </head>
 <body>
 <nav>
-  <a href="index.html" class="logo">LA 100</a>
+  <a href="coordinador.html" class="logo">LA 100</a>
   <span class="nav-t">Coordinador</span>
   <div class="nav-r">
     <a href="schedule.html" class="nav-link">Schedule →</a>
@@ -280,6 +280,30 @@ document.addEventListener('keydown',e=>{
 function initAssignments(){PROGS.forEach(p=>{assignments[p.id]={};p.horas.forEach(h=>assignments[p.id][h.h]=null);});}
 initAssignments();
 
+function getPastDates(baseStr) {
+  if(!baseStr) return [];
+  const [y, m, d] = baseStr.split('-').map(Number);
+  const baseDate = new Date(y, m - 1, d);
+  const day = baseDate.getDay();
+  let d1 = new Date(baseDate);
+  let d2 = new Date(baseDate);
+  if (day === 0 || day === 6) { 
+    d1.setDate(d1.getDate() - 7);
+    d2.setDate(d2.getDate() - 14);
+  } else {
+    d1.setDate(d1.getDate() - 1);
+    if (d1.getDay() === 0) d1.setDate(d1.getDate() - 2); 
+    if (d1.getDay() === 6) d1.setDate(d1.getDate() - 1); 
+    d2 = new Date(d1);
+    d2.setDate(d2.getDate() - 1);
+    if (d2.getDay() === 0) d2.setDate(d2.getDate() - 2); 
+    if (d2.getDay() === 6) d2.setDate(d2.getDate() - 1); 
+  }
+  const f1 = `${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
+  const f2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
+  return [f1, f2];
+}
+
 function parseDur(s){
   if(!s) return 0;
   s=String(s).trim();
@@ -357,16 +381,6 @@ function setContent(state){
 function saveUrl(){try{localStorage.setItem('la100c_url',document.getElementById('url-in').value.trim());}catch(e){}}
 function loadUrl(){try{const v=localStorage.getItem('la100c_url')||DEFAULT_URL;if(v){document.getElementById('url-in').value=v;recargar();}}catch(e){}}
 
-function getPastDates(baseStr) {
-  if(!baseStr) return [];
-  const [y, m, d] = baseStr.split('-').map(Number);
-  const d1 = new Date(y, m - 1, d - 1);
-  const d2 = new Date(y, m - 1, d - 2);
-  const f1 = `${d1.getFullYear()}-${String(d1.getMonth()+1).padStart(2,'0')}-${String(d1.getDate()).padStart(2,'0')}`;
-  const f2 = `${d2.getFullYear()}-${String(d2.getMonth()+1).padStart(2,'0')}-${String(d2.getDate()).padStart(2,'0')}`;
-  return [f1, f2];
-}
-
 async function loadHistory(fechaVal) {
   if(!fechaVal) return;
   historyStatus = 'loading';
@@ -412,9 +426,11 @@ function updatePickerHistory() {
      const diasNombres = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
      const n1 = diasNombres[d1Obj.getDay()];
      const n2 = diasNombres[d2Obj.getDay()];
+     const f1Str = `${f1.slice(8,10)}/${f1.slice(5,7)}`;
+     const f2Str = `${f2.slice(8,10)}/${f2.slice(5,7)}`;
      const a1 = (historyData[f1] && historyData[f1][h]) ? `<span class="ph-art">${historyData[f1][h]}</span>` : '<span class="ph-free">Sin pauta</span>';
      const a2 = (historyData[f2] && historyData[f2][h]) ? `<span class="ph-art">${historyData[f2][h]}</span>` : '<span class="ph-free">Sin pauta</span>';
-     histDiv.innerHTML = `<div class="ph-box"><div class="ph-col"><div class="ph-day">Hace 2 días (${n2})</div>${a2}</div><div class="ph-col"><div class="ph-day">Ayer (${n1})</div>${a1}</div></div>`;
+     histDiv.innerHTML = `<div class="ph-box"><div class="ph-col"><div class="ph-day">${n2} ${f2Str}</div>${a2}</div><div class="ph-col"><div class="ph-day">${n1} ${f1Str}</div>${a1}</div></div>`;
   } else {
      histDiv.innerHTML = '';
   }
