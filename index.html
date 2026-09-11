@@ -15,7 +15,7 @@
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
 nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .logo-link{display:flex;align-items:center;text-decoration:none;}
-.nav-logo-img{height:34px;width:auto;object-fit:contain;display:block;mix-blend-mode:screen;}
+.nav-logo-svg{height:28px;width:auto;display:block;}
 .nav-divider{color:rgba(255,255,255,.3);font-size:1.1rem;font-weight:300;}
 .nav-t{color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:-0.2px;}
 .container{flex:1;max-width:1160px;margin:0 auto;padding:50px 24px;display:flex;flex-direction:column;justify-content:center;width:100%;}
@@ -67,7 +67,13 @@ nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:c
 
 <nav>
   <a href="index.html" class="logo-link" title="La 100">
-    <img src="LOGO LA 100 NO REDONDO PLANO una linea OOOK.png" alt="LA 100" class="nav-logo-img" onerror="this.onerror=null; this.src='logo.png';">
+    <svg class="nav-logo-svg" viewBox="0 0 460 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 15 10 H 26 V 99 H 68 V 110 H 15 Z" fill="#FFFFFF"/>
+      <path d="M 76 10 H 93 L 148 110 H 134 L 87 23 V 110 H 76 Z" fill="#FFFFFF"/>
+      <path d="M 204 10 C 218 10 228 20 228 34 V 90 C 228 101 219 110 208 110 C 197 110 188 101 188 90 V 52 C 180 52 173 48 169 41 C 164 33 164 22 171 15 C 178 9 190 10 204 10 Z" fill="#FFFFFF"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M 285 10 C 257.4 10 235 32.4 235 60 C 235 87.6 257.4 110 285 110 C 312.6 110 335 87.6 335 60 C 335 32.4 312.6 10 285 10 Z M 285 53 C 281.1 53 278 56.1 278 60 C 278 63.9 281.1 67 285 67 C 288.9 67 292 63.9 292 60 C 292 56.1 288.9 53 285 53 Z" fill="#FFFFFF"/>
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M 392 10 C 364.4 10 342 32.4 342 60 C 342 87.6 364.4 110 392 110 C 419.6 110 442 87.6 442 60 C 442 32.4 419.6 10 392 10 Z M 392 53 C 388.1 53 385 56.1 385 60 C 385 63.9 388.1 67 392 67 C 395.9 67 399 63.9 399 60 C 399 56.1 395.9 53 392 53 Z" fill="#FFFFFF"/>
+    </svg>
   </a>
   <span class="nav-divider">-</span>
   <span class="nav-t">Gestión de Schedules</span>
