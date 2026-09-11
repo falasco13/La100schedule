@@ -8,14 +8,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;--accent-lt:#EEF0FF;
+  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;
   --gold:#F5C842;--off:#F4F5FF;--text:#0D0E2E;--muted:#7478A8;
-  --border:#E2E4F6;--green:#0B6B48;--card:#fff;
+  --border:#E2E4F6;--green:#0B6B48;--orange:#FF5722;--card:#fff;
 }
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
 nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .logo-link{display:flex;align-items:center;text-decoration:none;}
-.nav-logo-img{height:30px;width:auto;object-fit:contain;display:block;}
+.nav-logo-svg{height:28px;width:auto;display:block;}
 .nav-divider{color:rgba(255,255,255,.3);font-size:1.1rem;font-weight:300;}
 .nav-t{color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:-0.2px;}
 .container{flex:1;max-width:1160px;margin:0 auto;padding:50px 24px;display:flex;flex-direction:column;justify-content:center;width:100%;}
@@ -23,17 +23,36 @@ nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:c
 .hero-title{font-size:2.1rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;}
 .hero-sub{font-size:0.95rem;color:var(--muted);font-weight:400;}
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-.card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:32px 26px;display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;color:inherit;transition:all .22s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 18px rgba(27,31,110,.04);position:relative;overflow:hidden;}
-.card:hover{transform:translateY(-5px);border-color:var(--accent);box-shadow:0 12px 30px rgba(79,94,255,.14);}
-.card-icon{width:56px;height:56px;border-radius:14px;background:var(--accent-lt);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px;transition:background .2s;}
-.card:hover .card-icon{background:var(--accent);color:#fff;}
-.card-title{font-size:1.25rem;font-weight:700;color:var(--navy);margin-bottom:8px;}
-.card-desc{font-size:0.82rem;color:var(--muted);line-height:1.5;margin-bottom:26px;flex:1;}
-.card-btn{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:700;color:var(--accent);font-family:'Sora',sans-serif;margin-top:auto;}
-.card:hover .card-btn{color:var(--navy);}
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;color:inherit;transition:all .22s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 18px rgba(27,31,110,.04);position:relative;overflow:hidden;}
+.card:hover{transform:translateY(-5px);box-shadow:0 14px 34px rgba(27,31,110,.12);}
+.card-stripe{height:6px;width:100%;}
+.card-content{padding:28px 24px 30px;display:flex;flex-direction:column;flex:1;width:100%;}
+.card-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:18px;transition:background .2s;}
+.card-title{font-size:1.22rem;font-weight:700;margin-bottom:10px;}
+.card-desc{font-size:0.82rem;color:var(--muted);line-height:1.55;margin-bottom:26px;flex:1;}
+.card-btn{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:700;font-family:'Sora',sans-serif;margin-top:auto;}
 .card-btn span{transition:transform .2s;}
 .card:hover .card-btn span{transform:translateX(4px);}
-.tag-pill{position:absolute;top:20px;right:20px;background:#FAFBFF;border:1px solid var(--border);color:var(--muted);font-size:0.65rem;font-weight:700;padding:4px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
+.tag-pill{position:absolute;top:18px;right:20px;background:#FAFBFF;border:1px solid var(--border);color:var(--muted);font-size:0.63rem;font-weight:700;padding:4px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
+
+.card-blue .card-stripe{background:var(--navy);}
+.card-blue .card-icon{background:#EEF0FF;color:var(--navy);}
+.card-blue .card-title{color:var(--navy);}
+.card-blue .card-btn{color:var(--navy);}
+.card-blue:hover{border-color:var(--navy);}
+
+.card-green .card-stripe{background:var(--green);}
+.card-green .card-icon{background:#E6F7EE;color:var(--green);}
+.card-green .card-title{color:var(--green);}
+.card-green .card-btn{color:var(--green);}
+.card-green:hover{border-color:var(--green);}
+
+.card-orange .card-stripe{background:var(--orange);}
+.card-orange .card-icon{background:#FFF0EB;color:var(--orange);}
+.card-orange .card-title{color:var(--orange);}
+.card-orange .card-btn{color:var(--orange);}
+.card-orange:hover{border-color:var(--orange);}
+
 @media(max-width:980px){
   .grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
 }
@@ -47,8 +66,14 @@ nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:c
 <body>
 
 <nav>
-  <a href="index.html" class="logo-link">
-    <img src="LOGO LA 100 NO REDONDO PLANO una linea OOOK.png" alt="La 100" class="nav-logo-img">
+  <a href="index.html" class="logo-link" title="La 100">
+    <svg class="nav-logo-svg" viewBox="0 0 540 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M14 18H26V100H68V112H14V18Z" fill="#FFFFFF"/>
+      <path d="M78 18H90V80L138 18H150V112H138V50L90 112H78V18Z" fill="#FFFFFF"/>
+      <path d="M192 18C172 18 158 32 158 52C158 64 166 74 178 78V100C178 107 183 112 190 112H210C217 112 222 107 222 100V48C222 31 209 18 192 18ZM208 98H192V66H188C178 66 172 60 172 52C172 40 181 32 192 32C201 32 208 39 208 48V98Z" fill="#FFFFFF"/>
+      <path d="M285 18C254 18 229 43 229 74C229 105 254 130 285 130C316 130 341 105 341 74C341 43 316 18 285 18ZM285 82C280.6 82 277 78.4 277 74C277 69.6 280.6 66 285 66C289.4 66 293 69.6 293 74C293 78.4 289.4 82 285 82Z" fill="#FFFFFF"/>
+      <path d="M410 18C379 18 354 43 354 74C354 105 379 130 410 130C441 130 466 105 466 74C466 43 441 18 410 18ZM410 82C405.6 82 402 78.4 402 74C402 69.6 405.6 66 410 66C414.4 66 418 69.6 418 74C418 78.4 414.4 82 410 82Z" fill="#FFFFFF"/>
+    </svg>
   </a>
   <span class="nav-divider">-</span>
   <span class="nav-t">Gestión de Schedules</span>
@@ -61,28 +86,37 @@ nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:c
   </div>
 
   <div class="grid">
-    <a href="coordinador.html" class="card">
-      <div class="tag-pill">MÓDULO 01</div>
-      <div class="card-icon">🎛️</div>
-      <h2 class="card-title">Asignar materiales</h2>
-      <p class="card-desc">Asignación ágil de promos por programa, control de frecuencias y monitoreo de historial semanal.</p>
-      <div class="card-btn">Abrir Coordinador <span>→</span></div>
+    <a href="coordinador.html" class="card card-blue">
+      <div class="card-stripe"></div>
+      <div class="card-content">
+        <div class="tag-pill">MÓDULO 01</div>
+        <div class="card-icon">🎛️</div>
+        <h2 class="card-title">Asignar materiales</h2>
+        <p class="card-desc">Asignación ágil de promos por programa, control de frecuencias y monitoreo de historial semanal.</p>
+        <div class="card-btn">Abrir Coordinador <span>→</span></div>
+      </div>
     </a>
 
-    <a href="schedule.html" class="card">
-      <div class="tag-pill">MÓDULO 02</div>
-      <div class="card-icon">📋</div>
-      <h2 class="card-title">Schedule Builder</h2>
-      <p class="card-desc">Estructuración técnica de tandas, distribución de separadores y armado de la grilla final.</p>
-      <div class="card-btn">Abrir Schedule Builder <span>→</span></div>
+    <a href="schedule.html" class="card card-green">
+      <div class="card-stripe"></div>
+      <div class="card-content">
+        <div class="tag-pill">MÓDULO 02</div>
+        <div class="card-icon">📋</div>
+        <h2 class="card-title">Schedule Builder</h2>
+        <p class="card-desc">Estructuración técnica de tandas, distribución de separadores y armado de la grilla final.</p>
+        <div class="card-btn">Abrir Schedule Builder <span>→</span></div>
+      </div>
     </a>
 
-    <a href="intertandas.html" class="card">
-      <div class="tag-pill">MÓDULO 03</div>
-      <div class="card-icon">📻</div>
-      <h2 class="card-title">Intertandas</h2>
-      <p class="card-desc">Distribución balanceada de contenidos temáticos, filtros antichoques y exportación unificada.</p>
-      <div class="card-btn">Abrir Intertandas <span>→</span></div>
+    <a href="intertandas.html" class="card card-orange">
+      <div class="card-stripe"></div>
+      <div class="card-content">
+        <div class="tag-pill">MÓDULO 03</div>
+        <div class="card-icon">📻</div>
+        <h2 class="card-title">Intertandas</h2>
+        <p class="card-desc">Distribución balanceada de contenidos temáticos, filtros antichoques y exportación unificada.</p>
+        <div class="card-btn">Abrir Intertandas <span>→</span></div>
+      </div>
     </a>
   </div>
 </div>
