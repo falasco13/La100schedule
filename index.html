@@ -15,7 +15,7 @@
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
 nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
 .logo-link{display:flex;align-items:center;text-decoration:none;}
-.nav-logo-svg{height:28px;width:auto;display:block;}
+.nav-logo-img{height:34px;width:auto;object-fit:contain;display:block;mix-blend-mode:screen;}
 .nav-divider{color:rgba(255,255,255,.3);font-size:1.1rem;font-weight:300;}
 .nav-t{color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:-0.2px;}
 .container{flex:1;max-width:1160px;margin:0 auto;padding:50px 24px;display:flex;flex-direction:column;justify-content:center;width:100%;}
@@ -67,13 +67,7 @@ nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:c
 
 <nav>
   <a href="index.html" class="logo-link" title="La 100">
-    <svg class="nav-logo-svg" viewBox="0 0 540 130" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M14 18H26V100H68V112H14V18Z" fill="#FFFFFF"/>
-      <path d="M78 18H90V80L138 18H150V112H138V50L90 112H78V18Z" fill="#FFFFFF"/>
-      <path d="M192 18C172 18 158 32 158 52C158 64 166 74 178 78V100C178 107 183 112 190 112H210C217 112 222 107 222 100V48C222 31 209 18 192 18ZM208 98H192V66H188C178 66 172 60 172 52C172 40 181 32 192 32C201 32 208 39 208 48V98Z" fill="#FFFFFF"/>
-      <path d="M285 18C254 18 229 43 229 74C229 105 254 130 285 130C316 130 341 105 341 74C341 43 316 18 285 18ZM285 82C280.6 82 277 78.4 277 74C277 69.6 280.6 66 285 66C289.4 66 293 69.6 293 74C293 78.4 289.4 82 285 82Z" fill="#FFFFFF"/>
-      <path d="M410 18C379 18 354 43 354 74C354 105 379 130 410 130C441 130 466 105 466 74C466 43 441 18 410 18ZM410 82C405.6 82 402 78.4 402 74C402 69.6 405.6 66 410 66C414.4 66 418 69.6 418 74C418 78.4 414.4 82 410 82Z" fill="#FFFFFF"/>
-    </svg>
+    <img src="LOGO LA 100 NO REDONDO PLANO una linea OOOK.png" alt="LA 100" class="nav-logo-img" onerror="this.onerror=null; this.src='logo.png';">
   </a>
   <span class="nav-divider">-</span>
   <span class="nav-t">Gestión de Schedules</span>
