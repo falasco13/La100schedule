@@ -3,137 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LA 100 · Pautado de Promos</title>
+<title>Portal de Emisión · LA 100</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
-  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;--gold:#F5C842;
-  --off:#F4F5FF;--text:#0D0E2E;--muted:#7478A8;--border:#E2E4F6;
-  --green:#0B6B48;--green-lt:#E6F7EE;
+  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;--accent-lt:#EEF0FF;
+  --gold:#F5C842;--off:#F4F5FF;--text:#0D0E2E;--muted:#7478A8;
+  --border:#E2E4F6;--green:#0B6B48;--card:#fff;
 }
 body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-
-header{background:var(--navy);padding:18px 32px;display:flex;align-items:center;gap:16px;}
-.logo{background:var(--gold);color:var(--navy);font-weight:800;font-size:1rem;padding:5px 12px;border-radius:7px;letter-spacing:-0.3px;}
-.hdr-name{color:#fff;font-weight:600;font-size:0.9rem;}
-.hdr-sub{color:rgba(255,255,255,.4);font-size:0.72rem;margin-top:1px;}
-
-.hero{background:linear-gradient(135deg,var(--navy) 0%,var(--mid) 55%,#3A44C0 100%);padding:64px 24px 80px;text-align:center;position:relative;overflow:hidden;}
-.hero::after{content:'100';position:absolute;right:-30px;bottom:-40px;font-size:240px;font-weight:800;color:rgba(255,255,255,.03);line-height:1;pointer-events:none;font-family:'DM Mono',monospace;}
-.hero-pill{display:inline-flex;align-items:center;gap:6px;background:rgba(245,200,66,.12);border:1px solid rgba(245,200,66,.3);color:var(--gold);font-size:0.7rem;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:22px;}
-.hero h1{font-size:clamp(1.9rem,5vw,3rem);font-weight:800;color:#fff;letter-spacing:-1px;line-height:1.1;margin-bottom:14px;}
-.hero h1 em{font-style:normal;color:var(--gold);}
-.hero p{color:rgba(255,255,255,.6);font-size:0.95rem;max-width:440px;margin:0 auto;line-height:1.75;font-weight:300;}
-
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;max-width:780px;margin:-38px auto 0;padding:0 20px 52px;position:relative;z-index:2;}
-.card{background:#fff;border-radius:18px;border:1px solid var(--border);overflow:hidden;box-shadow:0 4px 28px rgba(27,31,110,.09);display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;}
-.card:hover{transform:translateY(-5px);box-shadow:0 14px 44px rgba(27,31,110,.15);}
-.card-stripe{height:4px;}
-.cs-blue{background:linear-gradient(90deg,var(--navy),var(--accent));}
-.cs-green{background:linear-gradient(90deg,#0B6B48,#2BC48A);}
-.card-body{padding:26px 24px 18px;}
-.card-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;margin-bottom:14px;}
-.ci-blue{background:linear-gradient(135deg,var(--navy),var(--accent));}
-.ci-green{background:linear-gradient(135deg,#0B6B48,#2BC48A);}
-.card-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:7px;}
-.card-desc{font-size:0.8rem;color:var(--muted);line-height:1.7;font-weight:400;}
-.card-points{margin-top:14px;display:flex;flex-direction:column;gap:5px;}
-.cp{display:flex;align-items:center;gap:7px;font-size:0.76rem;color:#444;}
-.cp::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;}
-.card-footer{margin-top:auto;padding:16px 24px;border-top:1px solid var(--border);}
-.btn-card{display:block;text-align:center;text-decoration:none;padding:12px;border-radius:10px;font-weight:700;font-size:0.83rem;letter-spacing:0.2px;transition:all .15s;}
-.bc-blue{background:var(--navy);color:#fff;}.bc-blue:hover{background:var(--accent);}
-.bc-green{background:var(--green);color:#fff;}.bc-green:hover{background:#085c3e;}
-
-.flow{max-width:780px;margin:0 auto 50px;padding:0 20px;}
-.flow-title{font-size:0.66rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;}
-.flow-steps{display:flex;background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.fs{flex:1;padding:18px 16px;position:relative;}
-.fs:not(:last-child){border-right:1px solid var(--border);}
-.fs:not(:last-child)::after{content:'›';position:absolute;right:-9px;top:50%;transform:translateY(-50%);color:var(--accent);font-size:1.1rem;font-weight:700;background:#fff;z-index:1;}
-.fs-n{width:24px;height:24px;border-radius:50%;background:var(--accent);color:#fff;font-size:0.68rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:8px;}
-.fs-t{font-size:0.79rem;font-weight:700;color:var(--navy);margin-bottom:3px;}
-.fs-d{font-size:0.7rem;color:var(--muted);line-height:1.5;}
-
-.sheet-setup{max-width:780px;margin:0 auto 50px;padding:0 20px;}
-.setup-box{background:#fff;border:1px solid var(--border);border-radius:14px;padding:20px 22px;}
-.sb-hdr{display:flex;align-items:center;gap:11px;margin-bottom:16px;}
-.sb-icon{font-size:1.4rem;}
-.sb-title{font-weight:700;font-size:0.9rem;color:var(--navy);}
-.sb-sub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
-table.ct{width:100%;border-collapse:collapse;font-size:0.77rem;}
-table.ct th{text-align:left;padding:7px 10px;background:var(--off);color:var(--navy);font-weight:700;font-size:0.66rem;text-transform:uppercase;letter-spacing:0.4px;border-bottom:2px solid var(--border);}
-table.ct td{padding:8px 10px;border-bottom:1px solid var(--border);color:#444;vertical-align:top;}
-table.ct tr:last-child td{border-bottom:none;}
-.tr-new{background:#FFFBEA;}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.65rem;font-weight:700;text-transform:uppercase;}
-.b-new{background:#FFF3CD;color:#856404;}
-.b-ok{background:#E8EDF8;color:#1a3a7c;}
-code{background:var(--off);padding:1px 6px;border-radius:4px;font-family:'DM Mono',monospace;font-size:0.72rem;color:var(--navy);}
-
-footer{background:var(--navy);color:rgba(255,255,255,.3);font-size:0.7rem;text-align:center;padding:16px;margin-top:auto;}
-
-@media (max-width: 680px) {
-  .cards {
-    grid-template-columns: 1fr;
-    padding: 0 20px 20px;
-  }
+nav{background:var(--navy);height:54px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
+.logo{background:var(--gold);color:var(--navy);font-weight:800;font-size:0.85rem;padding:4px 10px;border-radius:6px;text-decoration:none;letter-spacing:-0.2px;}
+.nav-t{color:#fff;font-weight:600;font-size:0.85rem;}
+.container{flex:1;max-width:1050px;margin:0 auto;padding:50px 20px;display:flex;flex-direction:column;justify-content:center;}
+.hero{text-align:center;margin-bottom:45px;}
+.hero-title{font-size:2rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;}
+.hero-sub{font-size:0.95rem;color:var(--muted);font-weight:400;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px;}
+.card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;padding:32px 26px;display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;color:inherit;transition:all .22s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 18px rgba(27,31,110,.04);position:relative;overflow:hidden;}
+.card:hover{transform:translateY(-5px);border-color:var(--accent);box-shadow:0 12px 30px rgba(79,94,255,.14);}
+.card-icon{width:56px;height:56px;border-radius:14px;background:var(--accent-lt);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:20px;transition:background .2s;}
+.card:hover .card-icon{background:var(--accent);color:#fff;}
+.card-title{font-size:1.25rem;font-weight:700;color:var(--navy);margin-bottom:8px;}
+.card-desc{font-size:0.82rem;color:var(--muted);line-height:1.5;margin-bottom:26px;flex:1;}
+.card-btn{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:700;color:var(--accent);font-family:'Sora',sans-serif;margin-top:auto;}
+.card:hover .card-btn{color:var(--navy);}
+.card-btn span{transition:transform .2s;}
+.card:hover .card-btn span{transform:translateX(4px);}
+.tag-pill{position:absolute;top:20px;right:20px;background:#FAFBFF;border:1px solid var(--border);color:var(--muted);font-size:0.65rem;font-weight:700;padding:4px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
+@media(max-width:640px){
+  .container{padding:30px 16px;}
+  .hero-title{font-size:1.6rem;}
 }
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">LA 100</div>
-  <div>
-    <div class="hdr-name">Sistema de Pautado de Promos</div>
-    <div class="hdr-sub">Plataforma integral de gestión</div>
-  </div>
-</header>
 
-<div class="hero">
-  <div class="hero-pill">🎙 Sistema interno · LA 100 FM</div>
-  <h1>Pautado de promos</h1>  
-</div>
+<nav>
+  <a href="index.html" class="logo">LA 100</a>
+  <span class="nav-t">Gestión de Emisión</span>
+</nav>
 
-<div class="cards">
-  <div class="card">
-    <div class="card-stripe cs-blue"></div>
-    <div class="card-body">
-      <div class="card-icon ci-blue">🎙</div>
-      <div class="card-title">Asignar materiales</div>
-      <div class="card-desc">Módulo de selección de promos por bloque horario. Interfaz visual para estructurar el contenido base del día.</div>
-      <div class="card-points">
-        <div class="cp">Sincronización en tiempo real con rotación activa</div>
-        <div class="cp">Agrupación inteligente por artista y variantes</div>
-        <div class="cp">Generación del archivo de estructura (.json)</div>
-      </div>
-    </div>
-    <div class="card-footer">
-      <a href="coordinador.html" class="btn-card bc-blue">→ Abrir Promo Planner</a>
-    </div>
+<div class="container">
+  <div class="hero">
+    <h1 class="hero-title">Sistema de Pauta y Automatización</h1>
+    <p class="hero-sub">Seleccioná el módulo con el que querés operar hoy</p>
   </div>
 
-  <div class="card">
-    <div class="card-stripe cs-green"></div>
-    <div class="card-body">
-      <div class="card-icon ci-green">📋</div>
-      <div class="card-title">Schedule Builder</div>
-      <div class="card-desc">Procesamiento de la asignación diaria. Auto-completado de artísticas fijas, control de calidad y exportación de la pauta oficial.</div>
-      <div class="card-points">
-        <div class="cp">Auto-asignación inteligente de separadores y promos</div>
-        <div class="cp">Auditoría automática de duplicados y espacios vacíos</div>
-        <div class="cp">Exportación a Excel estandarizado para emisión</div>
-      </div>
-    </div>
-    <div class="card-footer">
-      <a href="schedule.html" class="btn-card bc-green">→ Abrir Schedule Builder</a>
-    </div>
+  <div class="grid">
+    <a href="coordinador.html" class="card">
+      <div class="tag-pill">MÓDULO 01</div>
+      <div class="card-icon">🎛️</div>
+      <h2 class="card-title">Asignar materiales</h2>
+      <p class="card-desc">Asignación ágil de promos por programa, control de frecuencias y monitoreo de historial semanal.</p>
+      <div class="card-btn">Abrir Coordinador <span>→</span></div>
+    </a>
+
+    <a href="schedule.html" class="card">
+      <div class="tag-pill">MÓDULO 02</div>
+      <div class="card-icon">📋</div>
+      <h2 class="card-title">Schedule Builder</h2>
+      <p class="card-desc">Estructuración técnica de tandas, distribución de separadores y armado de la grilla final.</p>
+      <div class="card-btn">Abrir Schedule Builder <span>→</span></div>
+    </a>
+
+    <a href="intertandas.html" class="card">
+      <div class="tag-pill">MÓDULO 03</div>
+      <div class="card-icon">📻</div>
+      <h2 class="card-title">Intertandas</h2>
+      <p class="card-desc">Distribución balanceada de contenidos temáticos, filtros antichoques y exportación unificada.</p>
+      <div class="card-btn">Abrir Intertandas <span>→</span></div>
+    </a>
   </div>
 </div>
 
-
-
-<footer>LA 100 · Sistema interno de pautado · Uso exclusivo del equipo de producción</footer>
 </body>
 </html>
