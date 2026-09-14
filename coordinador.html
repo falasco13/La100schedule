@@ -108,6 +108,67 @@ a.nav-link:hover{color:#fff;}
 .pk-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .pk-a-name{font-weight:700;font-size:0.84rem;color:var(--text);flex:1;}
 .pk-a-vers{font-size:0.67rem;color:var(--accent);font-weight:600;}
+
+.btn-play-audio {
+  background: #fff;
+  border: 1.5px solid var(--border);
+  color: var(--navy);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  transition: all .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
+.btn-play-audio:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn-play-audio.playing {
+  background: #FF5722;
+  border-color: #FF5722;
+  color: #fff;
+  animation: pulse 1s infinite alternate;
+}
+.pk-vers-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.btn-chip-play {
+  background: #fff;
+  border: 1px solid #C4CBFF;
+  color: var(--navy);
+  border-radius: 4px;
+  padding: 2px 5px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  line-height: 1;
+  transition: all .12s;
+}
+.btn-chip-play:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+.btn-chip-play.playing {
+  background: #FF5722;
+  border-color: #FF5722;
+  color: #fff;
+}
+@keyframes pulse {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.08); }
+}
+
 @media(max-width:680px){
   .layout{flex-direction:column;height:auto;}
   .sidebar{width:100%;min-width:0;max-height:none;border-right:none;border-bottom:1.5px solid var(--border);}
@@ -122,7 +183,7 @@ a.nav-link:hover{color:#fff;}
 </head>
 <body>
 <nav>
-  <a href="coordinador.html" class="logo">LA 100</a>
+  <a href="index.html" class="logo">LA 100</a>
   <span class="nav-t">Coordinador</span>
   <div class="nav-r">
     <a href="schedule.html" class="nav-link">Schedule →</a>
@@ -172,7 +233,7 @@ a.nav-link:hover{color:#fff;}
       <div class="state-center">
         <div class="sc-icon">📊</div>
         <div class="sc-title">Conectá el Google Sheet</div>
-        <div class="sc-text">Pegá la URL del Sheet "PROMOS EN ROTACIÓN" en el panel izquierdo y hacé click en Conectar.</div>
+        <div class="sc-text">Pegá la URL del Sheet en el panel izquierdo y hacé click en Conectar.</div>
       </div>
     </div>
   </div>
@@ -256,6 +317,83 @@ let historyData = {};
 let historyStatus = 'idle';
 let historyStack = [];
 
+let currentAudio = null;
+let currentPlayingCode = null;
+let AUDIO_MAP = {};
+
+function updateAudioButtons() {
+  document.querySelectorAll('[data-code]').forEach(btn => {
+    const c = btn.dataset.code;
+    if (btn.classList.contains('btn-play-audio') || btn.classList.contains('btn-chip-play')) {
+      const isMini = btn.textContent.trim().length > 1;
+      const num = isMini ? btn.textContent.replace(/[▶⏹\s]/g, '') : '';
+      if (c === currentPlayingCode) {
+        btn.classList.add('playing');
+        btn.textContent = num ? `⏹ ${num}` : '⏹';
+      } else {
+        btn.classList.remove('playing');
+        btn.textContent = num ? `▶ ${num}` : '▶';
+      }
+    }
+  });
+}
+
+function stopAudio() {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  currentPlayingCode = null;
+  updateAudioButtons();
+}
+
+function playAudio(code, event) {
+  if (event) event.stopPropagation();
+  const c = code.toUpperCase().trim();
+
+  if (currentPlayingCode === c) {
+    stopAudio();
+    return;
+  }
+
+  stopAudio();
+
+  const fileId = AUDIO_MAP[c];
+  if (!fileId) {
+    alert(`⚠️ No se encontró el archivo de audio para el código ${c} en la carpeta de Drive.\n\nAsegurate de que el MP3 esté subido a la carpeta con el nombre ${c}.mp3`);
+    return;
+  }
+
+  currentPlayingCode = c;
+  updateAudioButtons();
+
+  const audioUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+  currentAudio = new Audio(audioUrl);
+
+  currentAudio.onended = () => {
+    stopAudio();
+  };
+  currentAudio.onerror = () => {
+    alert(`❌ Error al reproducir el audio de ${c}.\n\nVerificá que la carpeta de Drive tenga permisos públicos ("Cualquier persona con el enlace puede ver").`);
+    stopAudio();
+  };
+
+  currentAudio.play().catch(e => {
+    stopAudio();
+  });
+}
+
+async function loadAudioMap() {
+  try {
+    const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getAudios');
+    const data = await res.json();
+    if (data && data.audios) {
+      AUDIO_MAP = Object.assign({}, AUDIO_MAP, data.audios);
+    }
+  } catch(e) {}
+}
+
 function saveState(){
   historyStack.push(JSON.stringify(assignments));
   if(historyStack.length>50) historyStack.shift();
@@ -265,6 +403,7 @@ function saveState(){
 
 function undo(){
   if(!historyStack.length)return;
+  stopAudio();
   assignments=JSON.parse(historyStack.pop());
   renderGrid();
   if(!historyStack.length){
@@ -320,6 +459,7 @@ function parseCSV(text){
   if(lines.length<2) throw new Error('El archivo está vacío');
   const H=splitCSV(lines[0]).map(h=>h.toUpperCase());
   const iCAT=H.indexOf('CATEGORIA'),iART=H.indexOf('ARTISTA'),iCOD=H.indexOf('CODIGO'),iDUR=H.indexOf('DURACION'),iNOM=H.indexOf('NOMBRE');
+  const iAUD=H.indexOf('AUDIO')>=0?H.indexOf('AUDIO'):H.indexOf('LINK');
   if(iCOD<0||iNOM<0) throw new Error('No se encontraron columnas CODIGO/NOMBRE');
   if(iCAT<0) throw new Error('Falta la columna CATEGORIA');
   const amap={};
@@ -332,6 +472,13 @@ function parseCSV(text){
     const dur=parseDur(iDUR>=0?p[iDUR]:'');
     const nom=(p[iNOM]||'').trim();
     if(!cod||!nom) continue;
+
+    if(iAUD>=0 && p[iAUD]){
+      const rawLink = p[iAUD];
+      const mId = rawLink.match(/\/d\/([a-zA-Z0-9_-]+)/) || rawLink.match(/id=([a-zA-Z0-9_-]+)/);
+      if(mId) AUDIO_MAP[cod.toUpperCase()] = mId[1];
+    }
+
     const item={c:cod,n:nom,d:dur};
     if(cat==='SEP_VERANO'){if(!amap['__SEP'])amap['__SEP']={label:'SEP_VERANO',cat:'SEP_VERANO',variants:[]};amap['__SEP'].variants.push(item);continue;}
     if(cat==='EXITO_VISTA'){if(!amap['__EV'])amap['__EV']={label:'EXITO_VISTA',cat:'EXITO_VISTA',variants:[]};amap['__EV'].variants.push(item);continue;}
@@ -370,6 +517,7 @@ async function recargar(){
     const nv=ARTISTS.reduce((s,a)=>s+a.variants.length,0);
     setStatus(`✅ ${ARTISTS.length} artistas · ${nv} materiales cargados`,'ok');
     renderGrid();
+    loadAudioMap();
   }catch(e){setStatus(`❌ ${e.message}`,'err');setContent('empty');}
 }
 function setStatus(msg,type){const el=document.getElementById('sheet-status');el.style.display='block';el.className=`status-pill sp-${type}`;el.textContent=msg;}
@@ -446,8 +594,23 @@ function renderGrid(){
     const done=Object.values(assignments[prog.id]).filter(Boolean).length;
     const slots=prog.horas.map(hr=>{
       const a=assignments[prog.id][hr.h];
+      let audioBtns = '';
+      if (a && a.variants) {
+        if (a.variants.length === 1) {
+          const v = a.variants[0];
+          audioBtns = `<button class="btn-chip-play ${currentPlayingCode === v.c ? 'playing' : ''}" data-code="${v.c}" onclick="playAudio('${v.c}', event)" title="Escuchar">${currentPlayingCode === v.c ? '⏹' : '▶'}</button>`;
+        } else {
+          audioBtns = a.variants.map((v, idx) => `
+            <button class="btn-chip-play ${currentPlayingCode === v.c ? 'playing' : ''}" data-code="${v.c}" onclick="playAudio('${v.c}', event)" title="Escuchar v${idx+1}">${currentPlayingCode === v.c ? '⏹' : '▶'}${idx+1}</button>
+          `).join('');
+        }
+      }
       const body=a
-        ?`<div class="slot-chip" draggable="true" data-drag-p="${prog.id}" data-drag-h="${hr.h}"><span class="sc-name">${a.label}</span>${a.variants.length>1?`<span class="sc-vars">${a.variants.length}v</span>`:''}<button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button></div>`
+        ?`<div class="slot-chip" draggable="true" data-drag-p="${prog.id}" data-drag-h="${hr.h}">
+            <span class="sc-name">${a.label}</span>
+            <div style="display:flex;align-items:center;gap:3px;" onclick="event.stopPropagation()">${audioBtns}</div>
+            <button class="sc-rm" data-p="${prog.id}" data-h="${hr.h}">✕</button>
+          </div>`
         :`<button class="slot-add-btn" data-open="${prog.id}" data-h="${hr.h}"><span class="plus">+</span><span>Asignar promo</span></button>`;
       return `<div class="slot-row" data-drop-p="${prog.id}" data-drop-h="${hr.h}"><span class="slot-time">${String(hr.h).padStart(2,'0')}:00</span><div class="slot-body">${body}</div></div>`;
     }).join('');
@@ -510,11 +673,12 @@ function openPicker(pid,h){
   setTimeout(()=>document.getElementById('picker-search').focus(),320);
 }
 
-function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;}
+function closePicker(){document.getElementById('picker-overlay').classList.remove('open');pickerTarget=null;stopAudio();}
 
 document.getElementById('picker-search').addEventListener('input',function(){renderPickerList(this.value);});
 
 document.getElementById('picker-list').addEventListener('click',e=>{
+  if(e.target.closest('.btn-play-audio')) return;
   const item=e.target.closest('[data-lbl]');
   if(!item||!pickerTarget)return;
   const artist=ARTISTS.find(a=>a.label===item.dataset.lbl&&a.cat===item.dataset.cat);
@@ -558,10 +722,22 @@ function renderPickerList(q){
     }
     html+=`<div class="pk-cat-label">${cIcon} ${cat}</div>`;
     for(const a of items) {
+      let audioBtns = '';
+      if(a.variants.length === 1) {
+        const v = a.variants[0];
+        audioBtns = `<button class="btn-play-audio ${currentPlayingCode === v.c ? 'playing' : ''}" data-code="${v.c}" onclick="playAudio('${v.c}', event)" title="Escuchar">${currentPlayingCode === v.c ? '⏹' : '▶'}</button>`;
+      } else {
+        audioBtns = `<div class="pk-vers-group"><span class="pk-a-vers" style="margin-right:4px;">${a.variants.length}v</span>${a.variants.map((v, idx) => `
+          <button class="btn-play-audio ${currentPlayingCode === v.c ? 'playing' : ''}" data-code="${v.c}" onclick="playAudio('${v.c}', event)" title="Escuchar v${idx+1}: ${v.n}">
+            ${currentPlayingCode === v.c ? '⏹' : '▶'} ${idx+1}
+          </button>
+        `).join('')}</div>`;
+      }
+
       html+=`<div class="pk-artist ${used.has(a.label)?'used':''}" data-lbl="${a.label}" data-cat="${a.cat}">
         <div class="pk-dot" style="background:${cColor}"></div>
         <div class="pk-a-name">${a.label}</div>
-        ${a.variants.length>1?`<span class="pk-a-vers">${a.variants.length} versiones</span>`:''}
+        <div onclick="event.stopPropagation()">${audioBtns}</div>
       </div>`;
     }
   }
@@ -597,9 +773,10 @@ function renderSummary(){
   document.getElementById('summary').innerHTML = any ? html : '<div style="font-size:0.73rem;color:var(--muted);">Sin asignaciones aún.</div>';
 }
 
-function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){saveState();initAssignments();renderGrid();}}
+function limpiar(){if(confirm('¿Limpiar todas las asignaciones?')){stopAudio();saveState();initAssignments();renderGrid();}}
 
 function exportar(){
+  stopAudio();
   const fecha=document.getElementById('fecha').value;
   if(!fecha){alert('Seleccioná la fecha primero');return;}
   if(!ARTISTS.length){alert('Cargá los datos del Sheet primero');return;}
@@ -635,6 +812,7 @@ function exportar(){
 }
 
 document.getElementById('fecha').addEventListener('change', function() {
+  stopAudio();
   const fechaVal = this.value;
   if (!fechaVal) { renderGrid(); return; }
   const [y, m, d] = fechaVal.split('-');
@@ -748,6 +926,7 @@ function dibujarHeatmap(artistaFiltro) {
 
 document.getElementById('fecha').value = '';
 loadUrl();
+loadAudioMap();
 </script>
 </body>
 </html>
