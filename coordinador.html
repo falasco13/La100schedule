@@ -320,13 +320,27 @@ let historyStack = [];
 let currentAudio = null;
 let currentPlayingCode = null;
 let AUDIO_MAP = {};
+let AUDIO_CACHE = {};
+
+function mostrarCargandoAudio(code, cargando) {
+  document.querySelectorAll('[data-code]').forEach(btn => {
+    if (btn.dataset.code === code && (btn.classList.contains('btn-play-audio') || btn.classList.contains('btn-chip-play'))) {
+      if (cargando) {
+        btn.textContent = '⏳';
+        btn.style.opacity = '0.7';
+      } else {
+        btn.style.opacity = '1';
+      }
+    }
+  });
+}
 
 function updateAudioButtons() {
   document.querySelectorAll('[data-code]').forEach(btn => {
     const c = btn.dataset.code;
     if (btn.classList.contains('btn-play-audio') || btn.classList.contains('btn-chip-play')) {
       const isMini = btn.textContent.trim().length > 1;
-      const num = isMini ? btn.textContent.replace(/[▶⏹\s]/g, '') : '';
+      const num = isMini ? btn.textContent.replace(/[▶⏹⏳\s]/g, '') : '';
       if (c === currentPlayingCode) {
         btn.classList.add('playing');
         btn.textContent = num ? `⏹ ${num}` : '⏹';
@@ -334,6 +348,7 @@ function updateAudioButtons() {
         btn.classList.remove('playing');
         btn.textContent = num ? `▶ ${num}` : '▶';
       }
+      btn.style.opacity = '1';
     }
   });
 }
@@ -348,7 +363,7 @@ function stopAudio() {
   updateAudioButtons();
 }
 
-function playAudio(code, event) {
+async function playAudio(code, event) {
   if (event) event.stopPropagation();
   const c = code.toUpperCase().trim();
 
@@ -359,6 +374,11 @@ function playAudio(code, event) {
 
   stopAudio();
 
+  if (AUDIO_CACHE[c]) {
+    iniciarReproduccion(c, AUDIO_CACHE[c]);
+    return;
+  }
+
   const fileId = AUDIO_MAP[c];
   if (!fileId) {
     alert(`⚠️ No se encontró el archivo de audio para el código ${c} en la carpeta de Drive.\n\nAsegurate de que el MP3 esté subido a la carpeta con el nombre ${c}.mp3`);
@@ -366,16 +386,40 @@ function playAudio(code, event) {
   }
 
   currentPlayingCode = c;
+  mostrarCargandoAudio(c, true);
+
+  try {
+    const res = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getAudioBase64&id=${fileId}`);
+    const data = await res.json();
+    
+    if (data.status === 'success' && data.base64) {
+      const mime = data.mime || 'audio/mp3';
+      const audioUrl = `data:${mime};base64,${data.base64}`;
+      AUDIO_CACHE[c] = audioUrl;
+      mostrarCargandoAudio(c, false);
+      iniciarReproduccion(c, audioUrl);
+    } else {
+      mostrarCargandoAudio(c, false);
+      currentPlayingCode = null;
+      alert(`❌ No se pudo cargar el audio: ${data.message || 'Error desconocido'}`);
+    }
+  } catch(e) {
+    mostrarCargandoAudio(c, false);
+    currentPlayingCode = null;
+    alert(`❌ Error de conexión al cargar el audio de ${c}.`);
+  }
+}
+
+function iniciarReproduccion(c, url) {
+  currentPlayingCode = c;
   updateAudioButtons();
 
-  const audioUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-  currentAudio = new Audio(audioUrl);
-
+  currentAudio = new Audio(url);
   currentAudio.onended = () => {
     stopAudio();
   };
   currentAudio.onerror = () => {
-    alert(`❌ Error al reproducir el audio de ${c}.\n\nVerificá que la carpeta de Drive tenga permisos públicos ("Cualquier persona con el enlace puede ver").`);
+    alert(`❌ El navegador no pudo reproducir el audio de ${c}.`);
     stopAudio();
   };
 
