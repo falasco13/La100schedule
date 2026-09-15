@@ -134,24 +134,16 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
 <div class="app">
   <div class="sb">
     <div class="sbs">
-      <div class="sbs-lbl">📊 Google Sheet (materiales)</div>
-      <input class="url-in" id="url-in" placeholder="URL del Sheet publicado como CSV…" oninput="saveUrl()">
-      <div class="btn-row">
-        <button class="btn btn-navy btn-sm" onclick="recargarSheet()">✓ Conectar</button>
-        <button class="btn btn-ghost btn-sm" onclick="recargarSheet()">🔄</button>
-      </div>
-      <div id="sheet-chip" class="status-chip"></div>
-    </div>
-    <div class="sbs">
       <div class="sbs-lbl" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>📥 Pautas en la Nube</span>
-        <button class="btn btn-ghost btn-sm" onclick="cargarPautasNube()" style="padding:2px 7px;font-size:0.65rem;" title="Recargar lista">🔄 Actualizar</button>
+        <span>📅 Seleccioná el día</span>
+        <button class="btn btn-ghost btn-sm" onclick="cargarPautasNube()" style="padding:2px 7px;font-size:0.65rem;" title="Recargar lista">🔄</button>
       </div>
       <div id="nube-list" style="background:#FAFBFF; border:1.5px solid var(--border); border-radius:8px; padding:4px; max-height:160px; overflow-y:auto; font-size:0.75rem; margin-top:6px;">
         <div style="padding:12px;text-align:center;color:var(--muted);font-size:0.72rem;">⏳ Conectando con Drive...</div>
       </div>
       <div id="import-ok" style="display:none;" class="dz-ok"></div>
     </div>
+
     <div class="sbs">
       <div class="sbs-lbl">🎲 Auto-asignar</div>
       <p style="font-size:0.68rem;color:var(--muted);margin-bottom:7px;line-height:1.5;">Rellena slots vacíos al azar, sin repetir en el día.</p>
@@ -162,6 +154,7 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       </div>
       <button class="btn btn-ghost btn-sm btn-full" onclick="autoAsignarLogos(true)" style="border-color:var(--accent); color:var(--accent); margin-top:6px;">📻 Auto-pautar Logos 99.9</button>
     </div>
+
     <div class="sbs">
       <div class="sbs-lbl">📊 Estadísticas</div>
       <div class="stats-grid">
@@ -172,20 +165,33 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       </div>
       <div id="alerts"></div>
     </div>
+
     <div class="sbs">
       <div class="sbs-lbl">📤 Exportar</div>
       <button class="btn btn-ghost btn-sm" onclick="validar()" style="margin-bottom:6px;width:100%;">🔎 Validar duplicados</button>
       <button class="btn btn-green btn-full" onclick="exportarExcel()">⬇ EXPORTAR EXCEL</button>
       <button id="btn-stats" class="btn btn-full" style="background:#F4F5FF; color:#1B1F6E; border:1.5px solid #1B1F6E; margin-top:10px;">📊 Ver Estadísticas Históricas</button>
     </div>
+
     <div class="sbs" style="flex:1;">
       <div class="sbs-lbl">📋 Materiales en rotación</div>
       <div id="mat-panel"><div style="font-size:0.71rem;color:var(--muted);">Conectá el Sheet para ver los materiales.</div></div>
     </div>
+
+    <div class="sbs" style="background:#FAFBFF;">
+      <div class="sbs-lbl">⚙️ Google Sheet (materiales)</div>
+      <input class="url-in" id="url-in" placeholder="URL del Sheet publicado como CSV…" oninput="saveUrl()">
+      <div class="btn-row">
+        <button class="btn btn-navy btn-sm" onclick="recargarSheet()">✓ Conectar</button>
+        <button class="btn btn-ghost btn-sm" onclick="recargarSheet()">🔄</button>
+      </div>
+      <div id="sheet-chip" class="status-chip"></div>
+    </div>
   </div>
+
   <div class="main">
     <div class="main-hdr">
-      <div><div class="mh-title" id="main-title">Schedule LA 100</div><div class="mh-sub" id="main-sub">Seleccioná una pauta de la nube en el panel izquierdo para comenzar</div></div>
+      <div><div class="mh-title" id="main-title">Schedule LA 100</div><div class="mh-sub" id="main-sub">Seleccioná un día en el panel izquierdo para comenzar</div></div>
       <div class="mh-actions">
         <button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);" onclick="validar()">🔎 Validar</button>
         <button class="btn btn-green btn-sm" onclick="exportarExcel()">⬇ Excel</button>
