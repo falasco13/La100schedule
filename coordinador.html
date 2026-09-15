@@ -256,7 +256,7 @@ a.nav-link:hover{color:#fff;}
 
 <div id="heatmap-modal" style="display:none; position:fixed; inset:0; background:rgba(13,14,46,.7); z-index:9999; padding:20px; overflow-y:auto; align-items:flex-start; justify-content:center; backdrop-filter:blur(4px);">
   <div style="background:#fff; width:100%; max-width:900px; margin:20px auto; padding:25px; border-radius:14px; position:relative; font-family:'Sora',sans-serif; box-shadow:0 10px 40px rgba(0,0,0,.3); display:flex; flex-direction:column; min-height:80vh;">
-    <button onclick="document.getElementById('heatmap-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; background:none; border:none; cursor:pointer; color:#7478A8; transition:color .2s;">&times;</button>
+    <button onclick="document.getElementById('heatmap-modal').style.display='none'" style="position:absolute; top:15px; right:20px; font-size:24px; background:none; border:none; cursor:color .2s;">&times;</button>
     <h2 style="margin-bottom:5px; color:#1B1F6E; font-weight:800;">🗺️ Mapa de Calor Semanal</h2>
     <p style="font-size:0.8rem; color:#7478A8; margin-bottom:20px;">Visualizá dónde cae cada promo a lo largo de toda la semana para evitar concentraciones.</p>
     
@@ -584,9 +584,9 @@ async function loadHistory(fechaVal) {
     const data = await res.json();
     if (data && data.files) {
       for (let f of [f1, f2]) {
-        const target = `asignaciones_${f}.json`;
-        if (data.files.find(x => x.name === target)) {
-          const req = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
+        const fileTarget = data.files.find(x => x.name === `promos_${f}.json` || x.name === `asignaciones_${f}.json`);
+        if (fileTarget) {
+          const req = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${fileTarget.name}`);
           const fileData = await req.json();
           if (fileData && fileData.asignaciones) {
             historyData[f] = {};
@@ -833,7 +833,7 @@ function exportar(){
     asignaciones.push({prog:p.name,hora:h.h,slot:'t1i',artista:a.label,code:chosen.c,name:chosen.n,dur:chosen.d,allVariants:a.variants.map(v=>v.c)});
   }
   const payload={fecha,sheetUrl:document.getElementById('url-in').value.trim(),generado:new Date().toISOString(),asignaciones};
-  const fileName=`asignaciones_${fecha}.json`;
+  const fileName=`promos_${fecha}.json`;
   const contentStr=JSON.stringify(payload,null,2);
   document.getElementById('ef-note').innerHTML='⏳ Guardando en la nube...';
   
@@ -845,7 +845,7 @@ function exportar(){
   .then(r=>r.json())
   .then(d=>{
     if(d.status==='success'){
-      document.getElementById('ef-note').innerHTML='✅ Archivo guardado en la nube. Ya está disponible para el Schedule Builder.';
+      document.getElementById('ef-note').innerHTML=`✅ Archivo guardado: <strong>${fileName}</strong>. Ya está disponible para el Schedule Builder.`;
     }else{
       document.getElementById('ef-note').innerHTML='❌ Error al guardar en la nube.';
     }
@@ -902,9 +902,9 @@ async function abrirHeatmap() {
     if (data && data.files) {
       for(let f of heatmapFechas) {
         heatmapData[f] = {};
-        const target = `asignaciones_${f}.json`;
-        if(data.files.find(x => x.name === target)) {
-          const p = fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`)
+        const fileTarget = data.files.find(x => x.name === `promos_${f}.json` || x.name === `asignaciones_${f}.json`);
+        if(fileTarget) {
+          const p = fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${fileTarget.name}`)
             .then(r => r.json())
             .then(fileData => {
               if(fileData && fileData.asignaciones) {
