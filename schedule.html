@@ -47,6 +47,20 @@ a.nav-link:hover{color:#fff;}
 .btn-sm{padding:4px 9px;font-size:0.69rem;}
 .btn-full{width:100%;margin-top:5px;}
 .btn-row{display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;}
+.btn-excel-header{
+  padding: 10px 22px !important;
+  font-size: 1.12rem !important;
+  font-weight: 800 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all .15s ease-in-out;
+}
+.btn-excel-header:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.35);
+}
 .toast{padding:6px 10px;border-radius:7px;font-size:0.7rem;margin-top:6px;display:none;line-height:1.4;}
 .t-ok{background:#E6F7EE;color:#0B5E38;display:block;}
 .t-warn{background:#FFF8E1;color:#7A5800;display:block;}
@@ -70,7 +84,7 @@ a.nav-link:hover{color:#fff;}
 .main-hdr{background:var(--navy);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 .mh-title{color:#fff;font-weight:700;font-size:0.9rem;}
 .mh-sub{color:rgba(255,255,255,.45);font-size:0.65rem;margin-top:1px;}
-.mh-actions{display:flex;gap:7px;flex-wrap:wrap;}
+.mh-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
 .schedule-body{padding:16px 20px;}
 .prog-block{margin-bottom:18px;}
 .pb-title{background:var(--navy);color:#fff;font-weight:700;font-size:0.73rem;text-transform:uppercase;letter-spacing:0.5px;padding:7px 12px;border-radius:8px 8px 0 0;}
@@ -194,7 +208,7 @@ td.hour-cell{background:var(--accent-lt);color:var(--navy);font-weight:700;font-
       <div><div class="mh-title" id="main-title">Schedule LA 100</div><div class="mh-sub" id="main-sub">Seleccioná un día en el panel izquierdo para comenzar</div></div>
       <div class="mh-actions">
         <button class="btn btn-ghost btn-sm" style="color:#fff;border-color:rgba(255,255,255,.3);" onclick="validar()">🔎 Validar</button>
-        <button class="btn btn-green btn-sm" onclick="exportarExcel()">⬇ Excel</button>
+        <button class="btn btn-green btn-excel-header" onclick="exportarExcel()">⬇ EXCEL</button>
       </div>
     </div>
     <div class="schedule-body" id="schedule-body">
