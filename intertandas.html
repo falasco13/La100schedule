@@ -423,10 +423,9 @@ async function bajarScheduleNube(){
   try {
     const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
     const data = await res.json();
-    const target = `asignaciones_${f}.json`;
-    const found = (data && data.files) ? data.files.find(x => x.name === target) : null;
+    const found = (data && data.files) ? data.files.find(x => x.name === `promos_${f}.json` || x.name === `asignaciones_${f}.json`) : null;
     if(found){
-      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${target}`);
+      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${found.name}`);
       SCHEDULE_PROMOS = await reqFile.json();
       setStatus('status-nube', `✅ Antichoques OK.`, 'ok');
       return true;
@@ -576,7 +575,7 @@ async function generarPrevisualizacion(){
             let validBlocks = availableBlocks.filter(block => {
                 if (block.assignedTags.length >= block.maxTags) return false;
                 if (block.assignedTags.includes(tag)) return false; 
-                if (block.h < minH) return false;
+                if (block.h < minH) return false; 
                 
                 if (forceT2) {
                     if (block.noT2) return false; 
@@ -1211,7 +1210,7 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.getColumn(6).width = 15;
 
   const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   saveAs(blob, 'Reporte_Estadisticas_LA100.xlsx');
 });
 </script>
