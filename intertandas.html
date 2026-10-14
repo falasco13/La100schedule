@@ -76,10 +76,11 @@
       <button onclick="cargarMateriales()" style="width:100%; margin-top:15px; background:#4CAF50; padding:10px;">🔄 Recargar Catálogo</button>
     </div>
     <div class="panel">
-      <label>2. Cargar Schedule del Día (Antichoques)</label>
+      <label>2. Cargar Schedule del Día</label>
       <input type="date" id="fecha-in" onchange="resetearEstadoPorFecha()">
       <button onclick="bajarScheduleNube()" style="width:100%; margin-top:5px;">Buscar en la Nube</button>
       <div id="status-nube" style="margin-top:10px;"></div>
+      <div id="nube-load-btn-box" style="margin-top:10px;"></div>
     </div>
   </div>
   <div class="panel">
@@ -95,7 +96,10 @@
   <div id="status-gen" style="margin-top:10px;text-align:center;font-weight:bold;"></div>
   
   <div id="panel-preview" class="panel" style="display:none; margin-top:30px; border-color:#FF5722;">
-    <h2 style="color:#FF5722; margin-top:0;">Revisión Manual</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+      <h2 style="color:#FF5722; margin:0;">Revisión Manual</h2>
+      <button onclick="guardarIntertandasEnNube(true)" style="background:#1B1F6E; padding:8px 14px; font-size:0.75rem;">☁️ Guardar en la Nube</button>
+    </div>
     <div style="max-height:550px; overflow-y:auto; border:1px solid #E2E4F6; border-radius:8px;">
       <table id="tabla-preview">
         <thead>
@@ -236,6 +240,7 @@ let MAT_TEMATICAS = {};
 let SCHEDULE_PROMOS = null;
 let celdaEditando = null;
 let modalItemsData = [];
+let ARCHIVO_INTERTANDAS_NUBE = null;
 
 const PALETA = ['#FFE4E1', '#E6E6FA', '#F0F8FF', '#F5FFFA', '#FFF0F5', '#FDF5E6', '#F0FFF0', '#F5F5DC', '#FFFACD', '#E0FFFF'];
 let colorMap = {};
@@ -291,7 +296,9 @@ function resetearEstadoPorFecha() {
   document.getElementById('panel-preview').style.display = 'none';
   document.getElementById('status-gen').innerHTML = '';
   document.getElementById('status-nube').innerHTML = '';
+  document.getElementById('nube-load-btn-box').innerHTML = '';
   SCHEDULE_PROMOS = null;
+  ARCHIVO_INTERTANDAS_NUBE = null;
   const checks = document.querySelectorAll('#lista-tematicas input[type="checkbox"]');
   checks.forEach(c => c.checked = false);
 }
@@ -419,26 +426,97 @@ function renderTematicas(){
 async function bajarScheduleNube(){
   const f = document.getElementById('fecha-in').value;
   if(!f){ setStatus('status-nube', 'Fecha.', 'err'); return false; }
-  setStatus('status-nube', 'Buscando...', 'load');
+  setStatus('status-nube', 'Buscando en la nube...', 'load');
+  document.getElementById('nube-load-btn-box').innerHTML = '';
   try {
     const res = await fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec');
     const data = await res.json();
-    const found = (data && data.files) ? data.files.find(x => x.name === `promos_${f}.json` || x.name === `asignaciones_${f}.json`) : null;
-    if(found){
-      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${found.name}`);
+    
+    let msg = '';
+    const foundPromos = (data && data.files) ? data.files.find(x => x.name === `promos_${f}.json` || x.name === `asignaciones_${f}.json`) : null;
+    if(foundPromos){
+      const reqFile = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${foundPromos.name}`);
       SCHEDULE_PROMOS = await reqFile.json();
-      setStatus('status-nube', `✅ Antichoques OK.`, 'ok');
-      return true;
+      msg += '✅ Antichoques de Promos OK';
     } else { 
       SCHEDULE_PROMOS = null; 
-      setStatus('status-nube', `⚠️ No hay schedule en la nube para esa fecha.`, 'err'); 
-      return false;
+      msg += '⚠️ Sin archivo de Promos';
+    }
+
+    const foundInter = (data && data.files) ? data.files.find(x => x.name === `intertandas_${f}.json`) : null;
+    if(foundInter){
+      ARCHIVO_INTERTANDAS_NUBE = foundInter.name;
+      msg += ' | 📁 Pautado de Intertandas guardado';
+      setStatus('status-nube', msg, 'ok');
+      
+      document.getElementById('nube-load-btn-box').innerHTML = `
+        <button onclick="cargarIntertandasDesdeNube()" style="width:100%; background:#0B6B48; padding:10px; font-size:0.85rem; box-shadow:0 2px 8px rgba(11,107,72,.3);">
+          📥 Cargar Grilla de Intertandas desde la Nube
+        </button>
+      `;
+      return true;
+    } else {
+      ARCHIVO_INTERTANDAS_NUBE = null;
+      setStatus('status-nube', msg, foundPromos ? 'ok' : 'err');
+      return !!foundPromos;
     }
   } catch(e) { 
     SCHEDULE_PROMOS = null; 
     setStatus('status-nube', '❌ Error de conexión.', 'err'); 
     return false;
   }
+}
+
+async function cargarIntertandasDesdeNube() {
+  if(!ARCHIVO_INTERTANDAS_NUBE) return;
+  const status = document.getElementById('status-gen');
+  status.innerHTML = '⏳ Descargando grilla guardada...';
+  try {
+    const req = await fetch(`https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec?action=getFile&fileName=${ARCHIVO_INTERTANDAS_NUBE}`);
+    const data = await req.json();
+    
+    if(data && data.grilla) {
+      if(Array.isArray(data.tagsSeleccionadas)) {
+        const checks = document.querySelectorAll('#lista-tematicas input[type="checkbox"]');
+        checks.forEach(c => {
+          c.checked = data.tagsSeleccionadas.includes(c.value);
+        });
+      }
+      
+      renderTablaDesdeJSON(data.grilla);
+      status.innerHTML = '✅ Grilla cargada desde la nube con éxito. Podés editarla o descargar el Excel.';
+    } else {
+      status.innerHTML = '❌ El archivo guardado no tiene el formato esperado.';
+    }
+  } catch(e) {
+    status.innerHTML = '❌ Error al cargar archivo: ' + e.message;
+  }
+}
+
+function renderTablaDesdeJSON(items) {
+  const tbody = document.getElementById('tbody-preview');
+  tbody.innerHTML = '';
+  
+  items.forEach(item => {
+    if(item.type === 'header') {
+      const trH = document.createElement('tr'); 
+      trH.className = 'prog-row';
+      trH.innerHTML = `<td colspan="5" style="padding:12px 15px;">${item.prog}</td>`;
+      tbody.appendChild(trH);
+    } else {
+      const tr = document.createElement('tr'); 
+      tr.dataset.prog = item.prog; 
+      tr.dataset.h = item.h;
+      tr.innerHTML = `<td style="font-weight:bold;text-align:center;font-size:1.1rem;border-right:2px solid #E2E4F6;">${decToTime(item.h)}</td>
+        ${renderCelda(item.t1, 'td-t1')}
+        <td style="text-align:center;border-right:2px solid #E2E4F6;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t1'), 1)">🔄</button></td>
+        ${renderCelda(item.t2, 'td-t2')}
+        <td style="text-align:center;"><button class="btn-edit" onclick="abrirModal(this.closest('tr').querySelector('.td-t2'), 2)">🔄</button></td>`;
+      tbody.appendChild(tr);
+    }
+  });
+  
+  document.getElementById('panel-preview').style.display = 'block';
 }
 
 function shuffle(arr){ return arr.sort(() => Math.random() - 0.5); }
@@ -707,7 +785,8 @@ async function generarPrevisualizacion(){
     });
     
     document.getElementById('panel-preview').style.display = 'block'; 
-    status.innerHTML = '✅ OK.';
+    status.innerHTML = '✅ Grilla generada. Podés revisarla o descargar el Excel.';
+    guardarIntertandasEnNube(false);
   } catch (err) { status.innerHTML = '❌ Error: ' + err.message; }
 }
 
@@ -801,6 +880,58 @@ function aplicarReemplazo(n, c, cat, d) {
   cerrarModal();
 }
 
+function guardarIntertandasEnNube(mostrarAlerta = false) {
+  const fIn = document.getElementById('fecha-in').value;
+  if (!fIn) return;
+
+  const seleccionadas = [];
+  document.querySelectorAll('#lista-tematicas input[type="checkbox"]:checked').forEach(c => seleccionadas.push(c.value));
+
+  const items = [];
+  document.querySelectorAll('#tbody-preview tr').forEach(tr => {
+    if(tr.classList.contains('prog-row')) {
+      items.push({ type: 'header', prog: tr.innerText.trim() });
+    } else {
+      let d1 = tr.querySelector('.td-t1');
+      let d2 = tr.querySelector('.td-t2');
+      items.push({
+        type: 'row',
+        prog: tr.dataset.prog,
+        h: parseInt(tr.dataset.h),
+        t1: { n: d1.dataset.n || '', c: d1.dataset.c || '', cat: d1.dataset.cat || '', d: parseInt(d1.dataset.d) || 0 },
+        t2: { n: d2.dataset.n || '', c: d2.dataset.c || '', cat: d2.dataset.cat || '', d: parseInt(d2.dataset.d) || 0 }
+      });
+    }
+  });
+
+  if(items.length === 0) return;
+
+  const payload = {
+    fecha: fIn,
+    generado: new Date().toISOString(),
+    tagsSeleccionadas: seleccionadas,
+    grilla: items
+  };
+
+  const fileName = `intertandas_${fIn}.json`;
+
+  fetch('https://script.google.com/macros/s/AKfycbxjMjXPutA3qveZUkWfieLqOauUhYcTlfE3MPSMwpGH63brEz8NqGWhWO5PZ7Ah-Qq3HQ/exec', {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify({ fileName: fileName, content: JSON.stringify(payload, null, 2) })
+  })
+  .then(r => r.json())
+  .then(d => {
+    if(mostrarAlerta) {
+      if(d.status === 'success') alert('✅ Grilla de Intertandas guardada en la nube con éxito.');
+      else alert('❌ Error al guardar en la nube.');
+    }
+  })
+  .catch(e => {
+    if(mostrarAlerta) alert('❌ Error de conexión al guardar.');
+  });
+}
+
 async function exportarDesdeTabla(){
   try {
       const fIn = document.getElementById('fecha-in').value; const objFecha = new Date(fIn + 'T12:00:00');
@@ -874,6 +1005,7 @@ async function exportarDesdeTabla(){
       const link = document.createElement("a"); link.href = URL.createObjectURL(blob);
       link.download = fileName; link.click();
       
+      guardarIntertandasEnNube(false);
       enviarEstadisticas();
   } catch (error) { status.innerHTML = '❌ Error: ' + error.message; }
 }
@@ -921,7 +1053,7 @@ function enviarEstadisticas() {
   })
   .then(response => {
     if (!response.ok) setStatus('status-gen', '⚠️ Excel descargado, pero falló envío de estadísticas.', 'warn');
-    else setStatus('status-gen', '✅ Excel Exportado y Estadísticas Guardadas.', 'ok');
+    else setStatus('status-gen', '✅ Excel Exportado y Grilla Guardada en la Nube.', 'ok');
   })
   .catch(e => {
     setStatus('status-gen', '⚠️ Excel descargado, pero falló conexión de estadísticas.', 'warn');
@@ -1210,7 +1342,7 @@ document.getElementById('btn-exportar-stats').addEventListener('click', async ()
   ws.getColumn(6).width = 15;
 
   const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+  const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   saveAs(blob, 'Reporte_Estadisticas_LA100.xlsx');
 });
 </script>
