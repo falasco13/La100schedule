@@ -3,172 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LA 100 - Sistema de Pautado</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<title>La 100 · Suite de Programación y Emisión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#1B1F6E;
-  --mid:#2D3396;
-  --accent:#4F5EFF;
-  --accent-lt:#EEF0FF;
-  --gold:#F5C842;
-  --off:#F4F5FF;
-  --text:#0D0E2E;
-  --muted:#7478A8;
-  --border:#E2E4F6;
-  --green:#0B6B48;
-  --orange:#FF5722;
-  --card:#ffffff;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-body{
-  font-family:'Sora',sans-serif;
-  background:var(--off);
-  color:var(--text);
-  min-height:100vh;
-  display:flex;
-  flex-direction:column;
-}
-nav{
-  background:var(--navy);
-  height:54px;
-  padding:0 24px;
-  display:flex;
-  align-items:center;
-  gap:14px;
-  position:sticky;
-  top:0;
-  z-index:100;
-  box-shadow:0 2px 12px rgba(0,0,0,.18);
-}
-.logo{
-  background:var(--gold);
-  color:var(--navy);
-  font-weight:800;
-  font-size:0.85rem;
-  padding:4px 10px;
-  border-radius:6px;
-  text-decoration:none;
-  letter-spacing:-0.2px;
-}
-.nav-t{
-  color:#fff;
-  font-weight:600;
-  font-size:0.85rem;
-}
-.container{
-  max-width:1000px;
-  width:100%;
-  margin:0 auto;
-  padding:48px 24px 60px;
-  flex:1;
-}
-.header{
-  margin-bottom:32px;
-}
-.header h1{
-  font-size:1.85rem;
-  font-weight:800;
-  color:var(--navy);
-  letter-spacing:-0.5px;
-  margin-bottom:8px;
-}
-.header p{
-  font-size:0.95rem;
-  color:var(--muted);
-}
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
-  gap:20px;
-}
-.card{
-  background:var(--card);
-  border:1.5px solid var(--border);
-  border-radius:14px;
-  text-decoration:none;
-  color:inherit;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-  box-shadow:0 2px 14px rgba(27,31,110,.05);
-  transition:all .2s ease;
-}
-.card:hover{
-  transform:translateY(-3px);
-  box-shadow:0 8px 24px rgba(27,31,110,.12);
-  border-color:var(--accent);
-}
-.card-stripe{
-  height:6px;
-  width:100%;
-}
-.stripe-coord{ background:var(--navy); }
-.stripe-sched{ background:var(--green); }
-.stripe-inter{ background:var(--orange); }
 
-.card-body{
-  padding:28px 24px;
-  display:flex;
-  flex-direction:column;
-  flex:1;
+:root {
+  --bg-canvas: #F5F5F7;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-card: #FFFFFF;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --text-tertiary: #A1A1A6;
+  
+  --accent-blue: #0071E3;
+  --accent-green: #34C759;
+  --accent-orange: #FF9500;
+  
+  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 20px 40px -8px rgba(0, 0, 0, 0.09), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
-.card-title{
-  font-size:1.15rem;
-  font-weight:700;
-  color:var(--navy);
-  margin-bottom:10px;
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
-.card-desc{
-  font-size:0.85rem;
-  color:var(--muted);
-  line-height:1.55;
+
+/* ---------------- NAV BAR ---------------- */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
 }
-@media(max-width:640px){
-  .header h1{ font-size:1.5rem; }
-  .container{ padding:28px 16px; }
+
+.nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-badge {
+  background: #1B1F6E;
+  color: #F5C842;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: -0.5px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(27, 31, 110, 0.2);
+}
+
+.brand-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
+}
+
+/* ---------------- HERO SECTION ---------------- */
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 70px 24px 45px;
+  text-align: center;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hero h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  color: var(--text-primary);
+  max-width: 780px;
+  margin: 0 auto 16px;
+}
+
+.hero p {
+  font-size: 1.12rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+}
+
+/* ---------------- CARDS GRID ---------------- */
+.main-wrapper {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+.grid-modules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  min-height: 380px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 28px;
+}
+
+.tag-blue { background: rgba(0, 113, 227, 0.08); color: var(--accent-blue); }
+.tag-green { background: rgba(52, 199, 89, 0.1); color: #1e8738; }
+.tag-orange { background: rgba(255, 149, 0, 0.1); color: #c46d00; }
+
+.card-icon {
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+  display: inline-block;
+  line-height: 1;
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.card-bottom {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.card-action {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.2s ease;
+}
+
+.card:hover .card-action {
+  gap: 10px;
+}
+
+.card-action span.arrow {
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover .card-action span.arrow {
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+/* ---------------- FOOTER ---------------- */
+footer {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  padding: 24px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 960px) {
+  .grid-modules {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+  .card {
+    min-height: auto;
+  }
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="logo">LA 100</a>
-  <span class="nav-t">Sistema de Pautado</span>
+  <div class="nav-container">
+    <a href="index.html" class="brand">
+      <div class="brand-badge">LA 100</div>
+      <span class="brand-title">Suite de Emisión</span>
+    </a>
+    <div class="nav-status">
+      <span class="status-dot"></span>
+      <span>FM 99.9 · En Red</span>
+    </div>
+  </div>
 </nav>
 
-<div class="container">
-  <div class="header">
-    <h1>Sistema de Pautado</h1>
-    <p>Seleccioná el módulo con el que querés trabajar.</p>
+<section class="hero">
+  <div class="hero-pill">
+    <span>Plataforma Interna de Producción</span>
   </div>
+  <h1>Programación de Aire</h1>
+  <p>Coordinación de artistas, armado técnico de tandas comerciales y rotación de intertandas en un entorno unificado.</p>
+</section>
 
-  <div class="grid">
+<main class="main-wrapper">
+  <div class="grid-modules">
+
+    <!-- Card 1: Coordinador -->
     <a href="coordinador.html" class="card">
-      <div class="card-stripe stripe-coord"></div>
-      <div class="card-body">
-        <h2 class="card-title">Asignar materiales (Coordinador)</h2>
-        <p class="card-desc">Asignación de artistas y promos hora por hora.</p>
+      <div class="card-top">
+        <span class="card-tag tag-blue">Pauta Artística</span>
+        <div class="card-icon">🎙️</div>
+        <h2 class="card-title">Coordinador</h2>
+        <p class="card-desc">Asignación de artistas y campañas hora por hora. Con pre-escucha integrada desde Drive y mapa de calor semanal.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
 
+    <!-- Card 2: Schedule Builder -->
     <a href="schedule.html" class="card">
-      <div class="card-stripe stripe-sched"></div>
-      <div class="card-body">
+      <div class="card-top">
+        <span class="card-tag tag-green">Tandas y Grilla</span>
+        <div class="card-icon">⚡</div>
         <h2 class="card-title">Schedule Builder</h2>
-        <p class="card-desc">Armado de tandas y exportación a Excel.</p>
+        <p class="card-desc">Sincronización con la nube, distribución automática de separadores institucionales y exportación final a planilla técnica.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
 
+    <!-- Card 3: Intertandas -->
     <a href="intertandas.html" class="card">
-      <div class="card-stripe stripe-inter"></div>
-      <div class="card-body">
+      <div class="card-top">
+        <span class="card-tag tag-orange">Contenidos Web</span>
+        <div class="card-icon">📻</div>
         <h2 class="card-title">Intertandas</h2>
-        <p class="card-desc">Generación y revisión de intertandas con antichoques.</p>
+        <p class="card-desc">Pautado balanceado de temáticas y cápsulas con algoritmo antichoques de promos y guardado automático en Drive.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
+
   </div>
-</div>
+</main>
+
+<footer>
+  LA 100 FM 99.9 · Suite de Gestión y Emisión
+</footer>
 
 </body>
 </html>
