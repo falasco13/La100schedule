@@ -4,195 +4,136 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LA 100 - Sistema de Pautado</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#1B1F6E;
+  --mid:#2D3396;
+  --accent:#4F5EFF;
+  --accent-lt:#EEF0FF;
+  --gold:#F5C842;
+  --off:#F4F5FF;
+  --text:#0D0E2E;
+  --muted:#7478A8;
+  --border:#E2E4F6;
+  --green:#0B6B48;
+  --orange:#FF5722;
+  --card:#ffffff;
 }
-
-:root {
-  --navy: #1B1F6E;
-  --mid: #2D3396;
-  --accent: #4F5EFF;
-  --accent-lt: #EEF0FF;
-  --gold: #F5C842;
-  --off: #F4F5FF;
-  --text: #0D0E2E;
-  --muted: #7478A8;
-  --border: #E2E4F6;
-  --green: #0B6B48;
-  --orange: #FF5722;
-  --card: #FFFFFF;
+body{
+  font-family:'Sora',sans-serif;
+  background:var(--off);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
 }
-
-body {
-  font-family: 'Sora', sans-serif;
-  background-color: var(--off);
-  color: var(--text);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+nav{
+  background:var(--navy);
+  height:54px;
+  padding:0 24px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  position:sticky;
+  top:0;
+  z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,.18);
 }
-
-/* ---------------- NAV BAR ---------------- */
-nav {
-  background: var(--navy);
-  height: 54px;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+.logo{
+  background:var(--gold);
+  color:var(--navy);
+  font-weight:800;
+  font-size:0.85rem;
+  padding:4px 10px;
+  border-radius:6px;
+  text-decoration:none;
+  letter-spacing:-0.2px;
 }
-
-.brand {
-  display: inline-flex;
-  align-items: center;
-  text-decoration: none;
+.nav-t{
+  color:#fff;
+  font-weight:600;
+  font-size:0.85rem;
 }
-
-.logo-svg {
-  height: 26px;
-  width: auto;
-  display: block;
+.container{
+  max-width:1000px;
+  width:100%;
+  margin:0 auto;
+  padding:48px 24px 60px;
+  flex:1;
 }
-
-.nav-t {
-  color: #FFFFFF;
-  font-weight: 600;
-  font-size: 0.85rem;
-  letter-spacing: -0.2px;
+.header{
+  margin-bottom:32px;
 }
-
-/* ---------------- CONTENIDO ---------------- */
-.container {
-  max-width: 1040px;
-  width: 100%;
-  margin: 40px auto;
-  padding: 0 20px;
-  flex: 1;
+.header h1{
+  font-size:1.85rem;
+  font-weight:800;
+  color:var(--navy);
+  letter-spacing:-0.5px;
+  margin-bottom:8px;
 }
-
-.header {
-  margin-bottom: 28px;
+.header p{
+  font-size:0.95rem;
+  color:var(--muted);
 }
-
-.header h1 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  color: var(--navy);
-  letter-spacing: -0.3px;
-  margin-bottom: 6px;
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+  gap:20px;
 }
-
-.header p {
-  font-size: 0.88rem;
-  color: var(--muted);
-  font-weight: 400;
+.card{
+  background:var(--card);
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  text-decoration:none;
+  color:inherit;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  box-shadow:0 2px 14px rgba(27,31,110,.05);
+  transition:all .2s ease;
 }
-
-/* ---------------- TARJETAS ---------------- */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 20px;
+.card:hover{
+  transform:translateY(-3px);
+  box-shadow:0 8px 24px rgba(27,31,110,.12);
+  border-color:var(--accent);
 }
-
-.card {
-  background: var(--card);
-  border: 1.5px solid var(--border);
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 2px 14px rgba(27, 31, 110, 0.07);
-  text-decoration: none;
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+.card-stripe{
+  height:6px;
+  width:100%;
 }
+.stripe-coord{ background:var(--navy); }
+.stripe-sched{ background:var(--green); }
+.stripe-inter{ background:var(--orange); }
 
-.card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(27, 31, 110, 0.14);
-  border-color: #C4CBFF;
+.card-body{
+  padding:28px 24px;
+  display:flex;
+  flex-direction:column;
+  flex:1;
 }
-
-/* Franjas temáticas superiores */
-.card-bar {
-  height: 6px;
-  width: 100%;
+.card-title{
+  font-size:1.15rem;
+  font-weight:700;
+  color:var(--navy);
+  margin-bottom:10px;
 }
-
-.card-bar.coord {
-  background: var(--navy);
+.card-desc{
+  font-size:0.85rem;
+  color:var(--muted);
+  line-height:1.55;
 }
-
-.card-bar.sched {
-  background: var(--green);
-}
-
-.card-bar.inter {
-  background: var(--orange);
-}
-
-.card-body {
-  padding: 24px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.card-title {
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--navy);
-  margin-bottom: 8px;
-  letter-spacing: -0.2px;
-}
-
-.card-desc {
-  font-size: 0.84rem;
-  color: var(--muted);
-  line-height: 1.55;
-}
-
-@media (max-width: 680px) {
-  .container {
-    margin: 24px auto;
-  }
-  .header h1 {
-    font-size: 1.5rem;
-  }
-  .grid {
-    grid-template-columns: 1fr;
-  }
+@media(max-width:640px){
+  .header h1{ font-size:1.5rem; }
+  .container{ padding:28px 16px; }
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="brand" title="La 100 FM 99.9">
-    <!-- Logotipo Oficial Vectorial LA 100 -->
-    <svg class="logo-svg" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="LA 100">
-      <g fill="#FFFFFF">
-        <!-- L -->
-        <path d="M10 8h6v18h12v6H10V8z"/>
-        <!-- A -->
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M36 8h7l10 24h-6.8l-2.2-5.5h-9l-2.2 5.5H26L36 8zm4.5 5.8l-3.1 7.7h6.2l-3.1-7.7z"/>
-        <!-- 1 -->
-        <path d="M68 13.5l-6 4V12.2l6.8-4.2h6.2v24H68V13.5z"/>
-        <!-- 0 -->
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M102 7c10 0 16 7.5 16 17s-6 17-16 17-16-7.5-16-17 6-17 16-17zm0 6c-6 0-9 4.8-9 11s3 11 9 11 9-4.8 9-11-3-11-9-11z"/>
-        <!-- 0 -->
-        <path fill-rule="evenodd" clip-rule="evenodd" d="M140 7c10 0 16 7.5 16 17s-6 17-16 17-16-7.5-16-17 6-17 16-17zm0 6c-6 0-9 4.8-9 11s3 11 9 11 9-4.8 9-11-3-11-9-11z"/>
-      </g>
-    </svg>
-  </a>
+  <a href="index.html" class="logo">LA 100</a>
   <span class="nav-t">Sistema de Pautado</span>
 </nav>
 
@@ -203,34 +144,29 @@ nav {
   </div>
 
   <div class="grid">
-
-    <!-- Tarjeta 1: Coordinador -->
     <a href="coordinador.html" class="card">
-      <div class="card-bar coord"></div>
+      <div class="card-stripe stripe-coord"></div>
       <div class="card-body">
         <h2 class="card-title">Asignar materiales (Coordinador)</h2>
         <p class="card-desc">Asignación de artistas y promos hora por hora.</p>
       </div>
     </a>
 
-    <!-- Tarjeta 2: Schedule Builder -->
     <a href="schedule.html" class="card">
-      <div class="card-bar sched"></div>
+      <div class="card-stripe stripe-sched"></div>
       <div class="card-body">
         <h2 class="card-title">Schedule Builder</h2>
         <p class="card-desc">Armado de tandas y exportación a Excel.</p>
       </div>
     </a>
 
-    <!-- Tarjeta 3: Intertandas -->
     <a href="intertandas.html" class="card">
-      <div class="card-bar inter"></div>
+      <div class="card-stripe stripe-inter"></div>
       <div class="card-body">
         <h2 class="card-title">Intertandas</h2>
         <p class="card-desc">Generación y revisión de intertandas con antichoques.</p>
       </div>
     </a>
-
   </div>
 </div>
 
