@@ -3,123 +3,380 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Portal de Emisión · LA 100</title>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<title>La 100 · Suite de Programación y Emisión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-:root{
-  --navy:#1B1F6E;--mid:#2D3396;--accent:#4F5EFF;
-  --gold:#F5C842;--off:#F4F5FF;--text:#0D0E2E;--muted:#7478A8;
-  --border:#E2E4F6;--green:#0B6B48;--orange:#FF5722;--card:#fff;
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
-body{font-family:'Sora',sans-serif;background:var(--off);color:var(--text);min-height:100vh;display:flex;flex-direction:column;}
-nav{background:var(--navy);height:60px;padding:0 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.2);}
-.logo-link{display:flex;align-items:center;text-decoration:none;}
-.nav-logo-svg{height:28px;width:auto;display:block;}
-.nav-divider{color:rgba(255,255,255,.3);font-size:1.1rem;font-weight:300;}
-.nav-t{color:#fff;font-weight:600;font-size:0.88rem;letter-spacing:-0.2px;}
-.container{flex:1;max-width:1160px;margin:0 auto;padding:50px 24px;display:flex;flex-direction:column;justify-content:center;width:100%;}
-.hero{text-align:center;margin-bottom:45px;}
-.hero-title{font-size:2.1rem;font-weight:800;color:var(--navy);letter-spacing:-0.5px;margin-bottom:8px;}
-.hero-sub{font-size:0.95rem;color:var(--muted);font-weight:400;}
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
-.card{background:var(--card);border:1.5px solid var(--border);border-radius:18px;display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;color:inherit;transition:all .22s cubic-bezier(.34,1.56,.64,1);box-shadow:0 4px 18px rgba(27,31,110,.04);position:relative;overflow:hidden;}
-.card:hover{transform:translateY(-5px);box-shadow:0 14px 34px rgba(27,31,110,.12);}
-.card-stripe{height:6px;width:100%;}
-.card-content{padding:28px 24px 30px;display:flex;flex-direction:column;flex:1;width:100%;}
-.card-icon{width:52px;height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:18px;transition:background .2s;}
-.card-title{font-size:1.22rem;font-weight:700;margin-bottom:10px;}
-.card-desc{font-size:0.82rem;color:var(--muted);line-height:1.55;margin-bottom:26px;flex:1;}
-.card-btn{display:inline-flex;align-items:center;gap:7px;font-size:0.78rem;font-weight:700;font-family:'Sora',sans-serif;margin-top:auto;}
-.card-btn span{transition:transform .2s;}
-.card:hover .card-btn span{transform:translateX(4px);}
-.tag-pill{position:absolute;top:18px;right:20px;background:#FAFBFF;border:1px solid var(--border);color:var(--muted);font-size:0.63rem;font-weight:700;padding:4px 9px;border-radius:20px;font-family:'DM Mono',monospace;}
 
-.card-blue .card-stripe{background:var(--navy);}
-.card-blue .card-icon{background:#EEF0FF;color:var(--navy);}
-.card-blue .card-title{color:var(--navy);}
-.card-blue .card-btn{color:var(--navy);}
-.card-blue:hover{border-color:var(--navy);}
-
-.card-green .card-stripe{background:var(--green);}
-.card-green .card-icon{background:#E6F7EE;color:var(--green);}
-.card-green .card-title{color:var(--green);}
-.card-green .card-btn{color:var(--green);}
-.card-green:hover{border-color:var(--green);}
-
-.card-orange .card-stripe{background:var(--orange);}
-.card-orange .card-icon{background:#FFF0EB;color:var(--orange);}
-.card-orange .card-title{color:var(--orange);}
-.card-orange .card-btn{color:var(--orange);}
-.card-orange:hover{border-color:var(--orange);}
-
-@media(max-width:980px){
-  .grid{grid-template-columns:repeat(auto-fit,minmax(280px,1fr));}
+:root {
+  --bg-canvas: #F5F5F7;
+  --bg-surface: rgba(255, 255, 255, 0.85);
+  --bg-card: #FFFFFF;
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-hover: rgba(0, 0, 0, 0.12);
+  --text-primary: #1D1D1F;
+  --text-secondary: #86868B;
+  --text-tertiary: #A1A1A6;
+  
+  --accent-blue: #0071E3;
+  --accent-green: #34C759;
+  --accent-orange: #FF9500;
+  
+  --radius-xl: 24px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.03);
+  --shadow-card: 0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 20px 40px -8px rgba(0, 0, 0, 0.09), 0 1px 4px rgba(0, 0, 0, 0.04);
 }
-@media(max-width:640px){
-  .container{padding:30px 16px;}
-  .hero-title{font-size:1.6rem;}
-  .grid{grid-template-columns:1fr;}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-canvas);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---------------- NAV BAR ---------------- */
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: 60px;
+  background: var(--bg-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  padding: 0 28px;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+}
+
+.brand-badge {
+  background: #1B1F6E;
+  color: #F5C842;
+  font-weight: 800;
+  font-size: 0.85rem;
+  letter-spacing: -0.5px;
+  padding: 5px 11px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(27, 31, 110, 0.2);
+}
+
+.brand-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.03);
+  padding: 5px 12px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-subtle);
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--accent-green);
+  box-shadow: 0 0 0 2px rgba(52, 199, 89, 0.2);
+}
+
+/* ---------------- HERO SECTION ---------------- */
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 70px 24px 45px;
+  text-align: center;
+}
+
+.hero-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.hero h1 {
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  color: var(--text-primary);
+  max-width: 780px;
+  margin: 0 auto 16px;
+}
+
+.hero p {
+  font-size: 1.12rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  max-width: 620px;
+  margin: 0 auto;
+  line-height: 1.5;
+  letter-spacing: -0.015em;
+}
+
+/* ---------------- CARDS GRID ---------------- */
+.main-wrapper {
+  flex: 1;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 60px;
+}
+
+.grid-modules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.card {
+  position: relative;
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-subtle);
+  padding: 34px 30px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  min-height: 380px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-top {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 12px;
+  border-radius: var(--radius-full);
+  margin-bottom: 28px;
+}
+
+.tag-blue { background: rgba(0, 113, 227, 0.08); color: var(--accent-blue); }
+.tag-green { background: rgba(52, 199, 89, 0.1); color: #1e8738; }
+.tag-orange { background: rgba(255, 149, 0, 0.1); color: #c46d00; }
+
+.card-icon {
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+  display: inline-block;
+  line-height: 1;
+}
+
+.card-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.03em;
+  margin-bottom: 10px;
+}
+
+.card-desc {
+  font-size: 0.92rem;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+
+.card-bottom {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.card-action {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.01em;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.2s ease;
+}
+
+.card:hover .card-action {
+  gap: 10px;
+}
+
+.card-action span.arrow {
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.card:hover .card-action span.arrow {
+  color: var(--text-primary);
+  transform: translateX(2px);
+}
+
+/* ---------------- FOOTER ---------------- */
+footer {
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-canvas);
+  padding: 24px;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 960px) {
+  .grid-modules {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+  .card {
+    min-height: auto;
+  }
 }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" class="logo-link" title="La 100">
-    <svg class="nav-logo-svg" viewBox="0 0 460 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M 15 10 H 26 V 99 H 68 V 110 H 15 Z" fill="#FFFFFF"/>
-      <path d="M 76 10 H 93 L 148 110 H 134 L 87 23 V 110 H 76 Z" fill="#FFFFFF"/>
-      <path d="M 204 10 C 218 10 228 20 228 34 V 90 C 228 101 219 110 208 110 C 197 110 188 101 188 90 V 52 C 180 52 173 48 169 41 C 164 33 164 22 171 15 C 178 9 190 10 204 10 Z" fill="#FFFFFF"/>
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M 285 10 C 257.4 10 235 32.4 235 60 C 235 87.6 257.4 110 285 110 C 312.6 110 335 87.6 335 60 C 335 32.4 312.6 10 285 10 Z M 285 53 C 281.1 53 278 56.1 278 60 C 278 63.9 281.1 67 285 67 C 288.9 67 292 63.9 292 60 C 292 56.1 288.9 53 285 53 Z" fill="#FFFFFF"/>
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M 392 10 C 364.4 10 342 32.4 342 60 C 342 87.6 364.4 110 392 110 C 419.6 110 442 87.6 442 60 C 442 32.4 419.6 10 392 10 Z M 392 53 C 388.1 53 385 56.1 385 60 C 385 63.9 388.1 67 392 67 C 395.9 67 399 63.9 399 60 C 399 56.1 395.9 53 392 53 Z" fill="#FFFFFF"/>
-    </svg>
-  </a>
-  <span class="nav-divider">-</span>
-  <span class="nav-t">Gestión de Schedules</span>
+  <div class="nav-container">
+    <a href="index.html" class="brand">
+      <div class="brand-badge">LA 100</div>
+      <span class="brand-title">Suite de Emisión</span>
+    </a>
+    <div class="nav-status">
+      <span class="status-dot"></span>
+      <span>FM 99.9 · En Red</span>
+    </div>
+  </div>
 </nav>
 
-<div class="container">
-  <div class="hero">
-    <h1 class="hero-title">Sistema de Pauta y Automatización</h1>
-    <p class="hero-sub">Seleccioná el módulo con el que querés operar hoy</p>
+<section class="hero">
+  <div class="hero-pill">
+    <span>Plataforma Interna de Producción</span>
   </div>
+  <h1>Programación de Aire</h1>
+  <p>Coordinación de artistas, armado técnico de tandas comerciales y rotación de intertandas en un entorno unificado.</p>
+</section>
 
-  <div class="grid">
-    <a href="coordinador.html" class="card card-blue">
-      <div class="card-stripe"></div>
-      <div class="card-content">
-        <div class="tag-pill">MÓDULO 01</div>
-        <div class="card-icon">🎛️</div>
-        <h2 class="card-title">Asignar materiales</h2>
-        <p class="card-desc">Asignación ágil de promos por programa, control de frecuencias y monitoreo de historial semanal.</p>
-        <div class="card-btn">Abrir Coordinador <span>→</span></div>
+<main class="main-wrapper">
+  <div class="grid-modules">
+
+    <!-- Card 1: Coordinador -->
+    <a href="coordinador.html" class="card">
+      <div class="card-top">
+        <span class="card-tag tag-blue">Pauta Artística</span>
+        <div class="card-icon">🎙️</div>
+        <h2 class="card-title">Coordinador</h2>
+        <p class="card-desc">Asignación de artistas y campañas hora por hora. Con pre-escucha integrada desde Drive y mapa de calor semanal.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
 
-    <a href="schedule.html" class="card card-green">
-      <div class="card-stripe"></div>
-      <div class="card-content">
-        <div class="tag-pill">MÓDULO 02</div>
-        <div class="card-icon">📋</div>
+    <!-- Card 2: Schedule Builder -->
+    <a href="schedule.html" class="card">
+      <div class="card-top">
+        <span class="card-tag tag-green">Tandas y Grilla</span>
+        <div class="card-icon">⚡</div>
         <h2 class="card-title">Schedule Builder</h2>
-        <p class="card-desc">Estructuración técnica de tandas, distribución de separadores y armado de la grilla final.</p>
-        <div class="card-btn">Abrir Schedule Builder <span>→</span></div>
+        <p class="card-desc">Sincronización con la nube, distribución automática de separadores institucionales y exportación final a planilla técnica.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
 
-    <a href="intertandas.html" class="card card-orange">
-      <div class="card-stripe"></div>
-      <div class="card-content">
-        <div class="tag-pill">MÓDULO 03</div>
+    <!-- Card 3: Intertandas -->
+    <a href="intertandas.html" class="card">
+      <div class="card-top">
+        <span class="card-tag tag-orange">Contenidos Web</span>
         <div class="card-icon">📻</div>
         <h2 class="card-title">Intertandas</h2>
-        <p class="card-desc">Distribución balanceada de contenidos temáticos, filtros antichoques y exportación unificada.</p>
-        <div class="card-btn">Abrir Intertandas <span>→</span></div>
+        <p class="card-desc">Pautado balanceado de temáticas y cápsulas con algoritmo antichoques de promos y guardado automático en Drive.</p>
+      </div>
+      <div class="card-bottom">
+        <span class="card-action">Abrir módulo <span class="arrow">→</span></span>
       </div>
     </a>
+
   </div>
-</div>
+</main>
+
+<footer>
+  LA 100 FM 99.9 · Suite de Gestión y Emisión
+</footer>
 
 </body>
 </html>
